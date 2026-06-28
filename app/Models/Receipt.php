@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\AllocationStatus;
 use App\Enums\ReceiptStatus;
 use App\Models\Concerns\HasApprovals;
+use App\Models\Concerns\HasAttachments;
 use App\Models\Concerns\HasLedgerEntries;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class Receipt extends Model implements Auditable
 {
-    use HasFactory, HasApprovals, HasLedgerEntries, AuditableTrait;
+    use HasFactory, HasApprovals, HasAttachments, HasLedgerEntries, AuditableTrait;
 
     protected $fillable = [
         'receipt_number',

@@ -7,9 +7,11 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Pengeluaran. WAJIB memilih Dana Amanah (fund_id) dan Event/Program bila ada.
+     * Pengeluaran. Dapat mengambil dari SATU atau BEBERAPA Dana Amanah
+     * melalui tabel expense_fund_sources (total source = amount).
+     * Event/Program (opsional) ditetapkan di level header.
      * Diposting ke ledger hanya saat status menjadi "approved" (final).
-     * Saldo Dana Amanah & saldo akun harus mencukupi (divalidasi di service layer).
+     * Saldo tiap Dana Amanah & saldo akun harus mencukupi (divalidasi di service layer).
      */
     public function up(): void
     {
@@ -18,9 +20,8 @@ return new class extends Migration
             $table->string('disbursement_number')->unique();
             $table->date('disbursement_date');
             $table->foreignId('account_id')->constrained('accounts')->restrictOnDelete();
-            $table->foreignId('fund_id')->constrained('funds')->restrictOnDelete();
             $table->foreignId('program_id')->nullable()->constrained('programs')->nullOnDelete();
-            $table->decimal('amount', 18, 2);
+            $table->decimal('amount', 18, 2)->comment('Total = SUM(expense_fund_sources.amount)');
             $table->string('payee')->nullable()->comment('Penerima pembayaran');
             $table->string('category')->nullable();
             $table->string('reference_number')->nullable();
@@ -55,7 +56,6 @@ return new class extends Migration
 
             $table->index('disbursement_date');
             $table->index('status');
-            $table->index('fund_id');
         });
     }
 

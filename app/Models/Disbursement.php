@@ -4,22 +4,23 @@ namespace App\Models;
 
 use App\Enums\DisbursementStatus;
 use App\Models\Concerns\HasApprovals;
+use App\Models\Concerns\HasAttachments;
 use App\Models\Concerns\HasLedgerEntries;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
 
 class Disbursement extends Model implements Auditable
 {
-    use HasFactory, HasApprovals, HasLedgerEntries, AuditableTrait;
+    use HasFactory, HasApprovals, HasAttachments, HasLedgerEntries, AuditableTrait;
 
     protected $fillable = [
         'disbursement_number',
         'disbursement_date',
         'account_id',
-        'fund_id',
         'program_id',
         'amount',
         'payee',
@@ -63,14 +64,21 @@ class Disbursement extends Model implements Auditable
         return $this->belongsTo(Account::class);
     }
 
-    public function fund(): BelongsTo
+    /** Sumber-sumber Dana Amanah pengeluaran ini (bisa lebih dari satu). */
+    public function fundSources(): HasMany
     {
-        return $this->belongsTo(Fund::class);
+        return $this->hasMany(ExpenseFundSource::class);
     }
 
     public function program(): BelongsTo
     {
         return $this->belongsTo(Program::class);
+    }
+
+    /** Total nominal dari seluruh sumber dana. */
+    public function sourcesTotal(): string
+    {
+        return (string) $this->fundSources()->sum('amount');
     }
 
     public function createdBy(): BelongsTo

@@ -71,6 +71,34 @@ class ReportController extends Controller
     }
 
     /**
+     * Rekonsiliasi global: total saldo seluruh Kas/Bank harus sama dengan
+     * total saldo seluruh Dana Amanah (karena tiap entri ledger menggerakkan
+     * kedua dimensi secara bersamaan). Selisih wajib 0.
+     */
+    public function reconciliationSummary(): JsonResponse
+    {
+        $totalAccounts = (string) (LedgerEntry::sum('amount') ?? 0);
+        $totalFunds = $totalAccounts; // sumber yang sama (SUM seluruh ledger)
+
+        $byAccount = LedgerEntry::query()
+            ->selectRaw('account_id, COALESCE(SUM(amount),0) as balance')
+            ->groupBy('account_id')->pluck('balance', 'account_id');
+        $byFund = LedgerEntry::query()
+            ->selectRaw('fund_id, COALESCE(SUM(amount),0) as balance')
+            ->groupBy('fund_id')->pluck('balance', 'fund_id');
+
+        $sumAccounts = (string) $byAccount->sum(fn ($v) => (float) $v);
+        $sumFunds = (string) $byFund->sum(fn ($v) => (float) $v);
+
+        return response()->json([
+            'total_kas_bank' => $sumAccounts,
+            'total_dana_amanah' => $sumFunds,
+            'selisih' => bcsub($sumAccounts, $sumFunds, 2),
+            'seimbang' => bccomp($sumAccounts, $sumFunds, 2) === 0,
+        ]);
+    }
+
+    /**
      * Mutasi per Dana Amanah dalam periode: total masuk, keluar, dan saldo akhir.
      */
     public function fundStatement(Request $request): JsonResponse

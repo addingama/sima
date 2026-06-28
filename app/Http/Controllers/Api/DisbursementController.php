@@ -15,9 +15,9 @@ class DisbursementController extends Controller
     public function index(Request $request): JsonResponse
     {
         $items = Disbursement::query()
-            ->with(['account:id,code,name', 'fund:id,code,name', 'program:id,code,name'])
+            ->with(['account:id,code,name', 'program:id,code,name', 'fundSources.fund:id,code,name'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->when($request->filled('fund_id'), fn ($q) => $q->where('fund_id', $request->integer('fund_id')))
+            ->when($request->filled('fund_id'), fn ($q) => $q->whereHas('fundSources', fn ($s) => $s->where('fund_id', $request->integer('fund_id'))))
             ->when($request->filled('program_id'), fn ($q) => $q->where('program_id', $request->integer('program_id')))
             ->when($request->filled('from'), fn ($q) => $q->whereDate('disbursement_date', '>=', $request->date('from')))
             ->when($request->filled('to'), fn ($q) => $q->whereDate('disbursement_date', '<=', $request->date('to')))
@@ -30,19 +30,26 @@ class DisbursementController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $data = $request->validate([
+        $validated = $request->validate([
             'disbursement_date' => ['required', 'date'],
             'account_id' => ['required', 'exists:accounts,id'],
-            'fund_id' => ['required', 'exists:funds,id'],
             'program_id' => ['nullable', 'exists:programs,id'],
             'amount' => ['required', 'numeric', 'gt:0'],
             'payee' => ['nullable', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:100'],
             'reference_number' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
+            'sources' => ['required', 'array', 'min:1'],
+            'sources.*.fund_id' => ['required', 'exists:funds,id'],
+            'sources.*.program_id' => ['nullable', 'exists:programs,id'],
+            'sources.*.amount' => ['required', 'numeric', 'gt:0'],
+            'sources.*.note' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $disbursement = $this->service->create($data, $request->user());
+        $sources = $validated['sources'];
+        unset($validated['sources']);
+
+        $disbursement = $this->service->create($validated, $sources, $request->user());
 
         return response()->json($disbursement, 201);
     }
@@ -51,29 +58,36 @@ class DisbursementController extends Controller
     {
         return response()->json($disbursement->load([
             'account:id,code,name',
-            'fund:id,code,name',
             'program:id,code,name',
+            'fundSources.fund:id,code,name',
+            'fundSources.program:id,code,name',
             'approvals.actor:id,name',
+            'attachments',
         ]));
     }
 
     public function update(Request $request, Disbursement $disbursement): JsonResponse
     {
-        abort_unless($disbursement->status->value === 'draft', 422, 'Hanya draft yang dapat diubah.');
-
-        $data = $request->validate([
+        $validated = $request->validate([
             'disbursement_date' => ['sometimes', 'date'],
             'account_id' => ['sometimes', 'exists:accounts,id'],
-            'fund_id' => ['sometimes', 'exists:funds,id'],
             'program_id' => ['nullable', 'exists:programs,id'],
             'amount' => ['sometimes', 'numeric', 'gt:0'],
             'payee' => ['nullable', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:100'],
             'reference_number' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
+            'sources' => ['sometimes', 'array', 'min:1'],
+            'sources.*.fund_id' => ['required_with:sources', 'exists:funds,id'],
+            'sources.*.program_id' => ['nullable', 'exists:programs,id'],
+            'sources.*.amount' => ['required_with:sources', 'numeric', 'gt:0'],
+            'sources.*.note' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $disbursement->update($data);
+        $sources = $validated['sources'] ?? null;
+        unset($validated['sources']);
+
+        $disbursement = $this->service->update($disbursement, $validated, $sources, $request->user());
 
         return response()->json($disbursement);
     }

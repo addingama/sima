@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BankFeeStatus;
+use App\Models\Concerns\HasAttachments;
 use App\Models\Concerns\HasLedgerEntries;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class BankFee extends Model implements Auditable
 {
-    use HasFactory, HasLedgerEntries, AuditableTrait;
+    use HasFactory, HasAttachments, HasLedgerEntries, AuditableTrait;
 
     protected $fillable = [
         'fee_number',

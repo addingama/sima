@@ -56,7 +56,9 @@ Penerimaan masuk dulu ke **Dana Sistem "Suspense"** (penampung sementara). Modul
 
 ### Audit trail
 
-Semua model master & transaksi meng-implement `OwenIt\Auditing\Contracts\Auditable`. Perubahan (create/update/delete) otomatis tercatat di tabel `audits` beserta user, nilai lama, dan nilai baru. Riwayat workflow approval juga dicatat di tabel `approvals` (polymorphic).
+Semua model master & transaksi meng-implement `OwenIt\Auditing\Contracts\Auditable`. Perubahan (create/update/delete) otomatis tercatat di tabel `audit_logs` beserta user, nilai lama, dan nilai baru. Riwayat workflow approval juga dicatat di tabel `approvals` (polymorphic).
+
+> Catatan: audit owen-it dinonaktifkan untuk eksekusi CLI (`config/audit.php` → `console => false`). Pencatatan audit aktif pada jalur HTTP/aplikasi.
 
 ---
 
@@ -65,10 +67,16 @@ Semua model master & transaksi meng-implement `OwenIt\Auditing\Contracts\Auditab
 ### Tabel utama
 
 - Master: `donors`, `funds`, `accounts`, `programs`
-- Transaksi: `receipts`, `receipt_allocations`, `disbursements`, `bank_fees`
+- Transaksi: `receipts`, `receipt_allocations`, `disbursements`, `expense_fund_sources`, `bank_fees`
 - Inti: `ledger_entries`
-- Pendukung: `approvals`, `bank_reconciliations`, `bank_reconciliation_lines`, `document_sequences`
-- Sistem: `users`, `roles`, `permissions`, `audits`, `personal_access_tokens`
+- Pendukung: `approvals`, `attachments`, `operational_liabilities`, `bank_reconciliations`, `bank_reconciliation_lines`, `document_sequences`
+- Sistem: `users`, `roles`, `permissions`, `audit_logs`, `personal_access_tokens`
+
+> **Satu pengeluaran, banyak Dana Amanah.** `disbursements` tidak lagi memiliki `fund_id` tunggal. Sumber dana disimpan di `expense_fund_sources` (`fund_id`, `program_id?`, `amount`). Saat di-approve, **satu leg ledger dibuat per sumber dana**, sehingga setiap Dana Amanah berkurang sesuai porsinya dan total = `disbursements.amount`.
+
+> **Lampiran/bukti** (`attachments`) bersifat polymorphic — dapat ditautkan ke penerimaan, pengeluaran, biaya bank, dan liabilitas.
+
+> **Liabilitas operasional** (`operational_liabilities`) adalah register komitmen/utang (gaji, sewa, tagihan). Penyelesaiannya menautkan satu Pengeluaran yang sudah di-approve (tanpa double-count kas).
 
 ### Service layer (`app/Services`)
 
@@ -177,13 +185,40 @@ Base URL: `/api`. Auth: **Bearer token** (Sanctum).
 - `GET|POST /api/receipts/{id}/allocations`
 - `POST /api/allocations/{id}/reverse` (`{ reason }`)
 
-### Pengeluaran (workflow)
+### Pengeluaran (workflow, multi-dana)
 - `GET|POST /api/disbursements`, `GET|PUT /api/disbursements/{id}`
 - `POST /api/disbursements/{id}/submit`
 - `POST /api/disbursements/{id}/verify`
-- `POST /api/disbursements/{id}/approve` ← posting ke ledger
+- `POST /api/disbursements/{id}/approve` ← posting ke ledger (satu leg per sumber dana)
 - `POST /api/disbursements/{id}/reject` (`{ reason }`)
 - `POST /api/disbursements/{id}/reverse` (`{ reason }`)
+
+Body `store` menyertakan `sources` (total harus = `amount`):
+
+```json
+{
+  "disbursement_date": "2026-06-29",
+  "account_id": 1,
+  "amount": 500000,
+  "payee": "Vendor",
+  "sources": [
+    { "fund_id": 4, "amount": 300000 },
+    { "fund_id": 5, "amount": 200000 }
+  ]
+}
+```
+
+### Liabilitas Operasional
+- `GET|POST /api/liabilities`, `GET|PUT /api/liabilities/{id}`
+- `POST /api/liabilities/{id}/settle` (`{ disbursement_id }`)
+- `POST /api/liabilities/{id}/void` (`{ reason }`)
+
+### Lampiran / Bukti
+- `GET /api/attachments?attachable_type=&attachable_id=`
+- `POST /api/attachments` (multipart: `attachable_type`, `attachable_id`, `file`, `title?`)
+  - `attachable_type` ∈ `receipt|disbursement|bank_fee|liability`
+- `GET /api/attachments/{id}/download`
+- `DELETE /api/attachments/{id}`
 
 ### Biaya Bank
 - `GET|POST /api/bank-fees`, `GET /api/bank-fees/{id}`
@@ -197,7 +232,8 @@ Base URL: `/api`. Auth: **Bearer token** (Sanctum).
 
 ### Audit, Laporan, Dashboard, Portal
 - `GET /api/audits`, `GET /api/audits/{id}`
-- `GET /api/reports/fund-balances` · `account-balances` · `ledger` · `fund-statement`
+- `GET /api/reports/fund-balances` · `account-balances` · `reconciliation-summary` · `ledger` · `fund-statement`
+  - `reconciliation-summary`: memastikan total saldo kas/bank = total saldo Dana Amanah (`selisih` harus 0).
 - `GET /api/dashboard`
 - `GET /api/portal/profile` · `summary` · `donations` (role Donatur)
 

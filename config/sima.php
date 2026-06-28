@@ -32,6 +32,12 @@ return [
         // Rekonsiliasi
         'reconciliation.view', 'reconciliation.manage',
 
+        // Liabilitas operasional
+        'liability.view', 'liability.manage',
+
+        // Lampiran/bukti
+        'attachment.view', 'attachment.manage',
+
         // Audit, laporan, pengguna, portal
         'audit.view',
         'report.view',
@@ -58,6 +64,8 @@ return [
             'disbursement.view', 'disbursement.create', 'disbursement.submit',
             'bankfee.view', 'bankfee.manage', 'bankfee.post', 'bankfee.reverse',
             'reconciliation.view', 'reconciliation.manage',
+            'liability.view', 'liability.manage',
+            'attachment.view', 'attachment.manage',
             'report.view',
         ],
 
@@ -66,6 +74,8 @@ return [
             'receipt.view', 'allocation.view',
             'disbursement.view', 'disbursement.verify', 'disbursement.reject',
             'bankfee.view',
+            'liability.view',
+            'attachment.view',
             'report.view',
         ],
 
@@ -75,6 +85,8 @@ return [
             'disbursement.view', 'disbursement.approve', 'disbursement.reject',
             'bankfee.view',
             'reconciliation.view',
+            'liability.view',
+            'attachment.view',
             'report.view',
         ],
 
@@ -82,6 +94,7 @@ return [
             'donor.view', 'fund.view', 'account.view', 'program.view',
             'receipt.view', 'allocation.view', 'disbursement.view',
             'bankfee.view', 'reconciliation.view',
+            'liability.view', 'attachment.view',
             'audit.view', 'report.view',
         ],
 

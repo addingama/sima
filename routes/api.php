@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AttachmentController;
 use App\Http\Controllers\Api\AuditController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BankFeeController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DisbursementController;
 use App\Http\Controllers\Api\DonorController;
 use App\Http\Controllers\Api\FundController;
+use App\Http\Controllers\Api\OperationalLiabilityController;
 use App\Http\Controllers\Api\PortalController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\ReceiptAllocationController;
@@ -113,6 +115,28 @@ Route::middleware('auth:sanctum')->group(function () {
 
     /*
     |----------------------------------------------------------------------
+    | Liabilitas Operasional
+    |----------------------------------------------------------------------
+    */
+    Route::get('liabilities', [OperationalLiabilityController::class, 'index'])->middleware('permission:liability.view');
+    Route::get('liabilities/{operationalLiability}', [OperationalLiabilityController::class, 'show'])->middleware('permission:liability.view');
+    Route::post('liabilities', [OperationalLiabilityController::class, 'store'])->middleware('permission:liability.manage');
+    Route::put('liabilities/{operationalLiability}', [OperationalLiabilityController::class, 'update'])->middleware('permission:liability.manage');
+    Route::post('liabilities/{operationalLiability}/settle', [OperationalLiabilityController::class, 'settle'])->middleware('permission:liability.manage');
+    Route::post('liabilities/{operationalLiability}/void', [OperationalLiabilityController::class, 'void'])->middleware('permission:liability.manage');
+
+    /*
+    |----------------------------------------------------------------------
+    | Lampiran / Bukti
+    |----------------------------------------------------------------------
+    */
+    Route::get('attachments', [AttachmentController::class, 'index'])->middleware('permission:attachment.view');
+    Route::post('attachments', [AttachmentController::class, 'store'])->middleware('permission:attachment.manage');
+    Route::get('attachments/{attachment}/download', [AttachmentController::class, 'download'])->middleware('permission:attachment.view');
+    Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy'])->middleware('permission:attachment.manage');
+
+    /*
+    |----------------------------------------------------------------------
     | Audit Trail
     |----------------------------------------------------------------------
     */
@@ -127,6 +151,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('permission:report.view')->prefix('reports')->group(function () {
         Route::get('fund-balances', [ReportController::class, 'fundBalances']);
         Route::get('account-balances', [ReportController::class, 'accountBalances']);
+        Route::get('reconciliation-summary', [ReportController::class, 'reconciliationSummary']);
         Route::get('ledger', [ReportController::class, 'ledger']);
         Route::get('fund-statement', [ReportController::class, 'fundStatement']);
     });
