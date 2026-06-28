@@ -1,0 +1,80 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\DisbursementStatus;
+use App\Models\Concerns\HasApprovals;
+use App\Models\Concerns\HasLedgerEntries;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use OwenIt\Auditing\Auditable as AuditableTrait;
+use OwenIt\Auditing\Contracts\Auditable;
+
+class Disbursement extends Model implements Auditable
+{
+    use HasFactory, HasApprovals, HasLedgerEntries, AuditableTrait;
+
+    protected $fillable = [
+        'disbursement_number',
+        'disbursement_date',
+        'account_id',
+        'fund_id',
+        'program_id',
+        'amount',
+        'payee',
+        'category',
+        'reference_number',
+        'description',
+        'status',
+        'submitted_at',
+        'submitted_by',
+        'verified_at',
+        'verified_by',
+        'approved_at',
+        'approved_by',
+        'rejected_at',
+        'rejected_by',
+        'rejection_reason',
+        'posted_at',
+        'reversed_at',
+        'reversed_by',
+        'reversal_reason',
+        'created_by',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'disbursement_date' => 'date',
+            'amount' => 'decimal:2',
+            'status' => DisbursementStatus::class,
+            'submitted_at' => 'datetime',
+            'verified_at' => 'datetime',
+            'approved_at' => 'datetime',
+            'rejected_at' => 'datetime',
+            'posted_at' => 'datetime',
+            'reversed_at' => 'datetime',
+        ];
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class);
+    }
+
+    public function fund(): BelongsTo
+    {
+        return $this->belongsTo(Fund::class);
+    }
+
+    public function program(): BelongsTo
+    {
+        return $this->belongsTo(Program::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+}

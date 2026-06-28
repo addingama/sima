@@ -1,0 +1,121 @@
+<?php
+
+use App\Enums\UserRole;
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Daftar Permission
+    |--------------------------------------------------------------------------
+    | Format: "modul.aksi". Dipakai oleh seeder & policy.
+    */
+    'permissions' => [
+        // Master data
+        'donor.view', 'donor.manage',
+        'fund.view', 'fund.manage',
+        'account.view', 'account.manage',
+        'program.view', 'program.manage',
+
+        // Penerimaan & alokasi
+        'receipt.view', 'receipt.create', 'receipt.post', 'receipt.reverse',
+        'allocation.view', 'allocation.manage',
+
+        // Pengeluaran & approval
+        'disbursement.view', 'disbursement.create',
+        'disbursement.submit', 'disbursement.verify',
+        'disbursement.approve', 'disbursement.reject', 'disbursement.reverse',
+
+        // Biaya bank
+        'bankfee.view', 'bankfee.manage', 'bankfee.post', 'bankfee.reverse',
+
+        // Rekonsiliasi
+        'reconciliation.view', 'reconciliation.manage',
+
+        // Audit, laporan, pengguna, portal
+        'audit.view',
+        'report.view',
+        'user.manage',
+        'portal.view',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pemetaan Role -> Permission
+    |--------------------------------------------------------------------------
+    | Gunakan ['*'] untuk seluruh permission (super admin).
+    */
+    'roles' => [
+        UserRole::ADMIN->value => ['*'],
+
+        UserRole::BENDAHARA->value => [
+            'donor.view', 'donor.manage',
+            'fund.view',
+            'account.view',
+            'program.view', 'program.manage',
+            'receipt.view', 'receipt.create', 'receipt.post', 'receipt.reverse',
+            'allocation.view', 'allocation.manage',
+            'disbursement.view', 'disbursement.create', 'disbursement.submit',
+            'bankfee.view', 'bankfee.manage', 'bankfee.post', 'bankfee.reverse',
+            'reconciliation.view', 'reconciliation.manage',
+            'report.view',
+        ],
+
+        UserRole::VERIFIKATOR->value => [
+            'donor.view', 'fund.view', 'account.view', 'program.view',
+            'receipt.view', 'allocation.view',
+            'disbursement.view', 'disbursement.verify', 'disbursement.reject',
+            'bankfee.view',
+            'report.view',
+        ],
+
+        UserRole::KETUA->value => [
+            'donor.view', 'fund.view', 'account.view', 'program.view',
+            'receipt.view', 'allocation.view',
+            'disbursement.view', 'disbursement.approve', 'disbursement.reject',
+            'bankfee.view',
+            'reconciliation.view',
+            'report.view',
+        ],
+
+        UserRole::AUDITOR->value => [
+            'donor.view', 'fund.view', 'account.view', 'program.view',
+            'receipt.view', 'allocation.view', 'disbursement.view',
+            'bankfee.view', 'reconciliation.view',
+            'audit.view', 'report.view',
+        ],
+
+        UserRole::DONATUR->value => [
+            'portal.view',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dana Sistem (tidak boleh dihapus)
+    |--------------------------------------------------------------------------
+    */
+    'system_funds' => [
+        [
+            'system_key' => 'suspense',
+            'code' => 'SYS-SUSPENSE',
+            'name' => 'Dana Belum Dialokasikan (Suspense)',
+            'type' => 'unrestricted',
+            'description' => 'Penampung sementara penerimaan sebelum dialokasikan ke Dana Amanah.',
+        ],
+        [
+            'system_key' => 'bank_admin',
+            'code' => 'SYS-BANKADMIN',
+            'name' => 'Dana Biaya Administrasi Bank',
+            'type' => 'unrestricted',
+            'description' => 'Dana penanggung biaya administrasi/transfer bank.',
+        ],
+        [
+            'system_key' => 'opening_equity',
+            'code' => 'SYS-OPENING',
+            'name' => 'Saldo Awal (Opening Equity)',
+            'type' => 'unrestricted',
+            'description' => 'Dana lawan untuk posting saldo awal kas/bank.',
+        ],
+    ],
+];
