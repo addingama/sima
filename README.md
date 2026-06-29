@@ -15,6 +15,8 @@ Backend + frontend untuk lembaga sosial yang mencatat dan mengelola **dana titip
 |---------|-----|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Diagram arsitektur & aliran data |
 | [docs/DANA-AMANAH.md](docs/DANA-AMANAH.md) | Tipe Dana Amanah: restricted vs unrestricted |
+| [docs/PANDUAN-MULAI.md](docs/PANDUAN-MULAI.md) | Panduan go-live: master data & saldo awal |
+| [docs/BACKLOG.md](docs/BACKLOG.md) | Daftar pekerjaan belum selesai (todo) |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deploy produksi (Docker, TLS, backup) |
 | [docs/CODING_STANDARDS.md](docs/CODING_STANDARDS.md) | Standar kode backend & frontend |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Alur kontribusi & PR checklist |
@@ -84,6 +86,8 @@ Tidak ada kolom saldo yang disimpan terpisah → tidak ada risiko saldo "drift".
 Perbedaan teknis penting: **biaya bank tidak boleh dibebankan ke dana restricted** — sistem otomatis menolak; gunakan Dana Operasional (unrestricted). Pengeluaran biasa boleh memakai kedua tipe selama saldo dana cukup.
 
 Penjelasan lengkap, contoh, dan referensi kode: **[docs/DANA-AMANAH.md](docs/DANA-AMANAH.md)**.
+
+Panduan step-by-step entry master data & go-live organisasi: **[docs/PANDUAN-MULAI.md](docs/PANDUAN-MULAI.md)**.
 
 ### Invariant yang dijaga
 
