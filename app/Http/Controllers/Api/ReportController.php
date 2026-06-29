@@ -7,8 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Fund;
 use App\Models\LedgerEntry;
-use App\Services\LedgerService;
-use App\Services\TrustFundBalanceService;
+use App\Domains\Ledger\Services\BalanceService;
+use App\Domains\Ledger\Services\LedgerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,7 +16,7 @@ class ReportController extends Controller
 {
     public function __construct(
         private readonly LedgerService $ledger,
-        private readonly TrustFundBalanceService $balances,
+        private readonly BalanceService $balances,
     ) {}
 
     /** Saldo seluruh Dana Amanah (posisi dana) — dihitung dari ledger. */

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Domains\Audit\Services\AuditLogService;
 use App\Exceptions\DomainException;
 use App\Models\Disbursement;
 use App\Models\OperationalLiability;

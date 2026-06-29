@@ -8,7 +8,7 @@ use App\Exceptions\InsufficientBalanceException;
 use App\Models\Account;
 use App\Models\Fund;
 use App\Models\User;
-use App\Services\LedgerService;
+use App\Domains\Ledger\Services\LedgerService;
 use Illuminate\Console\Command;
 
 /**

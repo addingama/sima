@@ -11,7 +11,7 @@ use App\Models\BankFee;
 use App\Models\Disbursement;
 use App\Models\OperationalLiability;
 use App\Models\Receipt;
-use App\Services\AuditLogService;
+use App\Domains\Audit\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;

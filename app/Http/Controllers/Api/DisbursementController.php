@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Domains\Expense\Services\ExpenseReversalService;
+use App\Domains\Expense\Services\ExpenseService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Disbursement\ApproveDisbursementRequest;
 use App\Http\Requests\Disbursement\RejectDisbursementRequest;
@@ -11,9 +13,7 @@ use App\Http\Requests\Disbursement\UpdateDisbursementRequest;
 use App\Http\Requests\Disbursement\VerifyDisbursementRequest;
 use App\Http\Resources\DisbursementResource;
 use App\Models\Disbursement;
-use App\Services\ExpenseService;
 use App\Services\IdempotencyService;
-use App\Services\ReversalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -21,7 +21,7 @@ class DisbursementController extends Controller
 {
     public function __construct(
         private readonly ExpenseService $service,
-        private readonly ReversalService $reversal,
+        private readonly ExpenseReversalService $reversal,
         private readonly IdempotencyService $idempotency,
     ) {}
 
@@ -29,16 +29,13 @@ class DisbursementController extends Controller
     {
         $this->authorize('viewAny', Disbursement::class);
 
-        $items = Disbursement::query()
-            ->with(['account:id,code,name', 'program:id,code,name', 'fundSources.fund:id,code,name'])
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->when($request->filled('fund_id'), fn ($q) => $q->whereHas('fundSources', fn ($s) => $s->where('fund_id', $request->integer('fund_id'))))
-            ->when($request->filled('program_id'), fn ($q) => $q->where('program_id', $request->integer('program_id')))
-            ->when($request->filled('from'), fn ($q) => $q->whereDate('disbursement_date', '>=', $request->date('from')))
-            ->when($request->filled('to'), fn ($q) => $q->whereDate('disbursement_date', '<=', $request->date('to')))
-            ->orderByDesc('disbursement_date')
-            ->orderByDesc('id')
-            ->paginate($request->integer('per_page', 15));
+        $items = $this->service->paginate([
+            'status' => $request->filled('status') ? $request->string('status')->value() : null,
+            'fund_id' => $request->filled('fund_id') ? $request->integer('fund_id') : null,
+            'program_id' => $request->filled('program_id') ? $request->integer('program_id') : null,
+            'from' => $request->filled('from') ? $request->date('from') : null,
+            'to' => $request->filled('to') ? $request->date('to') : null,
+        ], $request->integer('per_page', 15));
 
         return DisbursementResource::collection($items)->response();
     }
@@ -118,7 +115,7 @@ class DisbursementController extends Controller
     {
         return $this->idempotency->resolve($request, function () use ($request, $disbursement): JsonResponse {
             return (new DisbursementResource(
-                $this->reversal->reverseExpense($disbursement, $request->user(), $request->validated('reason'))
+                $this->reversal->reverse($disbursement, $request->user(), $request->validated('reason'))
             ))->response();
         });
     }

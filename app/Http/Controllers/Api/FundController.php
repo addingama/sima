@@ -8,7 +8,7 @@ use App\Http\Requests\Master\StoreFundRequest;
 use App\Http\Requests\Master\UpdateFundRequest;
 use App\Http\Resources\FundResource;
 use App\Models\Fund;
-use App\Services\LedgerService;
+use App\Domains\Ledger\Services\LedgerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

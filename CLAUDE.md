@@ -143,14 +143,17 @@ Daftar permission & pemetaan role ada di `config/sima.php`.
 **Sudah ada (backend):**
 - Migration: master data, transaksi finansial, `ledger_entries` (double-entry Amanah Ledger),
   `idempotency_keys`, `audit_logs`, dll.
-- Service layer: `LedgerService` (mesin inti), `TrustFundBalanceService`, `ReceiptService`, `ExpenseService`,
-  `BankFeeService`, `ReversalService`, `ReconciliationService`, `OperationalLiabilityService`,
-  `ApprovalService`, `AuditLogService`, `IdempotencyService`, `DocumentNumberService`.
+- **Domain layer** (`app/Domains/`): Receipt, Expense, Ledger, Approval, Reconciliation, Audit —
+  masing-masing punya DTO, Repository, Service, Policy, Validator, Event, Listener.
+  Controller hanya HTTP adapter (validasi Form Request + delegasi ke domain service).
+- **Ledger domain** = mesin akuntansi (posting jurnal, saldo dari ledger). **Business domain**
+  (Receipt/Expense) memanggil Ledger saat approve/post; audit & approval via event/listener.
+- Infrastruktur (`app/Services/`): `DocumentNumberService`, `IdempotencyService`, `OperationalLiabilityService`.
 - API + RBAC + Policy record-level + Form Request/Resource (modul finansial & master data).
-- Saldo materialized + locking (P0), idempotency claim (race-safe), CI/tests, Docker.
+- Idempotency claim (race-safe), CI/tests, Docker.
 
 **Catatan:**
-- **Audit**: master data memakai owen-it; aksi workflow finansial memakai `AuditLogService` + `ApprovalService`.
+- **Audit**: master data memakai owen-it; aksi workflow finansial memakai Audit domain (event-driven).
 - **Modul Vendor**: belum ada — tambahkan saat dibutuhkan.
 - **User management API**: permission `user.manage` ada, endpoint belum dibuat.
 

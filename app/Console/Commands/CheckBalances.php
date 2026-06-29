@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\Account;
 use App\Models\Fund;
-use App\Services\LedgerService;
-use App\Services\TrustFundBalanceService;
+use App\Domains\Ledger\Services\BalanceService;
+use App\Domains\Ledger\Services\LedgerService;
 use Illuminate\Console\Command;
 
 /**
@@ -20,7 +20,7 @@ class CheckBalances extends Command
 
     protected $description = 'Verifikasi invariant ledger (double-entry & saldo non-negatif).';
 
-    public function handle(LedgerService $ledger, TrustFundBalanceService $balances): int
+    public function handle(LedgerService $ledger, BalanceService $balances): int
     {
         $issues = [];
 

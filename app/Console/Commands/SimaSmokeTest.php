@@ -7,13 +7,13 @@ use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Fund;
 use App\Models\User;
-use App\Services\BankFeeService;
-use App\Services\ExpenseService;
-use App\Services\LedgerService;
-use App\Services\ReceiptService;
-use App\Services\ReconciliationService;
-use App\Services\ReversalService;
-use App\Services\TrustFundBalanceService;
+use App\Domains\Expense\Services\BankFeeService;
+use App\Domains\Expense\Services\ExpenseReversalService;
+use App\Domains\Expense\Services\ExpenseService;
+use App\Domains\Ledger\Services\BalanceService;
+use App\Domains\Ledger\Services\LedgerService;
+use App\Domains\Receipt\Services\ReceiptService;
+use App\Domains\Reconciliation\Services\ReconciliationService;
 use Illuminate\Console\Command;
 use OwenIt\Auditing\Models\Audit;
 
@@ -25,11 +25,11 @@ class SimaSmokeTest extends Command
 
     public function handle(
         LedgerService $ledger,
-        TrustFundBalanceService $balances,
+        BalanceService $balances,
         ReceiptService $receipts,
         ExpenseService $expenses,
         BankFeeService $bankFees,
-        ReversalService $reversal,
+        ExpenseReversalService $reversal,
         ReconciliationService $reconcile,
     ): int {
         $actor = User::role('admin')->firstOrFail();
@@ -113,7 +113,7 @@ class SimaSmokeTest extends Command
         $this->line("Bank fee {$fee2->fee_number} status={$fee2->status->value} liability_id={$fee2->operational_liability_id}");
 
         // 5) REVERSAL expense -> saldo Zakat kembali
-        $expense = $reversal->reverseExpense($expense, $actor, 'Salah penerima');
+        $expense = $reversal->reverse($expense, $actor, 'Salah penerima');
         $this->line("Reversal expense status={$expense->status->value} -> Saldo Zakat: ".$balances->fundBalance($zakat->id));
 
         // 6) RECONCILIATION (tidak mengubah ledger)

@@ -7,9 +7,8 @@ use App\Http\Requests\BankFee\ReverseBankFeeRequest;
 use App\Http\Requests\BankFee\StoreBankFeeRequest;
 use App\Http\Resources\BankFeeResource;
 use App\Models\BankFee;
-use App\Services\BankFeeService;
+use App\Domains\Expense\Services\BankFeeService;
 use App\Services\IdempotencyService;
-use App\Services\ReversalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,7 +16,6 @@ class BankFeeController extends Controller
 {
     public function __construct(
         private readonly BankFeeService $service,
-        private readonly ReversalService $reversal,
         private readonly IdempotencyService $idempotency,
     ) {}
 
@@ -72,7 +70,7 @@ class BankFeeController extends Controller
     {
         return $this->idempotency->resolve($request, function () use ($request, $bankFee): JsonResponse {
             return (new BankFeeResource(
-                $this->reversal->reverseBankFee($bankFee, $request->user(), $request->validated('reason'))
+                $this->service->reverse($bankFee, $request->user(), $request->validated('reason'))
             ))->response();
         });
     }

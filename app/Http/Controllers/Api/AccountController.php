@@ -8,7 +8,7 @@ use App\Http\Requests\Master\StoreAccountRequest;
 use App\Http\Requests\Master\UpdateAccountRequest;
 use App\Http\Resources\AccountResource;
 use App\Models\Account;
-use App\Services\LedgerService;
+use App\Domains\Ledger\Services\LedgerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

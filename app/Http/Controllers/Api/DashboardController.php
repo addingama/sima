@@ -7,13 +7,13 @@ use App\Enums\ReceiptStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Disbursement;
 use App\Models\Receipt;
-use App\Services\TrustFundBalanceService;
+use App\Domains\Ledger\Services\BalanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function __construct(private readonly TrustFundBalanceService $balances) {}
+    public function __construct(private readonly BalanceService $balances) {}
 
     public function index(): JsonResponse
     {

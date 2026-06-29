@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Domains\Audit\Services\AuditLogService;
+use App\Domains\Reconciliation\Services\ReconciliationService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Reconciliation\AddBankReconciliationLineRequest;
 use App\Http\Requests\Reconciliation\CompleteBankReconciliationRequest;
 use App\Http\Requests\Reconciliation\StoreBankReconciliationRequest;
 use App\Models\BankReconciliation;
-use App\Services\ReconciliationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -19,12 +20,10 @@ class BankReconciliationController extends Controller
     {
         $this->authorize('viewAny', BankReconciliation::class);
 
-        $items = BankReconciliation::query()
-            ->with('account:id,code,name')
-            ->when($request->filled('account_id'), fn ($q) => $q->where('account_id', $request->integer('account_id')))
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->orderByDesc('period_end')
-            ->paginate($request->integer('per_page', 15));
+        $items = $this->service->paginate([
+            'account_id' => $request->filled('account_id') ? $request->integer('account_id') : null,
+            'status' => $request->filled('status') ? $request->string('status')->value() : null,
+        ], $request->integer('per_page', 15));
 
         return response()->json($items);
     }

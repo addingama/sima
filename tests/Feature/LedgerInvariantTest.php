@@ -2,6 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Domains\Expense\Services\ExpenseReversalService;
+use App\Domains\Expense\Services\ExpenseService;
+use App\Domains\Ledger\Services\BalanceService;
+use App\Domains\Ledger\Services\LedgerService;
+use App\Domains\Receipt\Services\ReceiptService;
 use App\Enums\DisbursementStatus;
 use App\Enums\LedgerMovement;
 use App\Enums\ReceiptStatus;
@@ -12,11 +17,6 @@ use App\Models\Account;
 use App\Models\Fund;
 use App\Models\LedgerEntry;
 use App\Models\User;
-use App\Services\ExpenseService;
-use App\Services\LedgerService;
-use App\Services\ReceiptService;
-use App\Services\ReversalService;
-use App\Services\TrustFundBalanceService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -53,7 +53,7 @@ class LedgerInvariantTest extends TestCase
     public function test_receipt_full_flow_posts_ledger_and_balances(): void
     {
         $receipts = app(ReceiptService::class);
-        $balances = app(TrustFundBalanceService::class);
+        $balances = app(BalanceService::class);
 
         $r = $receipts->create([
             'receipt_date' => now()->toDateString(), 'account_id' => $this->account->id,
@@ -95,7 +95,7 @@ class LedgerInvariantTest extends TestCase
     {
         $this->seedOpening('300000.00');
         $expenses = app(ExpenseService::class);
-        $balances = app(TrustFundBalanceService::class);
+        $balances = app(BalanceService::class);
 
         $e = $expenses->create([
             'disbursement_date' => now()->toDateString(), 'account_id' => $this->account->id,
@@ -114,8 +114,8 @@ class LedgerInvariantTest extends TestCase
     {
         $this->seedOpening('300000.00');
         $expenses = app(ExpenseService::class);
-        $reversal = app(ReversalService::class);
-        $balances = app(TrustFundBalanceService::class);
+        $reversal = app(ExpenseReversalService::class);
+        $balances = app(BalanceService::class);
 
         $e = $expenses->create([
             'disbursement_date' => now()->toDateString(), 'account_id' => $this->account->id,
@@ -123,7 +123,7 @@ class LedgerInvariantTest extends TestCase
         ], [['fund_id' => $this->fund->id, 'amount' => '120000.00']], $this->actor);
         $e = $expenses->approve($expenses->verify($expenses->submit($e, $this->actor), $this->actor), $this->actor);
 
-        $e = $reversal->reverseExpense($e, $this->actor, 'salah input');
+        $e = $reversal->reverse($e, $this->actor, 'salah input');
 
         $this->assertSame(DisbursementStatus::REVERSED, $e->status);
         $this->assertSame('300000.00', $balances->fundBalance($this->fund->id));
@@ -133,7 +133,7 @@ class LedgerInvariantTest extends TestCase
     {
         $this->seedOpening('300000.00');
         $receipts = app(ReceiptService::class);
-        $balances = app(TrustFundBalanceService::class);
+        $balances = app(BalanceService::class);
 
         $r = $receipts->create([
             'receipt_date' => now()->toDateString(), 'account_id' => $this->account->id,
