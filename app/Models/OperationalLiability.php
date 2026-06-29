@@ -58,4 +58,14 @@ class OperationalLiability extends Model implements Auditable
     {
         return $this->belongsTo(Disbursement::class, 'settled_disbursement_id');
     }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function voidedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'voided_by');
+    }
 }

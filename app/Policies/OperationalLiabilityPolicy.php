@@ -27,6 +27,19 @@ class OperationalLiabilityPolicy
 
     public function update(User $user, OperationalLiability $operationalLiability): bool
     {
-        return $this->allows($user, 'liability.manage');
+        return $this->allows($user, 'liability.manage')
+            && $operationalLiability->status === 'outstanding';
+    }
+
+    public function settle(User $user, OperationalLiability $operationalLiability): bool
+    {
+        return $this->allows($user, 'liability.manage')
+            && ! in_array($operationalLiability->status, ['settled', 'void'], true);
+    }
+
+    public function void(User $user, OperationalLiability $operationalLiability): bool
+    {
+        return $this->allows($user, 'liability.manage')
+            && $operationalLiability->status !== 'void';
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Requests\BankFee\StoreBankFeeRequest;
 use App\Http\Resources\BankFeeResource;
 use App\Models\BankFee;
 use App\Services\BankFeeService;
+use App\Services\IdempotencyService;
 use App\Services\ReversalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class BankFeeController extends Controller
     public function __construct(
         private readonly BankFeeService $service,
         private readonly ReversalService $reversal,
+        private readonly IdempotencyService $idempotency,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -36,11 +38,13 @@ class BankFeeController extends Controller
 
     public function store(StoreBankFeeRequest $request): JsonResponse
     {
-        $fee = $this->service->create($request->validated(), $request->user());
+        return $this->idempotency->resolve($request, function () use ($request): JsonResponse {
+            $fee = $this->service->create($request->validated(), $request->user());
 
-        return (new BankFeeResource($fee->load('account:id,code,name', 'fund:id,code,name')))
-            ->response()
-            ->setStatusCode(201);
+            return (new BankFeeResource($fee->load('account:id,code,name', 'fund:id,code,name')))
+                ->response()
+                ->setStatusCode(201);
+        });
     }
 
     public function show(BankFee $bankFee): JsonResponse
@@ -59,13 +63,17 @@ class BankFeeController extends Controller
     {
         $this->authorize('post', $bankFee);
 
-        return (new BankFeeResource($this->service->post($bankFee, $request->user())))->response();
+        return $this->idempotency->resolve($request, function () use ($request, $bankFee): JsonResponse {
+            return (new BankFeeResource($this->service->post($bankFee, $request->user())))->response();
+        });
     }
 
     public function reverse(ReverseBankFeeRequest $request, BankFee $bankFee): JsonResponse
     {
-        return (new BankFeeResource(
-            $this->reversal->reverseBankFee($bankFee, $request->user(), $request->validated('reason'))
-        ))->response();
+        return $this->idempotency->resolve($request, function () use ($request, $bankFee): JsonResponse {
+            return (new BankFeeResource(
+                $this->reversal->reverseBankFee($bankFee, $request->user(), $request->validated('reason'))
+            ))->response();
+        });
     }
 }

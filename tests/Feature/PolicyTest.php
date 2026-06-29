@@ -51,7 +51,7 @@ class PolicyTest extends TestCase
         $receipt->allocations()->create([
             'fund_id' => $fund->id,
             'amount' => '100000.00',
-            'status' => 'posted',
+            'status' => 'draft',
             'created_by' => $admin->id,
         ]);
 

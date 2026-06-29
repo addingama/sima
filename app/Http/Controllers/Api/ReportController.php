@@ -120,11 +120,14 @@ class ReportController extends Controller
         $inflow = (clone $query)->where('amount', '>', 0)->sum('amount');
         $outflow = (clone $query)->where('amount', '<', 0)->sum('amount');
 
+        $inflowStr = bcadd((string) $inflow, '0', 2);
+        $outflowStr = bcadd((string) $outflow, '0', 2);
+
         return response()->json([
             'fund' => Fund::find($fundId),
-            'inflow' => (string) $inflow,
-            'outflow' => (string) abs((float) $outflow),
-            'net' => (string) ((float) $inflow + (float) $outflow),
+            'inflow' => $inflowStr,
+            'outflow' => bccomp($outflowStr, '0', 2) === -1 ? bcmul($outflowStr, '-1', 2) : $outflowStr,
+            'net' => bcadd($inflowStr, $outflowStr, 2),
         ]);
     }
 }

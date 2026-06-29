@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\SimaMorphMap;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -15,10 +16,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Response flat (tanpa wrapper `data`) agar kontrak API konsisten dengan paginator Laravel.
+        SimaMorphMap::register();
+
         JsonResource::withoutWrapping();
 
-        // Admin bypass policy (Spatie role admin punya permission '*').
         Gate::before(function ($user, $ability) {
             return $user->hasRole('admin') ? true : null;
         });

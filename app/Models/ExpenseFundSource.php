@@ -4,12 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use OwenIt\Auditing\Auditable as AuditableTrait;
-use OwenIt\Auditing\Contracts\Auditable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ExpenseFundSource extends Model implements Auditable
+class ExpenseFundSource extends Model
 {
-    use AuditableTrait;
+    use SoftDeletes;
 
     protected $fillable = [
         'disbursement_id',

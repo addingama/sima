@@ -7,12 +7,11 @@ use App\Models\Concerns\HasLedgerEntries;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use OwenIt\Auditing\Auditable as AuditableTrait;
-use OwenIt\Auditing\Contracts\Auditable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ReceiptAllocation extends Model implements Auditable
+class ReceiptAllocation extends Model
 {
-    use AuditableTrait, HasFactory, HasLedgerEntries;
+    use HasFactory, HasLedgerEntries, SoftDeletes;
 
     protected $fillable = [
         'receipt_id',

@@ -8,8 +8,7 @@ return new class extends Migration
 {
     /**
      * Alokasi Penerimaan: satu penerimaan dapat dipecah ke beberapa Dana Amanah.
-     * Saat di-post: memindahkan dana dari suspense ke fund tujuan (dalam akun yang sama).
-     * Total alokasi ter-post per receipt tidak boleh melebihi receipts.amount.
+     * Total alokasi WAJIB sama dengan receipts.amount; diposting ke ledger saat penerimaan di-approve.
      */
     public function up(): void
     {
@@ -21,7 +20,7 @@ return new class extends Migration
             $table->decimal('amount', 18, 2);
             $table->text('note')->nullable();
 
-            $table->enum('status', ['posted', 'reversed'])->default('posted');
+            $table->enum('status', ['draft', 'posted', 'reversed'])->default('draft');
 
             $table->timestamp('posted_at')->nullable();
             $table->foreignId('posted_by')->nullable()->constrained('users')->nullOnDelete();

@@ -31,6 +31,12 @@ class BankReconciliationLine extends Model
         return $this->belongsTo(BankReconciliation::class, 'bank_reconciliation_id');
     }
 
+    /** Alias konsisten dengan relasi parent `lines()`. */
+    public function bankReconciliation(): BelongsTo
+    {
+        return $this->reconciliation();
+    }
+
     public function ledgerEntry(): BelongsTo
     {
         return $this->belongsTo(LedgerEntry::class);

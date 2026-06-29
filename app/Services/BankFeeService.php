@@ -32,20 +32,22 @@ class BankFeeService
     /** @param array<string, mixed> $data */
     public function create(array $data, User $actor): BankFee
     {
-        if (empty($data['fund_id'])) {
-            $data['fund_id'] = $this->operationalFund()->id;
-        }
+        return DB::transaction(function () use ($data, $actor): BankFee {
+            if (empty($data['fund_id'])) {
+                $data['fund_id'] = $this->operationalFund()->id;
+            }
 
-        $this->assertFundAllowed((int) $data['fund_id']);
+            $this->assertFundAllowed((int) $data['fund_id']);
 
-        $data['fee_number'] = $data['fee_number'] ?? $this->numbers->next('FEE');
-        $data['status'] = BankFeeStatus::DRAFT->value;
-        $data['created_by'] = $actor->getKey();
+            $data['fee_number'] = $data['fee_number'] ?? $this->numbers->next('FEE');
+            $data['status'] = BankFeeStatus::DRAFT->value;
+            $data['created_by'] = $actor->getKey();
 
-        $fee = BankFee::create($data);
-        $this->audit->log($fee, 'created', null, $fee->toArray(), $actor);
+            $fee = BankFee::create($data);
+            $this->audit->log($fee, 'created', null, $fee->toArray(), $actor);
 
-        return $fee;
+            return $fee;
+        });
     }
 
     /**

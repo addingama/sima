@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\AllocationStatus;
 use App\Enums\ApprovalAction;
 use App\Enums\BankFeeStatus;
 use App\Enums\DisbursementStatus;
@@ -42,6 +43,13 @@ class ReversalService
 
             $receipt->update([
                 'status' => ReceiptStatus::REVERSED->value,
+                'reversed_at' => now(),
+                'reversed_by' => $actor->getKey(),
+                'reversal_reason' => $reason,
+            ]);
+
+            $receipt->allocations()->update([
+                'status' => AllocationStatus::REVERSED->value,
                 'reversed_at' => now(),
                 'reversed_by' => $actor->getKey(),
                 'reversal_reason' => $reason,

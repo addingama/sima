@@ -102,9 +102,11 @@ class ReceiptController extends Controller
 
     public function approve(ApproveReceiptRequest $request, Receipt $receipt): JsonResponse
     {
-        return (new ReceiptResource(
-            $this->service->approve($receipt, $request->user(), $request->validated('notes'))
-        ))->response();
+        return $this->idempotency->resolve($request, function () use ($request, $receipt): JsonResponse {
+            return (new ReceiptResource(
+                $this->service->approve($receipt, $request->user(), $request->validated('notes'))
+            ))->response();
+        });
     }
 
     public function reject(RejectReceiptRequest $request, Receipt $receipt): JsonResponse
@@ -116,8 +118,10 @@ class ReceiptController extends Controller
 
     public function reverse(ReverseReceiptRequest $request, Receipt $receipt): JsonResponse
     {
-        return (new ReceiptResource(
-            $this->reversal->reverseReceipt($receipt, $request->user(), $request->validated('reason'))
-        ))->response();
+        return $this->idempotency->resolve($request, function () use ($request, $receipt): JsonResponse {
+            return (new ReceiptResource(
+                $this->reversal->reverseReceipt($receipt, $request->user(), $request->validated('reason'))
+            ))->response();
+        });
     }
 }

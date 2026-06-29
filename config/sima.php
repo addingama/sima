@@ -81,7 +81,7 @@ return [
         UserRole::KETUA->value => [
             'donor.view', 'fund.view', 'account.view', 'program.view',
             'receipt.view', 'receipt.approve', 'receipt.reject', 'receipt.reverse',
-            'disbursement.view', 'disbursement.approve', 'disbursement.reject',
+            'disbursement.view', 'disbursement.approve', 'disbursement.reject', 'disbursement.reverse',
             'bankfee.view',
             'reconciliation.view',
             'liability.view',
@@ -113,7 +113,7 @@ return [
             'code' => 'SYS-SUSPENSE',
             'name' => 'Dana Belum Dialokasikan (Suspense)',
             'type' => 'unrestricted',
-            'description' => 'Penampung sementara penerimaan sebelum dialokasikan ke Dana Amanah.',
+            'description' => 'Dana sistem legacy/placeholder. Alur penerimaan aktif memposting langsung ke Dana tujuan (inline allocation).',
         ],
         [
             'system_key' => 'operational',

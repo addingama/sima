@@ -10,9 +10,9 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DisbursementController;
 use App\Http\Controllers\Api\DonorController;
 use App\Http\Controllers\Api\FundController;
+use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\OperationalLiabilityController;
 use App\Http\Controllers\Api\PortalController;
-use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\ReceiptController;
 use App\Http\Controllers\Api\ReportController;
@@ -36,8 +36,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('me', [AuthController::class, 'me']);
     Route::post('logout', [AuthController::class, 'logout']);
 
-    // Dashboard
-    Route::get('dashboard', [DashboardController::class, 'index']);
+    // Dashboard (staff only — bukan portal donatur)
+    Route::get('dashboard', [DashboardController::class, 'index'])->middleware('permission:report.view');
 
     /*
     |----------------------------------------------------------------------

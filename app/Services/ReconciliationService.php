@@ -129,28 +129,30 @@ class ReconciliationService
 
     public function complete(BankReconciliation $reconciliation, User $actor): BankReconciliation
     {
-        $periodEnd = $reconciliation->period_end->toDateString();
-        $systemBalance = $this->systemBalanceAsOf($reconciliation->account_id, $periodEnd);
-        $difference = bcsub((string) $reconciliation->statement_balance, $systemBalance, 2);
-        $reconciling = $this->deferredBankFeeItems($reconciliation->account_id, $periodEnd);
-        $adjustedDifference = $this->adjustedDifference($difference, $reconciling['total']);
+        return DB::transaction(function () use ($reconciliation, $actor): BankReconciliation {
+            $periodEnd = $reconciliation->period_end->toDateString();
+            $systemBalance = $this->systemBalanceAsOf($reconciliation->account_id, $periodEnd);
+            $difference = bcsub((string) $reconciliation->statement_balance, $systemBalance, 2);
+            $reconciling = $this->deferredBankFeeItems($reconciliation->account_id, $periodEnd);
+            $adjustedDifference = $this->adjustedDifference($difference, $reconciling['total']);
 
-        $reconciliation->update([
-            'system_balance' => $systemBalance,
-            'difference' => $difference,
-            'status' => 'completed',
-            'reconciled_at' => now(),
-            'reconciled_by' => $actor->getKey(),
-            'notes' => $this->appendReconcilingNotes($reconciliation->notes, $reconciling, $adjustedDifference),
-        ]);
+            $reconciliation->update([
+                'system_balance' => $systemBalance,
+                'difference' => $difference,
+                'status' => 'completed',
+                'reconciled_at' => now(),
+                'reconciled_by' => $actor->getKey(),
+                'notes' => $this->appendReconcilingNotes($reconciliation->notes, $reconciling, $adjustedDifference),
+            ]);
 
-        $this->audit->log($reconciliation, 'completed', null, [
-            'system_balance' => $systemBalance,
-            'difference' => $difference,
-            'reconciling_items' => $reconciling['items'],
-            'adjusted_difference' => $adjustedDifference,
-        ], $actor);
+            $this->audit->log($reconciliation, 'completed', null, [
+                'system_balance' => $systemBalance,
+                'difference' => $difference,
+                'reconciling_items' => $reconciling['items'],
+                'adjusted_difference' => $adjustedDifference,
+            ], $actor);
 
-        return $reconciliation->refresh();
+            return $reconciliation->refresh();
+        });
     }
 }

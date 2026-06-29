@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\ReceiptStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Portal\PortalDonorResource;
+use App\Http\Resources\Portal\PortalReceiptResource;
 use App\Models\Receipt;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Portal Donatur — donatur hanya dapat melihat data miliknya sendiri:
- * riwayat donasi dan ke Dana Amanah mana donasinya dialokasikan.
+ * Portal Donatur — donatur hanya dapat melihat data miliknya sendiri.
  */
 class PortalController extends Controller
 {
@@ -20,7 +21,7 @@ class PortalController extends Controller
 
         abort_if($donor === null, 404, 'Akun ini belum tertaut dengan data donatur.');
 
-        return response()->json($donor);
+        return (new PortalDonorResource($donor))->response();
     }
 
     public function donations(Request $request): JsonResponse
@@ -40,7 +41,7 @@ class PortalController extends Controller
             ->orderByDesc('receipt_date')
             ->paginate($request->integer('per_page', 15));
 
-        return response()->json($receipts);
+        return PortalReceiptResource::collection($receipts)->response();
     }
 
     public function summary(Request $request): JsonResponse
@@ -54,8 +55,8 @@ class PortalController extends Controller
             ->sum('amount');
 
         return response()->json([
-            'donor' => $donor->only(['id', 'code', 'name']),
-            'total_donasi' => (string) $total,
+            'donor' => (new PortalDonorResource($donor))->resolve(),
+            'total_donasi' => bcadd((string) $total, '0', 2),
             'jumlah_transaksi' => Receipt::where('donor_id', $donor->id)
                 ->where('status', ReceiptStatus::APPROVED->value)->count(),
         ]);

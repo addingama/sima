@@ -35,12 +35,14 @@ Setiap baris `ledger_entries` mencatat pergerakan uang pada **dua dimensi sekali
 Aliran uang:
 
 ```
-Penerimaan (post)      :  Akun + , Dana SUSPENSE +
-Alokasi (post)         :  Dana SUSPENSE − , Dana Tujuan +     (akun tetap)
-Pengeluaran (approve)  :  Akun − , Dana Tujuan −              (1 leg per sumber dana)
+Penerimaan (approve)   :  Akun + , Dana Tujuan +   (1 leg per alokasi; alokasi inline saat draft)
+Pengeluaran (approve)  :  Akun − , Dana Tujuan −   (1 leg per sumber dana)
 Biaya Bank (post)      :  Akun − , Dana (admin) −
 Reversal               :  negasi seluruh leg transaksi sumber
 ```
+
+Catatan: alokasi penerimaan **menyatu** dengan penerimaan (bukan modul terpisah via Dana SUSPENSE).
+Dana `SYS-SUSPENSE` tetap ada untuk kebutuhan sistem/legacy; alur aktif tidak memposting ke suspense.
 
 ---
 
@@ -101,10 +103,10 @@ Reversal               :  negasi seluruh leg transaksi sumber
 
 ### Status transaksi
 
-- Penerimaan: `draft → posted → reversed`
-- Alokasi: `posted → reversed`
+- Penerimaan: `draft → submitted → approved(=post ke ledger) → reversed` (atau `rejected`)
+- Alokasi: disimpan inline dengan penerimaan; diposting bersamaan saat penerimaan di-approve
 - Pengeluaran: `draft → submitted → verified → approved(=post ke ledger) → reversed` (atau `rejected`)
-- Biaya Bank: `draft → posted → reversed`
+- Biaya Bank: `draft → posted/deferred → reversed`
 
 ### Role
 
@@ -139,22 +141,17 @@ Daftar permission & pemetaan role ada di `config/sima.php`.
 > Bagian ini menjaga sinkronisasi antara aturan & kode nyata. Perbarui saat ada perubahan.
 
 **Sudah ada (backend):**
-- Migration: `donors`, `funds`, `accounts`, `programs`, `receipts`, `receipt_allocations`,
-  `disbursements`, `expense_fund_sources`, `bank_fees`, `ledger_entries`, `approvals`,
-  `attachments`, `operational_liabilities`, `bank_reconciliations`, `bank_reconciliation_lines`,
-  `document_sequences`, `audit_logs`.
-- Service layer: `LedgerService`, `ReceiptService`, `AllocationService`, `DisbursementService`,
-  `BankFeeService`, `DocumentNumberService`.
-- API + RBAC + audit + immutability ledger (trigger DB + guard model) sudah berjalan & terverifikasi.
+- Migration: master data, transaksi finansial, `ledger_entries`, materialized balances
+  (`account_balances`, `fund_balances`), `idempotency_keys`, `audit_logs`, dll.
+- Service layer: `LedgerService`, `TrustFundBalanceService`, `ReceiptService`, `ExpenseService`,
+  `BankFeeService`, `ReversalService`, `ReconciliationService`, `OperationalLiabilityService`,
+  `ApprovalService`, `AuditLogService`, `IdempotencyService`, `DocumentNumberService`.
+- API + RBAC + Policy record-level + Form Request/Resource (modul finansial & master data).
+- Saldo materialized + locking (P0), idempotency claim (race-safe), CI/tests, Docker.
 
-**Catatan / perbedaan dengan daftar di atas yang perlu diputuskan:**
-- **Audit library**: stack menyebut *Spatie Activity Log*, tetapi implementasi saat ini memakai
-  **`owen-it/laravel-auditing`** (tabel `audit_logs`, mencatat old/new values per model). Keduanya valid;
-  pertahankan owen-it kecuali diminta migrasi ke Spatie Activity Log secara eksplisit.
-- **Modul Vendor**: tercantum sebagai core module namun **belum** ada tabel/model/endpoint-nya.
-  Tambahkan saat dibutuhkan (master `vendors`, relasi opsional ke `disbursements`/`bank_fees`).
-- **Validasi**: saat ini sebagian besar memakai inline `$request->validate()` + service guard,
-  belum semuanya dipindah ke Form Request. **API Resource** juga belum dipakai (response Eloquent langsung).
-  Saat menambah/merefaktor endpoint, arahkan ke Form Request + API Resource sesuai Backend Rules.
+**Catatan:**
+- **Audit**: master data memakai owen-it; aksi workflow finansial memakai `AuditLogService` + `ApprovalService`.
+- **Modul Vendor**: belum ada — tambahkan saat dibutuhkan.
+- **User management API**: permission `user.manage` ada, endpoint belum dibuat.
 
 **Belum dibuat:** seluruh frontend (sesuai UI Rules).

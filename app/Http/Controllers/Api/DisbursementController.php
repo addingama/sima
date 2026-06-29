@@ -100,9 +100,11 @@ class DisbursementController extends Controller
 
     public function approve(ApproveDisbursementRequest $request, Disbursement $disbursement): JsonResponse
     {
-        return (new DisbursementResource(
-            $this->service->approve($disbursement, $request->user(), $request->validated('notes'))
-        ))->response();
+        return $this->idempotency->resolve($request, function () use ($request, $disbursement): JsonResponse {
+            return (new DisbursementResource(
+                $this->service->approve($disbursement, $request->user(), $request->validated('notes'))
+            ))->response();
+        });
     }
 
     public function reject(RejectDisbursementRequest $request, Disbursement $disbursement): JsonResponse
@@ -114,8 +116,10 @@ class DisbursementController extends Controller
 
     public function reverse(ReverseDisbursementRequest $request, Disbursement $disbursement): JsonResponse
     {
-        return (new DisbursementResource(
-            $this->reversal->reverseExpense($disbursement, $request->user(), $request->validated('reason'))
-        ))->response();
+        return $this->idempotency->resolve($request, function () use ($request, $disbursement): JsonResponse {
+            return (new DisbursementResource(
+                $this->reversal->reverseExpense($disbursement, $request->user(), $request->validated('reason'))
+            ))->response();
+        });
     }
 }

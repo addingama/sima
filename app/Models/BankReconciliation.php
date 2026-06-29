@@ -48,4 +48,14 @@ class BankReconciliation extends Model implements Auditable
     {
         return $this->hasMany(BankReconciliationLine::class);
     }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function reconciledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reconciled_by');
+    }
 }

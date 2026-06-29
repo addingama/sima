@@ -42,6 +42,7 @@ class AttachmentController extends Controller
     public function store(StoreAttachmentRequest $request): JsonResponse
     {
         $model = $this->resolve($request->attachableType(), $request->attachableId());
+        $this->authorize('view', $model);
         $this->authorize('create', Attachment::class);
 
         $file = $request->file('file');

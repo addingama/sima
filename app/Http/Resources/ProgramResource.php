@@ -14,8 +14,20 @@ class ProgramResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'fund_id' => $this->fund_id,
             'code' => $this->code,
             'name' => $this->name,
+            'description' => $this->description,
+            'budget' => $this->budget,
+            'start_date' => $this->start_date,
+            'end_date' => $this->end_date,
+            'status' => $this->status,
+            'is_active' => $this->is_active,
+            'created_by' => $this->created_by,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'deleted_at' => $this->deleted_at,
+            'fund' => FundResource::make($this->whenLoaded('fund')),
         ];
     }
 }

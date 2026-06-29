@@ -8,12 +8,10 @@ use App\Models\Concerns\HasLedgerEntries;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use OwenIt\Auditing\Auditable as AuditableTrait;
-use OwenIt\Auditing\Contracts\Auditable;
 
-class BankFee extends Model implements Auditable
+class BankFee extends Model
 {
-    use AuditableTrait, HasAttachments, HasFactory, HasLedgerEntries;
+    use HasAttachments, HasFactory, HasLedgerEntries;
 
     protected $fillable = [
         'fee_number',
@@ -57,5 +55,15 @@ class BankFee extends Model implements Auditable
     public function operationalLiability(): BelongsTo
     {
         return $this->belongsTo(OperationalLiability::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function postedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'posted_by');
     }
 }

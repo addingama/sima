@@ -84,14 +84,16 @@ class ExpenseService
         $this->assertStatus($expense, [DisbursementStatus::DRAFT]);
         $this->assertFundsAvailable($expense);
 
-        $expense->update([
-            'status' => DisbursementStatus::SUBMITTED->value,
-            'submitted_at' => now(),
-            'submitted_by' => $actor->getKey(),
-        ]);
-        $this->approvals->record($expense, ApprovalAction::SUBMITTED, $actor);
+        return DB::transaction(function () use ($expense, $actor): Disbursement {
+            $expense->update([
+                'status' => DisbursementStatus::SUBMITTED->value,
+                'submitted_at' => now(),
+                'submitted_by' => $actor->getKey(),
+            ]);
+            $this->approvals->record($expense, ApprovalAction::SUBMITTED, $actor);
 
-        return $expense->refresh();
+            return $expense->refresh();
+        });
     }
 
     public function verify(Disbursement $expense, User $actor, ?string $notes = null): Disbursement
@@ -99,14 +101,16 @@ class ExpenseService
         $this->assertStatus($expense, [DisbursementStatus::SUBMITTED]);
         $this->assertFundsAvailable($expense);
 
-        $expense->update([
-            'status' => DisbursementStatus::VERIFIED->value,
-            'verified_at' => now(),
-            'verified_by' => $actor->getKey(),
-        ]);
-        $this->approvals->record($expense, ApprovalAction::VERIFIED, $actor, $notes);
+        return DB::transaction(function () use ($expense, $actor, $notes): Disbursement {
+            $expense->update([
+                'status' => DisbursementStatus::VERIFIED->value,
+                'verified_at' => now(),
+                'verified_by' => $actor->getKey(),
+            ]);
+            $this->approvals->record($expense, ApprovalAction::VERIFIED, $actor, $notes);
 
-        return $expense->refresh();
+            return $expense->refresh();
+        });
     }
 
     /** Persetujuan final (Ketua) — memposting ledger (satu leg per sumber dana). */
@@ -146,15 +150,17 @@ class ExpenseService
     {
         $this->assertStatus($expense, [DisbursementStatus::SUBMITTED, DisbursementStatus::VERIFIED]);
 
-        $expense->update([
-            'status' => DisbursementStatus::REJECTED->value,
-            'rejected_at' => now(),
-            'rejected_by' => $actor->getKey(),
-            'rejection_reason' => $reason,
-        ]);
-        $this->approvals->record($expense, ApprovalAction::REJECTED, $actor, $reason);
+        return DB::transaction(function () use ($expense, $actor, $reason): Disbursement {
+            $expense->update([
+                'status' => DisbursementStatus::REJECTED->value,
+                'rejected_at' => now(),
+                'rejected_by' => $actor->getKey(),
+                'rejection_reason' => $reason,
+            ]);
+            $this->approvals->record($expense, ApprovalAction::REJECTED, $actor, $reason);
 
-        return $expense->refresh();
+            return $expense->refresh();
+        });
     }
 
     /** @param array<int, array<string, mixed>> $sources */

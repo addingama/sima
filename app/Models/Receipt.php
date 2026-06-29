@@ -11,12 +11,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use OwenIt\Auditing\Auditable as AuditableTrait;
-use OwenIt\Auditing\Contracts\Auditable;
 
-class Receipt extends Model implements Auditable
+class Receipt extends Model
 {
-    use AuditableTrait, HasApprovals, HasAttachments, HasFactory, HasLedgerEntries;
+    use HasApprovals, HasAttachments, HasFactory, HasLedgerEntries;
 
     protected $fillable = [
         'receipt_number',
@@ -76,11 +74,34 @@ class Receipt extends Model implements Auditable
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    /** Total nominal yang sudah dialokasikan (status posted). */
+    public function submittedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'submitted_by');
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejectedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    public function reversedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reversed_by');
+    }
+
+    /** Total nominal alokasi aktif (draft atau sudah posted). */
     public function allocatedAmount(): string
     {
         return (string) $this->allocations()
-            ->where('status', AllocationStatus::POSTED->value)
+            ->whereIn('status', [
+                AllocationStatus::DRAFT->value,
+                AllocationStatus::POSTED->value,
+            ])
             ->sum('amount');
     }
 

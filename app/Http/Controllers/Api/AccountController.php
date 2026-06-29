@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Master\StoreAccountRequest;
+use App\Http\Requests\Master\UpdateAccountRequest;
+use App\Http\Resources\AccountResource;
 use App\Models\Account;
 use App\Services\LedgerService;
 use Illuminate\Http\JsonResponse;
@@ -16,6 +19,8 @@ class AccountController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Account::class);
+
         $accounts = Account::query()
             ->leftJoin('account_balances', 'account_balances.account_id', '=', 'accounts.id')
             ->select('accounts.*', DB::raw('COALESCE(account_balances.balance, 0) as balance'))
@@ -26,53 +31,41 @@ class AccountController extends Controller
             ->orderBy('accounts.name')
             ->paginate($request->integer('per_page', 15));
 
-        return response()->json($accounts);
+        return AccountResource::collection($accounts)->response();
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreAccountRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'code' => ['required', 'string', 'max:50', 'unique:accounts,code'],
-            'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'in:cash,bank'],
-            'bank_name' => ['nullable', 'string', 'max:255'],
-            'account_number' => ['nullable', 'string', 'max:100'],
-            'account_holder' => ['nullable', 'string', 'max:255'],
-            'is_active' => ['boolean'],
+        $account = Account::create([
+            ...$request->validated(),
+            'created_by' => $request->user()->id,
         ]);
-        $data['created_by'] = $request->user()->id;
 
-        $account = Account::create($data);
-
-        return response()->json($account, 201);
+        return (new AccountResource($account))
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function show(Account $account): JsonResponse
     {
-        $account->balance = $this->ledger->balanceForAccount($account->id);
+        $this->authorize('view', $account);
 
-        return response()->json($account);
+        $account->setAttribute('balance', $this->ledger->balanceForAccount($account->id));
+
+        return (new AccountResource($account))->response();
     }
 
-    public function update(Request $request, Account $account): JsonResponse
+    public function update(UpdateAccountRequest $request, Account $account): JsonResponse
     {
-        $data = $request->validate([
-            'code' => ['sometimes', 'string', 'max:50', 'unique:accounts,code,'.$account->id],
-            'name' => ['sometimes', 'string', 'max:255'],
-            'type' => ['sometimes', 'in:cash,bank'],
-            'bank_name' => ['nullable', 'string', 'max:255'],
-            'account_number' => ['nullable', 'string', 'max:100'],
-            'account_holder' => ['nullable', 'string', 'max:255'],
-            'is_active' => ['boolean'],
-        ]);
+        $account->update($request->validated());
 
-        $account->update($data);
-
-        return response()->json($account);
+        return (new AccountResource($account))->response();
     }
 
     public function destroy(Account $account): JsonResponse
     {
+        $this->authorize('delete', $account);
+
         if (bccomp($this->ledger->balanceForAccount($account->id), '0', 2) !== 0) {
             throw new DomainException('Akun dengan saldo tidak nol tidak dapat dihapus.');
         }

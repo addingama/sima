@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\AllocationStatus;
 use App\Enums\ApprovalAction;
 use App\Enums\LedgerType;
 use App\Enums\ReceiptStatus;
@@ -45,7 +46,7 @@ class ReceiptService
                 'created_by' => $actor->getKey(),
             ]);
 
-            $this->syncAllocations($receipt, $allocations);
+            $this->syncAllocations($receipt, $allocations, $actor);
             $this->audit->log($receipt, 'created', null, $receipt->toArray(), $actor);
 
             return $receipt->load('allocations');
@@ -67,7 +68,7 @@ class ReceiptService
             if ($allocations !== null) {
                 $this->assertAllocationsMatch((string) $receipt->amount, $allocations);
                 $receipt->allocations()->delete();
-                $this->syncAllocations($receipt, $allocations);
+                $this->syncAllocations($receipt, $allocations, $actor);
             }
 
             $this->audit->log($receipt, 'updated', $before, $receipt->fresh()->toArray(), $actor);
@@ -85,14 +86,16 @@ class ReceiptService
         }
         $this->assertAllocationsMatchExisting($receipt);
 
-        $receipt->update([
-            'status' => ReceiptStatus::SUBMITTED->value,
-            'submitted_at' => now(),
-            'submitted_by' => $actor->getKey(),
-        ]);
-        $this->approvals->record($receipt, ApprovalAction::SUBMITTED, $actor);
+        return DB::transaction(function () use ($receipt, $actor): Receipt {
+            $receipt->update([
+                'status' => ReceiptStatus::SUBMITTED->value,
+                'submitted_at' => now(),
+                'submitted_by' => $actor->getKey(),
+            ]);
+            $this->approvals->record($receipt, ApprovalAction::SUBMITTED, $actor);
 
-        return $receipt->refresh();
+            return $receipt->refresh();
+        });
     }
 
     /** Persetujuan final — memposting ledger per alokasi. */
@@ -116,6 +119,7 @@ class ReceiptService
             $this->ledger->post($legs, $actor);
 
             $receipt->allocations()->update([
+                'status' => AllocationStatus::POSTED->value,
                 'posted_at' => now(),
                 'posted_by' => $actor->getKey(),
             ]);
@@ -138,19 +142,21 @@ class ReceiptService
     {
         $this->assertStatus($receipt, [ReceiptStatus::SUBMITTED]);
 
-        $receipt->update([
-            'status' => ReceiptStatus::REJECTED->value,
-            'rejected_at' => now(),
-            'rejected_by' => $actor->getKey(),
-            'rejection_reason' => $reason,
-        ]);
-        $this->approvals->record($receipt, ApprovalAction::REJECTED, $actor, $reason);
+        return DB::transaction(function () use ($receipt, $actor, $reason): Receipt {
+            $receipt->update([
+                'status' => ReceiptStatus::REJECTED->value,
+                'rejected_at' => now(),
+                'rejected_by' => $actor->getKey(),
+                'rejection_reason' => $reason,
+            ]);
+            $this->approvals->record($receipt, ApprovalAction::REJECTED, $actor, $reason);
 
-        return $receipt->refresh();
+            return $receipt->refresh();
+        });
     }
 
     /** @param array<int, array<string, mixed>> $allocations */
-    private function syncAllocations(Receipt $receipt, array $allocations): void
+    private function syncAllocations(Receipt $receipt, array $allocations, User $actor): void
     {
         foreach ($allocations as $a) {
             $receipt->allocations()->create([
@@ -158,8 +164,8 @@ class ReceiptService
                 'program_id' => $a['program_id'] ?? null,
                 'amount' => bcadd((string) $a['amount'], '0', 2),
                 'note' => $a['note'] ?? null,
-                'status' => 'posted',
-                'created_by' => $receipt->created_by,
+                'status' => AllocationStatus::DRAFT->value,
+                'created_by' => $actor->getKey(),
             ]);
         }
     }

@@ -44,4 +44,9 @@ class Donor extends Model implements Auditable
     {
         return $this->hasMany(Receipt::class);
     }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }

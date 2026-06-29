@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Auditable as AuditableTrait;
@@ -36,7 +37,22 @@ class Account extends Model implements Auditable
         return $this->hasMany(LedgerEntry::class);
     }
 
-    /** Saldo kas/bank = SUM(ledger_entries.amount) untuk akun ini (sumber kebenaran). */
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(Receipt::class);
+    }
+
+    public function disbursements(): HasMany
+    {
+        return $this->hasMany(Disbursement::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** @deprecated Gunakan LedgerService::balanceForAccount() */
     public function balance(): string
     {
         return (string) ($this->ledgerEntries()->sum('amount') ?? 0);

@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Master\StoreProgramRequest;
+use App\Http\Requests\Master\UpdateProgramRequest;
+use App\Http\Resources\ProgramResource;
 use App\Models\Program;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,6 +14,8 @@ class ProgramController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Program::class);
+
         $programs = Program::query()
             ->with('fund:id,code,name')
             ->when($request->filled('q'), fn ($q) => $q->where('name', 'like', '%'.$request->string('q').'%')
@@ -20,55 +25,39 @@ class ProgramController extends Controller
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 15));
 
-        return response()->json($programs);
+        return ProgramResource::collection($programs)->response();
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreProgramRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'fund_id' => ['nullable', 'exists:funds,id'],
-            'code' => ['required', 'string', 'max:50', 'unique:programs,code'],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'budget' => ['nullable', 'numeric', 'min:0'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-            'status' => ['nullable', 'in:planned,active,closed'],
-            'is_active' => ['boolean'],
+        $program = Program::create([
+            ...$request->validated(),
+            'created_by' => $request->user()->id,
         ]);
-        $data['created_by'] = $request->user()->id;
 
-        $program = Program::create($data);
-
-        return response()->json($program->load('fund:id,code,name'), 201);
+        return (new ProgramResource($program->load('fund:id,code,name')))
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function show(Program $program): JsonResponse
     {
-        return response()->json($program->load('fund:id,code,name'));
+        $this->authorize('view', $program);
+
+        return (new ProgramResource($program->load('fund:id,code,name')))->response();
     }
 
-    public function update(Request $request, Program $program): JsonResponse
+    public function update(UpdateProgramRequest $request, Program $program): JsonResponse
     {
-        $data = $request->validate([
-            'fund_id' => ['nullable', 'exists:funds,id'],
-            'code' => ['sometimes', 'string', 'max:50', 'unique:programs,code,'.$program->id],
-            'name' => ['sometimes', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'budget' => ['nullable', 'numeric', 'min:0'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-            'status' => ['nullable', 'in:planned,active,closed'],
-            'is_active' => ['boolean'],
-        ]);
+        $program->update($request->validated());
 
-        $program->update($data);
-
-        return response()->json($program->load('fund:id,code,name'));
+        return (new ProgramResource($program->load('fund:id,code,name')))->response();
     }
 
     public function destroy(Program $program): JsonResponse
     {
+        $this->authorize('delete', $program);
+
         $program->delete();
 
         return response()->json(['message' => 'Program dinonaktifkan (soft delete).']);

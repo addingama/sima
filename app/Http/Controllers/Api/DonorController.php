@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Master\StoreDonorRequest;
+use App\Http\Requests\Master\UpdateDonorRequest;
+use App\Http\Resources\DonorResource;
 use App\Models\Donor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,6 +14,8 @@ class DonorController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Donor::class);
+
         $donors = Donor::query()
             ->when($request->filled('q'), fn ($q) => $q->where(function ($w) use ($request) {
                 $term = '%'.$request->string('q').'%';
@@ -22,55 +27,39 @@ class DonorController extends Controller
             ->orderBy('name')
             ->paginate($request->integer('per_page', 15));
 
-        return response()->json($donors);
+        return DonorResource::collection($donors)->response();
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreDonorRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'code' => ['required', 'string', 'max:50', 'unique:donors,code'],
-            'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'in:individu,lembaga'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'identity_number' => ['nullable', 'string', 'max:100'],
-            'address' => ['nullable', 'string'],
-            'notes' => ['nullable', 'string'],
-            'is_active' => ['boolean'],
+        $donor = Donor::create([
+            ...$request->validated(),
+            'created_by' => $request->user()->id,
         ]);
-        $data['created_by'] = $request->user()->id;
 
-        $donor = Donor::create($data);
-
-        return response()->json($donor, 201);
+        return (new DonorResource($donor))
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function show(Donor $donor): JsonResponse
     {
-        return response()->json($donor);
+        $this->authorize('view', $donor);
+
+        return (new DonorResource($donor))->response();
     }
 
-    public function update(Request $request, Donor $donor): JsonResponse
+    public function update(UpdateDonorRequest $request, Donor $donor): JsonResponse
     {
-        $data = $request->validate([
-            'code' => ['sometimes', 'string', 'max:50', 'unique:donors,code,'.$donor->id],
-            'name' => ['sometimes', 'string', 'max:255'],
-            'type' => ['sometimes', 'in:individu,lembaga'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'identity_number' => ['nullable', 'string', 'max:100'],
-            'address' => ['nullable', 'string'],
-            'notes' => ['nullable', 'string'],
-            'is_active' => ['boolean'],
-        ]);
+        $donor->update($request->validated());
 
-        $donor->update($data);
-
-        return response()->json($donor);
+        return (new DonorResource($donor))->response();
     }
 
     public function destroy(Donor $donor): JsonResponse
     {
+        $this->authorize('delete', $donor);
+
         $donor->delete();
 
         return response()->json(['message' => 'Donatur dinonaktifkan (soft delete).']);
