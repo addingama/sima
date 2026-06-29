@@ -7,6 +7,7 @@ use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 use OpenApi\Attributes as OA;
 
 /** Health check untuk load balancer / monitoring (tanpa auth). */
@@ -34,6 +35,15 @@ class HealthController extends Controller
             $checks['cache'] = 'ok';
         } catch (\Throwable) {
             $checks['cache'] = 'fail';
+        }
+
+        if (config('cache.default') === 'redis' || config('queue.default') === 'redis') {
+            try {
+                Redis::connection()->ping();
+                $checks['redis'] = 'ok';
+            } catch (\Throwable) {
+                $checks['redis'] = 'fail';
+            }
         }
 
         $healthy = ! in_array('fail', $checks, true);

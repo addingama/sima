@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  quality:
-    name: Lint & Test
+  backend:
+    name: Backend — Lint & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -23,7 +23,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
-          extensions: bcmath, pdo_sqlite, intl, zip
+          extensions: bcmath, pdo_sqlite, intl, zip, redis
           coverage: none
 
       - name: Get composer cache directory
@@ -53,16 +53,52 @@ jobs:
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ":memory:"
-        run: php artisan test --testsuite=Feature
+        run: php artisan test
 
-  docker:
-    name: Docker build
+  frontend:
+    name: Frontend — Lint & Build
     runs-on: ubuntu-latest
-    needs: quality
+
+    defaults:
+      run:
+        working-directory: frontend
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build production image
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run check
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_API_URL: /api
+        run: npm run build
+
+  docker:
+    name: Docker — Production images
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build API image
         run: docker build --target production -t sima-api:ci .
+
+      - name: Build worker image
+        run: docker build --target worker -t sima-worker:ci .
+
+      - name: Build frontend image
+        run: docker build -t sima-frontend:ci ./frontend

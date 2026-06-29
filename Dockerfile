@@ -1,6 +1,8 @@
 # SIMA — Laravel 11 API (PHP 8.2 FPM)
-# Target dev:  docker compose build app
-# Target prod: docker build --target production -t sima-api .
+# Targets:
+#   dev        — docker compose build app
+#   production — PHP-FPM API (docker-compose.prod.yml)
+#   worker     — Supervisor: queue + scheduler
 
 FROM php:8.2-fpm-alpine AS base
 
@@ -13,6 +15,7 @@ RUN apk add --no-cache \
         libpng-dev \
         mysql-client \
         bash \
+        curl \
         $PHPIZE_DEPS \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
@@ -29,6 +32,11 @@ RUN apk add --no-cache \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
+
+COPY docker/scripts/entrypoint.sh /usr/local/bin/sima-entrypoint
+RUN chmod +x /usr/local/bin/sima-entrypoint
+
+ENTRYPOINT ["/usr/local/bin/sima-entrypoint"]
 
 # ------------------------------------------------------------------ dev target
 FROM base AS dev
@@ -49,9 +57,22 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
 COPY . .
 RUN composer dump-autoload --optimize \
     && php artisan package:discover --ansi \
+    && mkdir -p storage/app/public storage/backups storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
 USER www-data
 
 EXPOSE 9000
-CMD ["php-fpm"]
+CMD ["php-fpm", "-F"]
+
+# ------------------------------------------------------------------ worker (Supervisor)
+FROM production AS worker
+
+USER root
+
+RUN apk add --no-cache supervisor \
+    && mkdir -p /var/log/supervisor
+
+COPY docker/supervisor/supervisord.conf /etc/supervisord.conf
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]

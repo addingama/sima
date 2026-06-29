@@ -1,10 +1,58 @@
 # SIMA — Sistem Informasi Manajemen Amanah
 
-Backend untuk lembaga sosial yang mencatat dan mengelola **dana titipan/dana amanah**, memastikan setiap uang yang masuk hanya dapat dikeluarkan sesuai niat awal donatur.
+Backend + frontend untuk lembaga sosial yang mencatat dan mengelola **dana titipan/dana amanah**, memastikan setiap uang yang masuk hanya dapat dikeluarkan sesuai niat awal donatur.
 
-Stack: **Laravel 11**, **MySQL/MariaDB**, **Laravel Sanctum** (auth API token), RBAC via **spatie/laravel-permission**, audit trail via **owen-it/laravel-auditing**.
+| Stack | Teknologi |
+|-------|-----------|
+| Backend | Laravel 11, PHP 8.2, MySQL 8, Redis |
+| Frontend | Next.js, TypeScript, shadcn/ui, TanStack Table |
+| Auth | Laravel Sanctum + RBAC (Spatie Permission) |
+| Audit | owen-it/laravel-auditing |
 
-> Fokus repo tahap ini: desain database yang benar & aman untuk audit + API backend. **Belum** ada UI.
+## Dokumentasi operasional
+
+| Dokumen | Isi |
+|---------|-----|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Diagram arsitektur & aliran data |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deploy produksi (Docker, TLS, backup) |
+| [docs/CODING_STANDARDS.md](docs/CODING_STANDARDS.md) | Standar kode backend & frontend |
+| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Alur kontribusi & PR checklist |
+
+## Quick start
+
+### Development (Docker)
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+docker compose exec app composer install
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate --seed
+```
+
+- API: http://localhost:8080/api  
+- Frontend: `cd frontend && npm install && npm run dev` → http://localhost:3000
+
+### Production
+
+```bash
+cp .env.production.example .env
+# edit APP_KEY, passwords, domain
+make prod-up
+curl -s http://localhost/api/health | jq
+```
+
+Detail lengkap: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+
+### Makefile
+
+```bash
+make dev-up      # stack development
+make prod-up     # stack production
+make test        # PHPUnit
+make backup      # sima:backup-db
+make health      # GET /api/health
+```
 
 ---
 
@@ -252,6 +300,33 @@ curl -X POST http://127.0.0.1:8000/api/receipts \
 ```
 
 Error domain & saldo dikembalikan sebagai **HTTP 422** dengan body `{ message, error }`.
+
+### Health check
+
+```bash
+GET /api/health
+```
+
+Tanpa auth. Mengecek database, cache, dan Redis (jika dipakai). HTTP 503 bila degraded.
+
+---
+
+## Infrastruktur produksi
+
+| Komponen | File / lokasi |
+|----------|----------------|
+| Docker multi-stage | `Dockerfile` (targets: `dev`, `production`, `worker`) |
+| Frontend image | `frontend/Dockerfile` |
+| Compose dev | `docker-compose.yml` |
+| Compose prod | `docker-compose.prod.yml` |
+| NGINX dev / prod | `docker/nginx/default.conf`, `docker/nginx/production.conf` |
+| Supervisor (queue + scheduler) | `docker/supervisor/supervisord.conf` |
+| Entrypoint | `docker/scripts/entrypoint.sh` |
+| Env produksi | `.env.production.example` |
+| CI | `.github/workflows/ci.yml` |
+| Deploy | `.github/workflows/deploy.yml` |
+| Backup terjadwal | `.github/workflows/backup.yml` + `sima:backup-db` |
+| Scheduler | `routes/console.php` |
 
 ---
 

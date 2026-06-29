@@ -1,0 +1,91 @@
+name: Backup
+
+on:
+  schedule:
+    # 01:30 WIB ≈ 18:30 UTC (adjust for DST if needed)
+    - cron: "30 18 * * *"
+  workflow_dispatch:
+    inputs:
+      retain_days:
+        description: Days to retain local backup copies on server
+        required: false
+        default: "14"
+        type: string
+
+jobs:
+  backup-remote:
+    name: Database backup (production server)
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Run backup on server
+        if: ${{ secrets.DEPLOY_HOST != '' && secrets.DEPLOY_SSH_KEY != '' }}
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+            docker compose -f docker-compose.prod.yml exec -T app php artisan sima:backup-db
+            find storage/backups -name "*.sql.gz" -mtime +${{ inputs.retain_days || '14' }} -delete
+
+      - name: Backup skipped
+        if: ${{ secrets.DEPLOY_HOST == '' || secrets.DEPLOY_SSH_KEY == '' }}
+        run: |
+          echo "::warning::Configure DEPLOY_* secrets or run backup manually: make backup"
+
+  backup-artifact:
+    name: Backup artifact (CI smoke)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: sima
+          MYSQL_USER: sima
+          MYSQL_PASSWORD: sima_secret
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: bcmath, pdo_mysql, intl, zip
+
+      - name: Install & migrate
+        run: |
+          composer install --no-interaction --prefer-dist
+          cp .env.example .env
+          php artisan key:generate
+          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/' .env
+          php artisan migrate --force
+
+      - name: Run backup command
+        env:
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: sima
+          DB_USERNAME: sima
+          DB_PASSWORD: sima_secret
+        run: php artisan sima:backup-db
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sima-db-backup-smoke
+          path: storage/backups/*.sql.gz
+          retention-days: 7
