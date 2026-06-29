@@ -21,6 +21,7 @@ use App\Enums\TransactionType;
 use App\Models\Disbursement;
 use App\Models\User;
 use App\Services\DocumentNumberService;
+use App\Support\Query\ListQueryDto;
 use Illuminate\Support\Facades\DB;
 
 class ExpenseService
@@ -32,10 +33,26 @@ class ExpenseService
         private readonly DocumentNumberService $numbers,
     ) {}
 
-    /** @param array<string, mixed> $filters */
-    public function paginate(array $filters, int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function paginate(ListQueryDto $query): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return $this->repository->paginate($filters, $perPage);
+        return $this->repository->paginate($query);
+    }
+
+    public function findForShow(Disbursement $disbursement): Disbursement
+    {
+        return $disbursement->load([
+            'account:id,code,name',
+            'program:id,code,name',
+            'fundSources.fund:id,code,name',
+            'fundSources.program:id,code,name',
+            'approvals.actor:id,name',
+            'attachments',
+        ]);
+    }
+
+    public function loadWithSources(Disbursement $disbursement): Disbursement
+    {
+        return $disbursement->load('fundSources.fund', 'fundSources.program');
     }
 
     /**

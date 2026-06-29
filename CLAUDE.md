@@ -152,6 +152,14 @@ Daftar permission & pemetaan role ada di `config/sima.php`.
 - API + RBAC + Policy record-level + Form Request/Resource (modul finansial & master data).
 - Idempotency claim (race-safe), CI/tests, Docker.
 
+**REST API (standar respons):**
+- Envelope JSON: `success`, `message`, `data`, `meta`, `errors`.
+- Controller tipis → Service → Repository; Form Request + Policy + API Resource wajib.
+- List endpoint: pagination offset (`page`, `per_page`), filter, sort (`sort`, `direction`), search (`q`).
+- Audit list: cursor pagination (`cursor`) via `AuditQueryService`.
+- OpenAPI: anotasi di controller (`app/Http/Controllers/Api/`), generate via `php artisan l5-swagger:generate`.
+- Swagger UI: `/api/documentation` | Postman: `docs/postman/SIMA-API.postman_collection.json`.
+
 **Catatan:**
 - **Audit**: master data memakai owen-it; aksi workflow finansial memakai Audit domain (event-driven).
 - **Modul Vendor**: belum ada — tambahkan saat dibutuhkan.

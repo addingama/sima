@@ -29,6 +29,16 @@ class BankFeeService
         private readonly BankFeeValidator $validator,
     ) {}
 
+    public function findForShow(BankFee $fee): BankFee
+    {
+        return $fee->load([
+            'account:id,code,name',
+            'fund:id,code,name',
+            'operationalLiability',
+            'attachments',
+        ]);
+    }
+
     /** @param array<string, mixed> $data */
     public function create(array $data, User $actor): BankFee
     {

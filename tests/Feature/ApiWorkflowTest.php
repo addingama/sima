@@ -53,7 +53,7 @@ class ApiWorkflowTest extends TestCase
             'channel' => 'transfer',
             'amount' => '500000.00',
             'allocations' => [['fund_id' => $this->fund->id, 'amount' => '500000.00']],
-        ])->assertStatus(201)->assertJsonPath('status', 'draft');
+        ])->assertStatus(201)->assertJsonPath('data.status', 'draft');
     }
 
     public function test_verifikator_cannot_create_receipt(): void
@@ -79,7 +79,7 @@ class ApiWorkflowTest extends TestCase
             'channel' => 'transfer',
             'amount' => '500000.00',
             'allocations' => [['fund_id' => $this->fund->id, 'amount' => '400000.00']],
-        ])->assertStatus(422)->assertJsonPath('error', 'domain_rule_violation');
+        ])->assertStatus(422)->assertJsonPath('errors.code', 'domain_rule_violation');
     }
 
     public function test_receipt_approval_flow_over_http(): void
@@ -92,19 +92,19 @@ class ApiWorkflowTest extends TestCase
             'amount' => '500000.00',
             'allocations' => [['fund_id' => $this->fund->id, 'amount' => '500000.00']],
         ])->assertStatus(201);
-        $id = $create->json('id');
+        $id = $create->json('data.id');
 
-        $this->postJson("/api/receipts/{$id}/submit")->assertStatus(200)->assertJsonPath('status', 'submitted');
+        $this->postJson("/api/receipts/{$id}/submit")->assertStatus(200)->assertJsonPath('data.status', 'submitted');
 
         // Bendahara tidak boleh approve.
         $this->postJson("/api/receipts/{$id}/approve")->assertStatus(403);
 
         // Ketua approve.
         Sanctum::actingAs($this->userWithRole('ketua'));
-        $this->postJson("/api/receipts/{$id}/approve")->assertStatus(200)->assertJsonPath('status', 'approved');
+        $this->postJson("/api/receipts/{$id}/approve")->assertStatus(200)->assertJsonPath('data.status', 'approved');
 
         // Saldo dana bertambah.
         Sanctum::actingAs($this->userWithRole('admin'));
-        $this->getJson("/api/funds/{$this->fund->id}")->assertStatus(200)->assertJsonPath('balance', '500000.00');
+        $this->getJson("/api/funds/{$this->fund->id}")->assertStatus(200)->assertJsonPath('data.balance', '500000.00');
     }
 }

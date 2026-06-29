@@ -2,63 +2,55 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\ReceiptStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Portal\ListPortalDonationRequest;
 use App\Http\Resources\Portal\PortalDonorResource;
 use App\Http\Resources\Portal\PortalReceiptResource;
-use App\Models\Receipt;
+use App\Services\Portal\PortalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use OpenApi\Attributes as OA;
 
-/**
- * Portal Donatur — donatur hanya dapat melihat data miliknya sendiri.
- */
+/** Portal Donatur — donatur hanya dapat melihat data miliknya sendiri. */
 class PortalController extends Controller
 {
+    public function __construct(private readonly PortalService $service) {}
+
+    #[OA\Get(
+        path: '/portal/profile',
+        summary: 'Profil donatur portal',
+        tags: ['Portal'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function profile(Request $request): JsonResponse
     {
-        $donor = $request->user()->donor;
-
-        abort_if($donor === null, 404, 'Akun ini belum tertaut dengan data donatur.');
-
-        return (new PortalDonorResource($donor))->response();
+        return $this->resource(new PortalDonorResource($this->service->profile($request->user())));
     }
 
-    public function donations(Request $request): JsonResponse
+    #[OA\Get(
+        path: '/portal/donations',
+        summary: 'Riwayat donasi donatur',
+        tags: ['Portal'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
+    public function donations(ListPortalDonationRequest $request): JsonResponse
     {
-        $donor = $request->user()->donor;
-
-        abort_if($donor === null, 404, 'Akun ini belum tertaut dengan data donatur.');
-
-        $receipts = Receipt::query()
-            ->where('donor_id', $donor->id)
-            ->where('status', ReceiptStatus::APPROVED->value)
-            ->with([
-                'account:id,code,name',
-                'allocations.fund:id,code,name',
-                'allocations.program:id,code,name',
-            ])
-            ->orderByDesc('receipt_date')
-            ->paginate($request->integer('per_page', 15));
-
-        return PortalReceiptResource::collection($receipts)->response();
+        return $this->collection(PortalReceiptResource::collection(
+            $this->service->donations($request->user(), $request->listQuery())
+        ));
     }
 
+    #[OA\Get(
+        path: '/portal/summary',
+        summary: 'Ringkasan donasi donatur',
+        tags: ['Portal'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function summary(Request $request): JsonResponse
     {
-        $donor = $request->user()->donor;
-
-        abort_if($donor === null, 404, 'Akun ini belum tertaut dengan data donatur.');
-
-        $total = Receipt::where('donor_id', $donor->id)
-            ->where('status', ReceiptStatus::APPROVED->value)
-            ->sum('amount');
-
-        return response()->json([
-            'donor' => (new PortalDonorResource($donor))->resolve(),
-            'total_donasi' => bcadd((string) $total, '0', 2),
-            'jumlah_transaksi' => Receipt::where('donor_id', $donor->id)
-                ->where('status', ReceiptStatus::APPROVED->value)->count(),
-        ]);
+        return $this->ok($this->service->summary($request->user()));
     }
 }

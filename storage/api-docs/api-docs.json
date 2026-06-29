@@ -1,0 +1,1975 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "SIMA API",
+        "description": "Sistem Informasi Manajemen Amanah — REST API",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "API base path"
+        }
+    ],
+    "paths": {
+        "/accounts": {
+            "get": {
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Daftar akun kas/bank",
+                "operationId": "96daed062b209799ebd8c7e84dc97aed",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Buat akun kas/bank",
+                "operationId": "b3234b57f04a5c23b5d70ac83678df8c",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/accounts/{account}": {
+            "get": {
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Detail akun kas/bank",
+                "operationId": "fa80b13ea2ab503138c7faf25fcf984f",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Ubah akun kas/bank",
+                "operationId": "e5a4f19af009092c65acd1e4232c8f5b",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Nonaktifkan akun kas/bank",
+                "operationId": "0fcbfcc738e1e05609659d9a2bdde35d",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/attachments": {
+            "get": {
+                "tags": [
+                    "Attachment"
+                ],
+                "summary": "Daftar lampiran",
+                "operationId": "b5a27a67ec05dc2fb0f76c40e348e529",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Attachment"
+                ],
+                "summary": "Unggah lampiran",
+                "operationId": "5685c13f391a59a7e8ac0114b0c0130c",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/attachments/{attachment}/download": {
+            "get": {
+                "tags": [
+                    "Attachment"
+                ],
+                "summary": "Unduh lampiran",
+                "operationId": "d4c1160abd27e2b8ee8c6140f4cbbc42",
+                "responses": {
+                    "200": {
+                        "description": "File stream"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/attachments/{attachment}": {
+            "delete": {
+                "tags": [
+                    "Attachment"
+                ],
+                "summary": "Hapus lampiran",
+                "operationId": "dd1cf9e7079b3f23f356fa1ece5852dd",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/audits": {
+            "get": {
+                "tags": [
+                    "Audit"
+                ],
+                "summary": "Daftar audit trail",
+                "operationId": "194a055698c38ffe50c8013ead50d35d",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/audits/{audit}": {
+            "get": {
+                "tags": [
+                    "Audit"
+                ],
+                "summary": "Detail audit trail",
+                "operationId": "7b1d3da95a8f7c91e1d3a1d4f8bf9d82",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login dan dapatkan token Sanctum",
+                "operationId": "67d6d0fdd54fba132e1b6f55ca254183",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/me": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Profil pengguna saat ini",
+                "operationId": "bc2032a379aa97707ccc61511897c120",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout (hapus token saat ini)",
+                "operationId": "28d48c13fca984400ac8de99f54ee13a",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bank-fees": {
+            "get": {
+                "tags": [
+                    "BankFee"
+                ],
+                "summary": "Daftar biaya bank",
+                "operationId": "159bdcb6fc415d281a13fe22e45db173",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "BankFee"
+                ],
+                "summary": "Buat biaya bank",
+                "operationId": "db7d4f183b24d956720e0714b9ba1536",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bank-fees/{bankFee}": {
+            "get": {
+                "tags": [
+                    "BankFee"
+                ],
+                "summary": "Detail biaya bank",
+                "operationId": "c6173e5aed3c58556de715c8e33be1c4",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bank-fees/{bankFee}/post": {
+            "post": {
+                "tags": [
+                    "BankFee"
+                ],
+                "summary": "Post biaya bank ke ledger",
+                "operationId": "4e7a00cf8e3955066c6ef7db6cc2f439",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bank-fees/{bankFee}/reverse": {
+            "post": {
+                "tags": [
+                    "BankFee"
+                ],
+                "summary": "Batalkan biaya bank (reversal)",
+                "operationId": "8a1765ac08f1ce39ebefd4b0b08885ea",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bank-reconciliations": {
+            "get": {
+                "tags": [
+                    "BankReconciliation"
+                ],
+                "summary": "Daftar rekonsiliasi bank",
+                "operationId": "eafe465a2d30228afd7024bbf2b0e0c8",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "BankReconciliation"
+                ],
+                "summary": "Buat rekonsiliasi bank",
+                "operationId": "d335a81446e017abe027445f582205e6",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bank-reconciliations/{bankReconciliation}": {
+            "get": {
+                "tags": [
+                    "BankReconciliation"
+                ],
+                "summary": "Detail rekonsiliasi bank",
+                "operationId": "ae350e130df6e782a7d1510984f656ae",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bank-reconciliations/{bankReconciliation}/lines": {
+            "post": {
+                "tags": [
+                    "BankReconciliation"
+                ],
+                "summary": "Tambah baris rekonsiliasi",
+                "operationId": "37093dbc326bab0a64e20515e680baa7",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bank-reconciliations/{bankReconciliation}/complete": {
+            "post": {
+                "tags": [
+                    "BankReconciliation"
+                ],
+                "summary": "Selesaikan rekonsiliasi bank",
+                "operationId": "15600444c3674d0ec9d43d190cebe7d9",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/dashboard": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Ringkasan dashboard",
+                "operationId": "faae45987996934eda46ad27a6f61dea",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/disbursements": {
+            "get": {
+                "tags": [
+                    "Disbursement"
+                ],
+                "summary": "Daftar pengeluaran",
+                "operationId": "c61be00723d483db05795b010efb6cca",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Disbursement"
+                ],
+                "summary": "Buat pengeluaran",
+                "operationId": "aacf3fbf13ed50ec2f8a46ac2c461591",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/disbursements/{disbursement}": {
+            "get": {
+                "tags": [
+                    "Disbursement"
+                ],
+                "summary": "Detail pengeluaran",
+                "operationId": "5617815aaa1ae96483e5488daf899ed5",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Disbursement"
+                ],
+                "summary": "Ubah pengeluaran",
+                "operationId": "d13bfc02d39680a1f76ac5c0198faa72",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/disbursements/{disbursement}/submit": {
+            "post": {
+                "tags": [
+                    "Disbursement"
+                ],
+                "summary": "Ajukan pengeluaran",
+                "operationId": "3dc0ee73af0b1ed319e970ebfa76156d",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/disbursements/{disbursement}/verify": {
+            "post": {
+                "tags": [
+                    "Disbursement"
+                ],
+                "summary": "Verifikasi pengeluaran",
+                "operationId": "7f681f5acebb0327e66d0e5fbaed29b9",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/disbursements/{disbursement}/approve": {
+            "post": {
+                "tags": [
+                    "Disbursement"
+                ],
+                "summary": "Setujui pengeluaran",
+                "operationId": "c969c045bf6604c198f17606f90fdfc5",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/disbursements/{disbursement}/reject": {
+            "post": {
+                "tags": [
+                    "Disbursement"
+                ],
+                "summary": "Tolak pengeluaran",
+                "operationId": "97dd73dcb6507e2946ce9926f5c4f4ce",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/disbursements/{disbursement}/reverse": {
+            "post": {
+                "tags": [
+                    "Disbursement"
+                ],
+                "summary": "Batalkan pengeluaran (reversal)",
+                "operationId": "f07213bbdca23d30ece0f7490fe13af2",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/donors": {
+            "get": {
+                "tags": [
+                    "Donor"
+                ],
+                "summary": "Daftar donatur",
+                "operationId": "7eb0c80c4f72fef169943174f8dad7f2",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Donor"
+                ],
+                "summary": "Buat donatur",
+                "operationId": "ad5be05b4c6cfc693ae8d307e1b71aed",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/donors/{donor}": {
+            "get": {
+                "tags": [
+                    "Donor"
+                ],
+                "summary": "Detail donatur",
+                "operationId": "e99f2e44b16cf7b58d81851467484a56",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Donor"
+                ],
+                "summary": "Ubah donatur",
+                "operationId": "bf52bd237aecc9c06add36c3890cec45",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Donor"
+                ],
+                "summary": "Nonaktifkan donatur",
+                "operationId": "701b429970400d7bbd3dac51893e5fcf",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/funds": {
+            "get": {
+                "tags": [
+                    "Fund"
+                ],
+                "summary": "Daftar Dana Amanah",
+                "operationId": "4e73112f97cfd8c2725db81844efc260",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Fund"
+                ],
+                "summary": "Buat Dana Amanah",
+                "operationId": "b436b6ad3a866e8d102f4fa77e7f1f5c",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/funds/{fund}": {
+            "get": {
+                "tags": [
+                    "Fund"
+                ],
+                "summary": "Detail Dana Amanah",
+                "operationId": "dd24c61693d0dc922bb7d59813e7e70e",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Fund"
+                ],
+                "summary": "Ubah Dana Amanah",
+                "operationId": "f2910652142d058dd4d5995de451aefd",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Fund"
+                ],
+                "summary": "Nonaktifkan Dana Amanah",
+                "operationId": "7c4d7e0ceba03b01426f9a7efb2c5db3",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/health": {
+            "get": {
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "operationId": "f01348cd43f5a168b9969a9386b92dae",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/liabilities": {
+            "get": {
+                "tags": [
+                    "OperationalLiability"
+                ],
+                "summary": "Daftar kewajiban operasional",
+                "operationId": "6fa4c464b4efa52191b47b867d7caeee",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "OperationalLiability"
+                ],
+                "summary": "Buat kewajiban operasional",
+                "operationId": "f89deccee5dc9abf56ae3e730541766d",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/liabilities/{operationalLiability}": {
+            "get": {
+                "tags": [
+                    "OperationalLiability"
+                ],
+                "summary": "Detail kewajiban operasional",
+                "operationId": "974a78f7d0960a59793458d80b78524d",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "OperationalLiability"
+                ],
+                "summary": "Ubah kewajiban operasional",
+                "operationId": "ec939ef4af2dea7abafcd286e3ee7c9f",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/liabilities/{operationalLiability}/settle": {
+            "post": {
+                "tags": [
+                    "OperationalLiability"
+                ],
+                "summary": "Selesaikan kewajiban operasional",
+                "operationId": "cbeca161bddcea7fbf863fd61d39a646",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/liabilities/{operationalLiability}/void": {
+            "post": {
+                "tags": [
+                    "OperationalLiability"
+                ],
+                "summary": "Batalkan kewajiban operasional",
+                "operationId": "1e4998ab63e6c4f6dd45eafb49a44bd3",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/portal/profile": {
+            "get": {
+                "tags": [
+                    "Portal"
+                ],
+                "summary": "Profil donatur portal",
+                "operationId": "5610ea91f53a85bc0a2deffbdc360988",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/portal/donations": {
+            "get": {
+                "tags": [
+                    "Portal"
+                ],
+                "summary": "Riwayat donasi donatur",
+                "operationId": "fd4114c3fdab4c76e324552ae5c1ba0a",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/portal/summary": {
+            "get": {
+                "tags": [
+                    "Portal"
+                ],
+                "summary": "Ringkasan donasi donatur",
+                "operationId": "87dc4400f41b06f6071169f0a993c809",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/programs": {
+            "get": {
+                "tags": [
+                    "Program"
+                ],
+                "summary": "Daftar program",
+                "operationId": "6f677f7a6f2a1759d1134cd8a19c0115",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Program"
+                ],
+                "summary": "Buat program",
+                "operationId": "d89a30ece5239884ced56411f95ec746",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/programs/{program}": {
+            "get": {
+                "tags": [
+                    "Program"
+                ],
+                "summary": "Detail program",
+                "operationId": "e65e8baa7293e99b9fcf9df101ac4894",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Program"
+                ],
+                "summary": "Ubah program",
+                "operationId": "a8117558534caf0fbfca4595b902eaa3",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Program"
+                ],
+                "summary": "Nonaktifkan program",
+                "operationId": "83a8615270c4737e79711c4d7f680bc2",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/receipts": {
+            "get": {
+                "tags": [
+                    "Receipt"
+                ],
+                "summary": "Daftar penerimaan",
+                "operationId": "a1ff83d4f4f968545a9c6fe1cf38a209",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Receipt"
+                ],
+                "summary": "Buat penerimaan",
+                "operationId": "c0cd5e123efe0ee9b8ed0f8acc4c6189",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/receipts/{receipt}": {
+            "get": {
+                "tags": [
+                    "Receipt"
+                ],
+                "summary": "Detail penerimaan",
+                "operationId": "6d0ddaf82a433151a73aff181bedbf02",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Receipt"
+                ],
+                "summary": "Ubah penerimaan",
+                "operationId": "c7c2473f7f0ff593259f3c93218eb546",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/receipts/{receipt}/allocations": {
+            "get": {
+                "tags": [
+                    "Receipt"
+                ],
+                "summary": "Alokasi penerimaan",
+                "operationId": "2c96495cb7e72ac336b5cf4695df308b",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/receipts/{receipt}/submit": {
+            "post": {
+                "tags": [
+                    "Receipt"
+                ],
+                "summary": "Ajukan penerimaan",
+                "operationId": "476cd3757e66a52aa396d479ca8a38e3",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/receipts/{receipt}/approve": {
+            "post": {
+                "tags": [
+                    "Receipt"
+                ],
+                "summary": "Setujui penerimaan",
+                "operationId": "107c7853ae3baa6e023698d44df18e76",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/receipts/{receipt}/reject": {
+            "post": {
+                "tags": [
+                    "Receipt"
+                ],
+                "summary": "Tolak penerimaan",
+                "operationId": "0373b9fb69a6520f404e7d2837e5f641",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/receipts/{receipt}/reverse": {
+            "post": {
+                "tags": [
+                    "Receipt"
+                ],
+                "summary": "Batalkan penerimaan (reversal)",
+                "operationId": "44464afdb42fe4ea825a61d6ffc128dd",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/reports/fund-balances": {
+            "get": {
+                "tags": [
+                    "Report"
+                ],
+                "summary": "Saldo seluruh Dana Amanah",
+                "operationId": "3419387b1b61e9ffcff02f73c5418707",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/reports/account-balances": {
+            "get": {
+                "tags": [
+                    "Report"
+                ],
+                "summary": "Saldo seluruh kas/bank",
+                "operationId": "48941d9a2921539e0c50dd0a3435a64e",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/reports/ledger": {
+            "get": {
+                "tags": [
+                    "Report"
+                ],
+                "summary": "Buku besar (ledger)",
+                "operationId": "ba0c690f5aa3af6f17086e3c0120312c",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/reports/reconciliation-summary": {
+            "get": {
+                "tags": [
+                    "Report"
+                ],
+                "summary": "Rekonsiliasi global Amanah",
+                "operationId": "06ce0261046213b6c5972eaae4adb98f",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/reports/fund-statement": {
+            "get": {
+                "tags": [
+                    "Report"
+                ],
+                "summary": "Mutasi per Dana Amanah",
+                "operationId": "8c3df663928f5825c9600f6de7a91b79",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiEnvelope"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ApiEnvelope": {
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "message": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "data": {
+                        "nullable": true
+                    },
+                    "meta": {
+                        "nullable": true
+                    },
+                    "errors": {
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaginationMeta": {
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "example": "offset"
+                    },
+                    "current_page": {
+                        "type": "integer"
+                    },
+                    "per_page": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "last_page": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "sanctum": {
+                "type": "http",
+                "description": "Token dari POST /api/login",
+                "bearerFormat": "Sanctum Token",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Account",
+            "description": "Account"
+        },
+        {
+            "name": "Attachment",
+            "description": "Attachment"
+        },
+        {
+            "name": "Audit",
+            "description": "Audit"
+        },
+        {
+            "name": "Auth",
+            "description": "Auth"
+        },
+        {
+            "name": "BankFee",
+            "description": "BankFee"
+        },
+        {
+            "name": "BankReconciliation",
+            "description": "BankReconciliation"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Dashboard"
+        },
+        {
+            "name": "Disbursement",
+            "description": "Disbursement"
+        },
+        {
+            "name": "Donor",
+            "description": "Donor"
+        },
+        {
+            "name": "Fund",
+            "description": "Fund"
+        },
+        {
+            "name": "Health",
+            "description": "Health"
+        },
+        {
+            "name": "OperationalLiability",
+            "description": "OperationalLiability"
+        },
+        {
+            "name": "Portal",
+            "description": "Portal"
+        },
+        {
+            "name": "Program",
+            "description": "Program"
+        },
+        {
+            "name": "Receipt",
+            "description": "Receipt"
+        },
+        {
+            "name": "Report",
+            "description": "Report"
+        }
+    ]
+}

@@ -5,23 +5,28 @@ namespace App\Domains\Expense\Repositories;
 use App\Enums\DisbursementStatus;
 use App\Models\Disbursement;
 use App\Models\User;
+use App\Support\Query\ListQueryApplier;
+use App\Support\Query\ListQueryDto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ExpenseRepository
 {
-    /** @param array<string, mixed> $filters */
-    public function paginate(array $filters, int $perPage = 15): LengthAwarePaginator
+    public function paginate(ListQueryDto $query): LengthAwarePaginator
     {
-        return Disbursement::query()
-            ->with(['account:id,code,name', 'program:id,code,name', 'fundSources.fund:id,code,name'])
-            ->when(isset($filters['status']), fn ($q) => $q->where('status', $filters['status']))
-            ->when(isset($filters['fund_id']), fn ($q) => $q->whereHas('fundSources', fn ($s) => $s->where('fund_id', $filters['fund_id'])))
-            ->when(isset($filters['program_id']), fn ($q) => $q->where('program_id', $filters['program_id']))
-            ->when(isset($filters['from']), fn ($q) => $q->whereDate('disbursement_date', '>=', $filters['from']))
-            ->when(isset($filters['to']), fn ($q) => $q->whereDate('disbursement_date', '<=', $filters['to']))
-            ->orderByDesc('disbursement_date')
-            ->orderByDesc('id')
-            ->paginate($perPage);
+        $builder = ListQueryApplier::apply(
+            Disbursement::query()->with(['account:id,code,name', 'program:id,code,name', 'fundSources.fund:id,code,name']),
+            $query,
+            searchColumns: ['disbursement_number', 'payee', 'description'],
+            sortable: ['disbursement_date', 'disbursement_number', 'amount', 'created_at'],
+            defaultSort: 'disbursement_date',
+            filterCallbacks: [
+                'fund_id' => fn ($q, $v) => $q->whereHas('fundSources', fn ($s) => $s->where('fund_id', $v)),
+                'from' => fn ($q, $v) => $q->whereDate('disbursement_date', '>=', $v),
+                'to' => fn ($q, $v) => $q->whereDate('disbursement_date', '<=', $v),
+            ],
+        );
+
+        return $builder->paginate($query->perPage, ['*'], 'page', $query->page);
     }
 
     /** @param array<string, mixed> $data */

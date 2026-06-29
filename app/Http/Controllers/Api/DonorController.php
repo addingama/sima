@@ -3,65 +3,86 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Master\ListDonorRequest;
 use App\Http\Requests\Master\StoreDonorRequest;
 use App\Http\Requests\Master\UpdateDonorRequest;
 use App\Http\Resources\DonorResource;
 use App\Models\Donor;
+use App\Services\Master\DonorService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use OpenApi\Attributes as OA;
 
 class DonorController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function __construct(private readonly DonorService $service) {}
+
+    #[OA\Get(
+        path: '/donors',
+        summary: 'Daftar donatur',
+        tags: ['Donor'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
+    public function index(ListDonorRequest $request): JsonResponse
     {
         $this->authorize('viewAny', Donor::class);
 
-        $donors = Donor::query()
-            ->when($request->filled('q'), fn ($q) => $q->where(function ($w) use ($request) {
-                $term = '%'.$request->string('q').'%';
-                $w->where('name', 'like', $term)
-                    ->orWhere('code', 'like', $term)
-                    ->orWhere('email', 'like', $term);
-            }))
-            ->when($request->filled('is_active'), fn ($q) => $q->where('is_active', $request->boolean('is_active')))
-            ->orderBy('name')
-            ->paginate($request->integer('per_page', 15));
-
-        return DonorResource::collection($donors)->response();
+        return $this->collection(DonorResource::collection($this->service->paginate($request->listQuery())));
     }
 
+    #[OA\Post(
+        path: '/donors',
+        summary: 'Buat donatur',
+        tags: ['Donor'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function store(StoreDonorRequest $request): JsonResponse
     {
-        $donor = Donor::create([
-            ...$request->validated(),
-            'created_by' => $request->user()->id,
-        ]);
+        $donor = $this->service->create($request->validated(), $request->user());
 
-        return (new DonorResource($donor))
-            ->response()
-            ->setStatusCode(201);
+        return $this->created(new DonorResource($donor));
     }
 
+    #[OA\Get(
+        path: '/donors/{donor}',
+        summary: 'Detail donatur',
+        tags: ['Donor'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function show(Donor $donor): JsonResponse
     {
         $this->authorize('view', $donor);
 
-        return (new DonorResource($donor))->response();
+        return $this->resource(new DonorResource($donor));
     }
 
+    #[OA\Put(
+        path: '/donors/{donor}',
+        summary: 'Ubah donatur',
+        tags: ['Donor'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function update(UpdateDonorRequest $request, Donor $donor): JsonResponse
     {
-        $donor->update($request->validated());
-
-        return (new DonorResource($donor))->response();
+        return $this->resource(new DonorResource($this->service->update($donor, $request->validated())));
     }
 
+    #[OA\Delete(
+        path: '/donors/{donor}',
+        summary: 'Nonaktifkan donatur',
+        tags: ['Donor'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function destroy(Donor $donor): JsonResponse
     {
         $this->authorize('delete', $donor);
 
-        $donor->delete();
+        $this->service->delete($donor);
 
-        return response()->json(['message' => 'Donatur dinonaktifkan (soft delete).']);
+        return $this->message('Donatur dinonaktifkan (soft delete).');
     }
 }

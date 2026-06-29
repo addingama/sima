@@ -14,6 +14,7 @@ use App\Models\BankFee;
 use App\Models\BankReconciliation;
 use App\Models\BankReconciliationLine;
 use App\Models\User;
+use App\Support\Query\ListQueryDto;
 use Illuminate\Support\Facades\DB;
 
 class ReconciliationService
@@ -25,9 +26,31 @@ class ReconciliationService
     ) {}
 
     /** @param array<string, mixed> $filters */
-    public function paginate(array $filters, int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function paginate(ListQueryDto $query): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return $this->repository->paginate($filters, $perPage);
+        return $this->repository->paginate($query);
+    }
+
+    public function showDetail(BankReconciliation $reconciliation): BankReconciliation
+    {
+        $reconciliation->load([
+            'account:id,code,name',
+            'lines.ledgerEntry:id,transaction_type,debit,credit,reference,created_at',
+        ]);
+
+        $reconciling = $this->deferredBankFeeItems(
+            $reconciliation->account_id,
+            $reconciliation->period_end->toDateString()
+        );
+
+        $reconciliation->setAttribute('reconciling_items', $reconciling['items']);
+        $reconciliation->setAttribute('reconciling_total', $reconciling['total']);
+        $reconciliation->setAttribute(
+            'adjusted_difference',
+            $this->adjustedDifference((string) $reconciliation->difference, $reconciling['total'])
+        );
+
+        return $reconciliation;
     }
 
     public function systemBalanceAsOf(int $accountId, string $asOfDate): string

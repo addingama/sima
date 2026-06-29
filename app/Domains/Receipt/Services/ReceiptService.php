@@ -20,6 +20,7 @@ use App\Enums\TransactionType;
 use App\Models\Receipt;
 use App\Models\User;
 use App\Services\DocumentNumberService;
+use App\Support\Query\ListQueryDto;
 use Illuminate\Support\Facades\DB;
 
 class ReceiptService
@@ -31,10 +32,32 @@ class ReceiptService
         private readonly DocumentNumberService $numbers,
     ) {}
 
-    /** @param array<string, mixed> $filters */
-    public function paginate(array $filters, int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function paginate(ListQueryDto $query): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return $this->repository->paginate($filters, $perPage);
+        return $this->repository->paginate($query);
+    }
+
+    public function findForShow(Receipt $receipt): Receipt
+    {
+        return $receipt->load([
+            'account:id,code,name',
+            'donor:id,code,name',
+            'allocations.fund:id,code,name',
+            'allocations.program:id,code,name',
+            'approvals.actor:id,name',
+            'attachments',
+        ]);
+    }
+
+    /** @return \Illuminate\Support\Collection<int, \App\Models\ReceiptAllocation> */
+    public function allocationsFor(Receipt $receipt): \Illuminate\Support\Collection
+    {
+        return $receipt->allocations()->with(['fund:id,code,name', 'program:id,code,name'])->get();
+    }
+
+    public function loadWithAllocations(Receipt $receipt): Receipt
+    {
+        return $receipt->load('allocations.fund', 'allocations.program');
     }
 
     /**

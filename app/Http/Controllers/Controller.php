@@ -7,4 +7,5 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 abstract class Controller
 {
     use AuthorizesRequests;
+    use \App\Http\Controllers\Concerns\RespondsWithJson;
 }

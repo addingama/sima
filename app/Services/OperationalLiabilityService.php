@@ -7,6 +7,9 @@ use App\Exceptions\DomainException;
 use App\Models\Disbursement;
 use App\Models\OperationalLiability;
 use App\Models\User;
+use App\Support\Query\ListQueryApplier;
+use App\Support\Query\ListQueryDto;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,6 +22,23 @@ class OperationalLiabilityService
         private readonly DocumentNumberService $numbers,
         private readonly AuditLogService $audit,
     ) {}
+
+    public function paginate(ListQueryDto $query): LengthAwarePaginator
+    {
+        $builder = ListQueryApplier::apply(
+            OperationalLiability::query()->with(['fund:id,code,name', 'program:id,code,name']),
+            $query,
+            searchColumns: ['liability_number', 'creditor', 'description'],
+            sortable: ['liability_date', 'liability_number', 'amount', 'created_at'],
+            defaultSort: 'liability_date',
+            filterCallbacks: [
+                'from' => fn ($q, $v) => $q->whereDate('liability_date', '>=', $v),
+                'to' => fn ($q, $v) => $q->whereDate('liability_date', '<=', $v),
+            ],
+        );
+
+        return $builder->paginate($query->perPage, ['*'], 'page', $query->page);
+    }
 
     /** @param array<string, mixed> $data */
     public function create(array $data, User $actor): OperationalLiability
@@ -106,5 +126,15 @@ class OperationalLiabilityService
 
             return $liability->refresh();
         });
+    }
+
+    public function findForShow(OperationalLiability $liability): OperationalLiability
+    {
+        return $liability->load([
+            'fund:id,code,name',
+            'program:id,code,name',
+            'settledDisbursement',
+            'attachments',
+        ]);
     }
 }

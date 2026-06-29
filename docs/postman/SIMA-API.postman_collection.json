@@ -1,0 +1,232 @@
+{
+  "info": {
+    "name": "SIMA API",
+    "description": "Sistem Informasi Manajemen Amanah — REST API collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "http://localhost:8000/api"},
+    {"key": "token", "value": ""}
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {"type": "noauth"},
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('token', json.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "noauth"},
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@sima.test\",\n  \"password\": \"password\",\n  \"device_name\": \"postman\"\n}"
+            },
+            "url": "{{baseUrl}}/login"
+          }
+        },
+        {
+          "name": "Me",
+          "request": {"method": "GET", "url": "{{baseUrl}}/me"}
+        },
+        {
+          "name": "Logout",
+          "request": {"method": "POST", "url": "{{baseUrl}}/logout"}
+        }
+      ]
+    },
+    {
+      "name": "Master Data",
+      "item": [
+        {
+          "name": "List Donors",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/donors?q=&sort=name&direction=asc&per_page=15&page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["donors"],
+              "query": [
+                {"key": "q", "value": ""},
+                {"key": "sort", "value": "name"},
+                {"key": "direction", "value": "asc"},
+                {"key": "per_page", "value": "15"},
+                {"key": "page", "value": "1"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Funds",
+          "request": {"method": "GET", "url": "{{baseUrl}}/funds?sort=name&direction=asc"}
+        },
+        {
+          "name": "Show Fund",
+          "request": {"method": "GET", "url": "{{baseUrl}}/funds/1"}
+        },
+        {
+          "name": "List Accounts",
+          "request": {"method": "GET", "url": "{{baseUrl}}/accounts?sort=name&direction=asc"}
+        },
+        {
+          "name": "List Programs",
+          "request": {"method": "GET", "url": "{{baseUrl}}/programs?sort=name&direction=asc"}
+        }
+      ]
+    },
+    {
+      "name": "Receipts",
+      "item": [
+        {
+          "name": "List Receipts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/receipts?sort=receipt_date&direction=desc&per_page=15",
+              "host": ["{{baseUrl}}"],
+              "path": ["receipts"],
+              "query": [
+                {"key": "sort", "value": "receipt_date"},
+                {"key": "direction", "value": "desc"},
+                {"key": "per_page", "value": "15"},
+                {"key": "status", "value": "draft", "disabled": true},
+                {"key": "q", "value": "", "disabled": true}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Receipt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Idempotency-Key", "value": "{{$guid}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receipt_date\": \"2026-06-29\",\n  \"account_id\": 1,\n  \"channel\": \"transfer\",\n  \"amount\": \"500000.00\",\n  \"allocations\": [{\"fund_id\": 1, \"amount\": \"500000.00\"}]\n}"
+            },
+            "url": "{{baseUrl}}/receipts"
+          }
+        },
+        {
+          "name": "Submit Receipt",
+          "request": {"method": "POST", "url": "{{baseUrl}}/receipts/1/submit"}
+        },
+        {
+          "name": "Approve Receipt",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"notes\": \"Disetujui\"\n}"},
+            "url": "{{baseUrl}}/receipts/1/approve"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Disbursements",
+      "item": [
+        {
+          "name": "List Disbursements",
+          "request": {"method": "GET", "url": "{{baseUrl}}/disbursements?sort=disbursement_date&direction=desc"}
+        },
+        {
+          "name": "Create Disbursement",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"disbursement_date\": \"2026-06-29\",\n  \"account_id\": 1,\n  \"amount\": \"100000.00\",\n  \"payee\": \"Mustahik A\",\n  \"sources\": [{\"fund_id\": 1, \"amount\": \"100000.00\"}]\n}"
+            },
+            "url": "{{baseUrl}}/disbursements"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Fund Balances",
+          "request": {"method": "GET", "url": "{{baseUrl}}/reports/fund-balances"}
+        },
+        {
+          "name": "Account Balances",
+          "request": {"method": "GET", "url": "{{baseUrl}}/reports/account-balances"}
+        },
+        {
+          "name": "Reconciliation Summary",
+          "request": {"method": "GET", "url": "{{baseUrl}}/reports/reconciliation-summary"}
+        },
+        {
+          "name": "Ledger",
+          "request": {"method": "GET", "url": "{{baseUrl}}/reports/ledger?per_page=50&sort=created_at&direction=desc"}
+        }
+      ]
+    },
+    {
+      "name": "Audit",
+      "item": [
+        {
+          "name": "List Audits (cursor)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/audits?per_page=25&sort=id&direction=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["audits"],
+              "query": [
+                {"key": "per_page", "value": "25"},
+                {"key": "sort", "value": "id"},
+                {"key": "direction", "value": "desc"},
+                {"key": "cursor", "value": "", "disabled": true}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Dashboard Summary",
+          "request": {"method": "GET", "url": "{{baseUrl}}/dashboard"}
+        }
+      ]
+    }
+  ]
+}

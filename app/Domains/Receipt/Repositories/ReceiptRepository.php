@@ -6,23 +6,27 @@ use App\Enums\AllocationStatus;
 use App\Enums\ReceiptStatus;
 use App\Models\Receipt;
 use App\Models\User;
+use App\Support\Query\ListQueryApplier;
+use App\Support\Query\ListQueryDto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ReceiptRepository
 {
-    /** @param array<string, mixed> $filters */
-    public function paginate(array $filters, int $perPage = 15): LengthAwarePaginator
+    public function paginate(ListQueryDto $query): LengthAwarePaginator
     {
-        return Receipt::query()
-            ->with(['account:id,code,name', 'donor:id,code,name'])
-            ->when(isset($filters['status']), fn ($q) => $q->where('status', $filters['status']))
-            ->when(isset($filters['account_id']), fn ($q) => $q->where('account_id', $filters['account_id']))
-            ->when(isset($filters['donor_id']), fn ($q) => $q->where('donor_id', $filters['donor_id']))
-            ->when(isset($filters['from']), fn ($q) => $q->whereDate('receipt_date', '>=', $filters['from']))
-            ->when(isset($filters['to']), fn ($q) => $q->whereDate('receipt_date', '<=', $filters['to']))
-            ->orderByDesc('receipt_date')
-            ->orderByDesc('id')
-            ->paginate($perPage);
+        $builder = ListQueryApplier::apply(
+            Receipt::query()->with(['account:id,code,name', 'donor:id,code,name']),
+            $query,
+            searchColumns: ['receipt_number', 'description', 'reference_number'],
+            sortable: ['receipt_date', 'receipt_number', 'amount', 'created_at'],
+            defaultSort: 'receipt_date',
+            filterCallbacks: [
+                'from' => fn ($q, $v) => $q->whereDate('receipt_date', '>=', $v),
+                'to' => fn ($q, $v) => $q->whereDate('receipt_date', '<=', $v),
+            ],
+        );
+
+        return $builder->paginate($query->perPage, ['*'], 'page', $query->page);
     }
 
     /** @param array<string, mixed> $data */

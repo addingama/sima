@@ -13,8 +13,9 @@ class HealthTest extends TestCase
     {
         $this->getJson('/api/health')
             ->assertOk()
-            ->assertJsonPath('status', 'ok')
-            ->assertJsonPath('checks.database', 'ok')
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.status', 'ok')
+            ->assertJsonPath('data.checks.database', 'ok')
             ->assertHeader('X-Request-Id');
     }
 }

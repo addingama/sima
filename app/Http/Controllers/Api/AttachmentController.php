@@ -2,25 +2,25 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Domains\Audit\Services\AuditLogService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Attachment\IndexAttachmentRequest;
 use App\Http\Requests\Attachment\StoreAttachmentRequest;
 use App\Http\Resources\AttachmentResource;
+use App\Http\Responses\ApiResponse;
 use App\Models\Attachment;
 use App\Models\BankFee;
 use App\Models\Disbursement;
 use App\Models\OperationalLiability;
 use App\Models\Receipt;
-use App\Domains\Audit\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttachmentController extends Controller
 {
-    public function __construct(private readonly AuditLogService $audit) {}
-
     /** Pemetaan kunci tipe -> kelas model yang boleh dilampiri. */
     private const TYPES = [
         'receipt' => Receipt::class,
@@ -29,16 +29,32 @@ class AttachmentController extends Controller
         'liability' => OperationalLiability::class,
     ];
 
+    public function __construct(private readonly AuditLogService $audit) {}
+
+    #[OA\Get(
+        path: '/attachments',
+        summary: 'Daftar lampiran',
+        tags: ['Attachment'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function index(IndexAttachmentRequest $request): JsonResponse
     {
         $model = $this->resolve($request->attachableType(), $request->attachableId());
         $this->authorize('view', $model);
 
-        return AttachmentResource::collection(
+        return $this->collection(AttachmentResource::collection(
             $model->attachments()->with('uploader:id,name')->get()
-        )->response();
+        ));
     }
 
+    #[OA\Post(
+        path: '/attachments',
+        summary: 'Unggah lampiran',
+        tags: ['Attachment'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function store(StoreAttachmentRequest $request): JsonResponse
     {
         $model = $this->resolve($request->attachableType(), $request->attachableId());
@@ -64,11 +80,16 @@ class AttachmentController extends Controller
             'size' => $attachment->size,
         ], $request->user(), 'attachment');
 
-        return (new AttachmentResource($attachment))
-            ->response()
-            ->setStatusCode(201);
+        return $this->created(new AttachmentResource($attachment));
     }
 
+    #[OA\Get(
+        path: '/attachments/{attachment}/download',
+        summary: 'Unduh lampiran',
+        tags: ['Attachment'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'File stream')]
+    )]
     public function download(Attachment $attachment): StreamedResponse
     {
         $this->authorize('download', $attachment);
@@ -78,6 +99,13 @@ class AttachmentController extends Controller
         return Storage::disk($attachment->disk)->download($attachment->path, $attachment->original_name);
     }
 
+    #[OA\Delete(
+        path: '/attachments/{attachment}',
+        summary: 'Hapus lampiran',
+        tags: ['Attachment'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function destroy(Attachment $attachment): JsonResponse
     {
         $this->authorize('delete', $attachment);
@@ -85,7 +113,7 @@ class AttachmentController extends Controller
         Storage::disk($attachment->disk)->delete($attachment->path);
         $attachment->delete();
 
-        return response()->json(['message' => 'Lampiran dihapus.']);
+        return ApiResponse::success(null, 'Lampiran dihapus.');
     }
 
     private function resolve(string $type, int $id): Model

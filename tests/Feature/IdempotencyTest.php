@@ -45,7 +45,7 @@ class IdempotencyTest extends TestCase
         $first = $this->postJson('/api/receipts', $payload, $headers)->assertStatus(201);
         $second = $this->postJson('/api/receipts', $payload, $headers)->assertStatus(201);
 
-        $this->assertSame($first->json('id'), $second->json('id'));
+        $this->assertSame($first->json('data.id'), $second->json('data.id'));
         $this->assertSame(1, DB::table('receipts')->count());
     }
 }

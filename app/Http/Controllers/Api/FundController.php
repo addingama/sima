@@ -2,87 +2,87 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Master\ListFundRequest;
 use App\Http\Requests\Master\StoreFundRequest;
 use App\Http\Requests\Master\UpdateFundRequest;
 use App\Http\Resources\FundResource;
 use App\Models\Fund;
-use App\Domains\Ledger\Services\LedgerService;
+use App\Services\Master\FundService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use OpenApi\Attributes as OA;
 
 class FundController extends Controller
 {
-    public function __construct(private readonly LedgerService $ledger) {}
+    public function __construct(private readonly FundService $service) {}
 
-    public function index(Request $request): JsonResponse
+    #[OA\Get(
+        path: '/funds',
+        summary: 'Daftar Dana Amanah',
+        tags: ['Fund'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
+    public function index(ListFundRequest $request): JsonResponse
     {
         $this->authorize('viewAny', Fund::class);
 
-        $funds = Fund::query()
-            ->select('funds.*')
-            ->selectSub(
-                DB::table('ledger_entries')
-                    ->selectRaw('COALESCE(SUM(credit),0) - COALESCE(SUM(debit),0)')
-                    ->whereColumn('ledger_entries.ledger_account_id', 'funds.id')
-                    ->where('ledger_entries.ledger_account_type', 'fund'),
-                'balance'
-            )
-            ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w
-                ->where('funds.name', 'like', '%'.$request->string('q').'%')
-                ->orWhere('funds.code', 'like', '%'.$request->string('q').'%')))
-            ->when($request->filled('type'), fn ($q) => $q->where('funds.type', $request->string('type')))
-            ->orderBy('funds.name')
-            ->paginate($request->integer('per_page', 15));
-
-        return FundResource::collection($funds)->response();
+        return $this->collection(FundResource::collection($this->service->paginate($request->listQuery())));
     }
 
+    #[OA\Post(
+        path: '/funds',
+        summary: 'Buat Dana Amanah',
+        tags: ['Fund'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function store(StoreFundRequest $request): JsonResponse
     {
-        $fund = Fund::create([
-            ...$request->validated(),
-            'created_by' => $request->user()->id,
-            'is_system' => false,
-        ]);
+        $fund = $this->service->create($request->validated(), $request->user());
 
-        return (new FundResource($fund))
-            ->response()
-            ->setStatusCode(201);
+        return $this->created(new FundResource($fund));
     }
 
+    #[OA\Get(
+        path: '/funds/{fund}',
+        summary: 'Detail Dana Amanah',
+        tags: ['Fund'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function show(Fund $fund): JsonResponse
     {
         $this->authorize('view', $fund);
 
-        $fund->setAttribute('balance', $this->ledger->balanceForFund($fund->id));
-
-        return (new FundResource($fund))->response();
+        return $this->resource(new FundResource($this->service->findForShow($fund)));
     }
 
+    #[OA\Put(
+        path: '/funds/{fund}',
+        summary: 'Ubah Dana Amanah',
+        tags: ['Fund'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function update(UpdateFundRequest $request, Fund $fund): JsonResponse
     {
-        if ($fund->is_system) {
-            throw new DomainException('Dana sistem tidak dapat diubah.');
-        }
-
-        $fund->update($request->validated());
-
-        return (new FundResource($fund))->response();
+        return $this->resource(new FundResource($this->service->update($fund, $request->validated())));
     }
 
+    #[OA\Delete(
+        path: '/funds/{fund}',
+        summary: 'Nonaktifkan Dana Amanah',
+        tags: ['Fund'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function destroy(Fund $fund): JsonResponse
     {
         $this->authorize('delete', $fund);
 
-        if (bccomp($this->ledger->balanceForFund($fund->id), '0', 2) !== 0) {
-            throw new DomainException('Dana dengan saldo tidak nol tidak dapat dihapus.');
-        }
+        $this->service->delete($fund);
 
-        $fund->delete();
-
-        return response()->json(['message' => 'Dana Amanah dinonaktifkan (soft delete).']);
+        return $this->message('Dana Amanah dinonaktifkan (soft delete).');
     }
 }

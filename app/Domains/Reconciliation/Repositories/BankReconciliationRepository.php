@@ -4,19 +4,27 @@ namespace App\Domains\Reconciliation\Repositories;
 
 use App\Models\BankReconciliation;
 use App\Models\BankReconciliationLine;
+use App\Support\Query\ListQueryApplier;
+use App\Support\Query\ListQueryDto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class BankReconciliationRepository
 {
-    /** @param array<string, mixed> $filters */
-    public function paginate(array $filters, int $perPage = 15): LengthAwarePaginator
+    public function paginate(ListQueryDto $query): LengthAwarePaginator
     {
-        return BankReconciliation::query()
-            ->with('account:id,code,name')
-            ->when(isset($filters['account_id']), fn ($q) => $q->where('account_id', $filters['account_id']))
-            ->when(isset($filters['status']), fn ($q) => $q->where('status', $filters['status']))
-            ->orderByDesc('period_end')
-            ->paginate($perPage);
+        $builder = ListQueryApplier::apply(
+            BankReconciliation::query()->with('account:id,code,name'),
+            $query,
+            searchColumns: ['notes'],
+            sortable: ['period_end', 'period_start', 'created_at', 'id'],
+            defaultSort: 'period_end',
+            filterCallbacks: [
+                'from' => fn ($q, $v) => $q->whereDate('period_end', '>=', $v),
+                'to' => fn ($q, $v) => $q->whereDate('period_end', '<=', $v),
+            ],
+        );
+
+        return $builder->paginate($query->perPage, ['*'], 'page', $query->page);
     }
 
     /** @param array<string, mixed> $data */

@@ -3,6 +3,7 @@
 use App\Exceptions\DomainException;
 use App\Exceptions\InsufficientBalanceException;
 use App\Http\Middleware\AssignRequestId;
+use App\Http\Responses\ApiResponse;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -35,40 +36,44 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Render error domain & saldo sebagai 422 JSON yang konsisten untuk API.
         $exceptions->render(function (InsufficientBalanceException $e, Request $request) {
             if ($request->expectsJson()) {
-                return response()->json([
-                    'message' => $e->getMessage(),
-                    'error' => 'insufficient_balance',
-                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+                return ApiResponse::error($e->getMessage(), 'insufficient_balance', status: Response::HTTP_UNPROCESSABLE_ENTITY);
             }
         });
 
         $exceptions->render(function (DomainException $e, Request $request) {
             if ($request->expectsJson()) {
-                return response()->json([
-                    'message' => $e->getMessage(),
-                    'error' => 'domain_rule_violation',
-                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+                return ApiResponse::error($e->getMessage(), 'domain_rule_violation', status: Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        });
+
+        $exceptions->render(function (ValidationException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return ApiResponse::error(
+                    'Validasi gagal.',
+                    'validation_error',
+                    $e->errors(),
+                    status: $e->status,
+                );
             }
         });
 
         $exceptions->render(function (AuthorizationException $e, Request $request) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Anda tidak memiliki izin untuk aksi ini.'], Response::HTTP_FORBIDDEN);
+                return ApiResponse::error('Anda tidak memiliki izin untuk aksi ini.', 'forbidden', status: Response::HTTP_FORBIDDEN);
             }
         });
 
         $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Tidak terautentikasi.'], Response::HTTP_UNAUTHORIZED);
+                return ApiResponse::error('Tidak terautentikasi.', 'unauthenticated', status: Response::HTTP_UNAUTHORIZED);
             }
         });
 
         $exceptions->render(function (ModelNotFoundException $e, Request $request) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Data tidak ditemukan.'], Response::HTTP_NOT_FOUND);
+                return ApiResponse::error('Data tidak ditemukan.', 'not_found', status: Response::HTTP_NOT_FOUND);
             }
         });
     })->create();

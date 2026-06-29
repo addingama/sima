@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Responses\ApiResponse;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -29,7 +30,7 @@ class IdempotencyService
         }
 
         if (strlen($key) > 128) {
-            return response()->json(['message' => 'Idempotency-Key terlalu panjang (maks 128 karakter).'], 422);
+            return ApiResponse::error('Idempotency-Key terlalu panjang (maks 128 karakter).', 'idempotency_key_invalid', null, null, 422);
         }
 
         /** @var User $user */
@@ -63,7 +64,7 @@ class IdempotencyService
 
                 return $row !== null
                     ? $this->responseFromRow($row)
-                    : response()->json(['message' => 'Permintaan sedang diproses.'], 409);
+                    : ApiResponse::error('Permintaan sedang diproses.', 'idempotency_conflict', null, null, 409);
             }
 
             /** @var JsonResponse $response */
@@ -102,7 +103,7 @@ class IdempotencyService
     private function responseFromRow(object $row): JsonResponse
     {
         if ($row->status === self::STATUS_PROCESSING) {
-            return response()->json(['message' => 'Permintaan sedang diproses.'], 409);
+            return ApiResponse::error('Permintaan sedang diproses.', 'idempotency_processing', null, null, 409);
         }
 
         return response()->json(

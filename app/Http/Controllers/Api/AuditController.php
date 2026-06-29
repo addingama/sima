@@ -2,37 +2,44 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Domains\Audit\Repositories\AuditLogRepository;
+use App\Domains\Audit\Services\AuditQueryService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Audit\ListAuditRequest;
+use App\Http\Resources\AuditResource;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use OpenApi\Attributes as OA;
 use OwenIt\Auditing\Models\Audit;
 
 /** Audit Trail (read-only). */
 class AuditController extends Controller
 {
-    public function __construct(private readonly AuditLogRepository $audits) {}
+    public function __construct(private readonly AuditQueryService $service) {}
 
-    public function index(Request $request): JsonResponse
+    #[OA\Get(
+        path: '/audits',
+        summary: 'Daftar audit trail',
+        tags: ['Audit'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
+    public function index(ListAuditRequest $request): JsonResponse
     {
         $this->authorize('viewAny', Audit::class);
 
-        $audits = $this->audits->paginate([
-            'auditable_type' => $request->filled('auditable_type') ? $request->string('auditable_type')->value() : null,
-            'auditable_id' => $request->filled('auditable_id') ? $request->integer('auditable_id') : null,
-            'user_id' => $request->filled('user_id') ? $request->integer('user_id') : null,
-            'event' => $request->filled('event') ? $request->string('event')->value() : null,
-            'from' => $request->filled('from') ? $request->date('from') : null,
-            'to' => $request->filled('to') ? $request->date('to') : null,
-        ], $request->integer('per_page', 25));
-
-        return response()->json($audits);
+        return $this->collection(AuditResource::collection($this->service->paginate($request->listQuery(25))));
     }
 
+    #[OA\Get(
+        path: '/audits/{audit}',
+        summary: 'Detail audit trail',
+        tags: ['Audit'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
     public function show(Audit $audit): JsonResponse
     {
         $this->authorize('view', $audit);
 
-        return response()->json($audit->load('user:id,name,email'));
+        return $this->resource(new AuditResource($this->service->find($audit->id)));
     }
 }
