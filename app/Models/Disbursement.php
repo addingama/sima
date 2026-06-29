@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DisbursementStatus;
+use App\Enums\TransactionType;
 use App\Models\Concerns\HasApprovals;
 use App\Models\Concerns\HasAttachments;
 use App\Models\Concerns\HasLedgerEntries;
@@ -66,6 +67,11 @@ class Disbursement extends Model
     public function fundSources(): HasMany
     {
         return $this->hasMany(ExpenseFundSource::class);
+    }
+
+    public function ledgerTransactionType(): TransactionType
+    {
+        return TransactionType::EXPENSE;
     }
 
     public function program(): BelongsTo

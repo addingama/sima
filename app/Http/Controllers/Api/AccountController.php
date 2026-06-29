@@ -22,8 +22,14 @@ class AccountController extends Controller
         $this->authorize('viewAny', Account::class);
 
         $accounts = Account::query()
-            ->leftJoin('account_balances', 'account_balances.account_id', '=', 'accounts.id')
-            ->select('accounts.*', DB::raw('COALESCE(account_balances.balance, 0) as balance'))
+            ->select('accounts.*')
+            ->selectSub(
+                DB::table('ledger_entries')
+                    ->selectRaw('COALESCE(SUM(debit),0) - COALESCE(SUM(credit),0)')
+                    ->whereColumn('ledger_entries.ledger_account_id', 'accounts.id')
+                    ->where('ledger_entries.ledger_account_type', 'account'),
+                'balance'
+            )
             ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w
                 ->where('accounts.name', 'like', '%'.$request->string('q').'%')
                 ->orWhere('accounts.code', 'like', '%'.$request->string('q').'%')))

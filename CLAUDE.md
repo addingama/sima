@@ -23,16 +23,16 @@ SIMA mengelola **dana titipan / dana amanah** untuk lembaga sosial. Inti sistem 
 - Koreksi **hanya** melalui **void/reversal**.
 - Semua perubahan penting **harus masuk audit trail**.
 
-### Model ledger (cara kerja)
+### Model ledger (Amanah Ledger — double-entry)
 
-Setiap baris `ledger_entries` mencatat pergerakan uang pada **dua dimensi sekaligus**:
-`account_id` (kas/bank) dan `fund_id` (Dana Amanah), dengan `amount` bertanda (+ masuk / − keluar).
+Setiap transaksi finansial menghasilkan baris `ledger_entries` (debit/credit):
 
-- Saldo Kas/Bank = `SUM(amount)` per `account_id` (harus ≥ 0).
-- Saldo Dana Amanah = `SUM(amount)` per `fund_id` (harus ≥ 0).
-- Total semua akun == total semua dana (rekonsiliasi global).
+- `transaction_type` + `transaction_id` → sumber transaksi
+- `ledger_account_type` + `ledger_account_id` → akun buku besar (`account` = kas/bank, `fund` = Dana Amanah)
+- Saldo **tidak** disimpan statis; dihitung dari agregasi ledger
+- Total debit = total credit (jurnal seimbang); total kas/bank = total Dana Amanah
 
-Aliran uang:
+Aliran uang (pasangan debit/credit per nominal):
 
 ```
 Penerimaan (approve)   :  Akun + , Dana Tujuan +   (1 leg per alokasi; alokasi inline saat draft)
@@ -141,9 +141,9 @@ Daftar permission & pemetaan role ada di `config/sima.php`.
 > Bagian ini menjaga sinkronisasi antara aturan & kode nyata. Perbarui saat ada perubahan.
 
 **Sudah ada (backend):**
-- Migration: master data, transaksi finansial, `ledger_entries`, materialized balances
-  (`account_balances`, `fund_balances`), `idempotency_keys`, `audit_logs`, dll.
-- Service layer: `LedgerService`, `TrustFundBalanceService`, `ReceiptService`, `ExpenseService`,
+- Migration: master data, transaksi finansial, `ledger_entries` (double-entry Amanah Ledger),
+  `idempotency_keys`, `audit_logs`, dll.
+- Service layer: `LedgerService` (mesin inti), `TrustFundBalanceService`, `ReceiptService`, `ExpenseService`,
   `BankFeeService`, `ReversalService`, `ReconciliationService`, `OperationalLiabilityService`,
   `ApprovalService`, `AuditLogService`, `IdempotencyService`, `DocumentNumberService`.
 - API + RBAC + Policy record-level + Form Request/Resource (modul finansial & master data).

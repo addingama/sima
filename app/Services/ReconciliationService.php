@@ -6,7 +6,6 @@ use App\Enums\BankFeeStatus;
 use App\Models\BankFee;
 use App\Models\BankReconciliation;
 use App\Models\BankReconciliationLine;
-use App\Models\LedgerEntry;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -18,16 +17,17 @@ use Illuminate\Support\Facades\DB;
  */
 class ReconciliationService
 {
-    public function __construct(private readonly AuditLogService $audit) {}
+    public function __construct(
+        private readonly AuditLogService $audit,
+        private readonly LedgerService $ledger,
+    ) {}
 
     /**
      * Saldo sistem (ledger) untuk sebuah akun s/d tanggal tertentu.
      */
     public function systemBalanceAsOf(int $accountId, string $asOfDate): string
     {
-        return bcadd((string) (LedgerEntry::where('account_id', $accountId)
-            ->whereDate('entry_date', '<=', $asOfDate)
-            ->sum('amount') ?? '0'), '0', 2);
+        return $this->ledger->accountBalanceAsOf($accountId, $asOfDate);
     }
 
     /** @param array<string, mixed> $data */

@@ -2,18 +2,15 @@
 
 namespace App\Services;
 
+use App\Enums\LedgerAccountType;
 use App\Exceptions\InsufficientBalanceException;
 use App\Models\Account;
 use App\Models\Fund;
+use App\Models\LedgerEntry;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
- * API saldo untuk domain. Saldo dibaca dari cache termaterialisasi (O(1));
- * source of truth tetap ledger_entries (lihat LedgerService).
- *
- * Catatan: pengecekan di sini bersifat advisory (fail-fast / UX). Penjaga
- * sebenarnya yang anti-race adalah lockForUpdate di LedgerService::post().
+ * API saldo domain — selalu dihitung dari ledger (source of truth).
  */
 class TrustFundBalanceService
 {
@@ -59,14 +56,13 @@ class TrustFundBalanceService
     public function allFundBalances(): Collection
     {
         return Fund::query()
-            ->leftJoin('fund_balances', 'fund_balances.fund_id', '=', 'funds.id')
-            ->orderBy('funds.name')
-            ->get(['funds.id', 'funds.code', 'funds.name', DB::raw('COALESCE(fund_balances.balance, 0) as balance')])
+            ->orderBy('name')
+            ->get(['id', 'code', 'name'])
             ->map(fn (Fund $f) => [
                 'id' => $f->id,
                 'code' => $f->code,
                 'name' => $f->name,
-                'balance' => bcadd((string) $f->balance, '0', 2),
+                'balance' => $this->fundBalance($f->id),
             ]);
     }
 
@@ -74,14 +70,31 @@ class TrustFundBalanceService
     public function allAccountBalances(): Collection
     {
         return Account::query()
-            ->leftJoin('account_balances', 'account_balances.account_id', '=', 'accounts.id')
-            ->orderBy('accounts.name')
-            ->get(['accounts.id', 'accounts.code', 'accounts.name', DB::raw('COALESCE(account_balances.balance, 0) as balance')])
+            ->orderBy('name')
+            ->get(['id', 'code', 'name'])
             ->map(fn (Account $a) => [
                 'id' => $a->id,
                 'code' => $a->code,
                 'name' => $a->name,
-                'balance' => bcadd((string) $a->balance, '0', 2),
+                'balance' => $this->accountBalance($a->id),
             ]);
+    }
+
+    /** Agregat saldo seluruh kas/bank dari ledger. */
+    public function totalAccountBalances(): string
+    {
+        $debit = (string) (LedgerEntry::where('ledger_account_type', LedgerAccountType::ACCOUNT->value)->sum('debit') ?? '0');
+        $credit = (string) (LedgerEntry::where('ledger_account_type', LedgerAccountType::ACCOUNT->value)->sum('credit') ?? '0');
+
+        return bcsub($debit, $credit, 2);
+    }
+
+    /** Agregat saldo seluruh Dana Amanah dari ledger. */
+    public function totalFundBalances(): string
+    {
+        $debit = (string) (LedgerEntry::where('ledger_account_type', LedgerAccountType::FUND->value)->sum('debit') ?? '0');
+        $credit = (string) (LedgerEntry::where('ledger_account_type', LedgerAccountType::FUND->value)->sum('credit') ?? '0');
+
+        return bcsub($credit, $debit, 2);
     }
 }

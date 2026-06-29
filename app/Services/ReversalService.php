@@ -7,6 +7,7 @@ use App\Enums\ApprovalAction;
 use App\Enums\BankFeeStatus;
 use App\Enums\DisbursementStatus;
 use App\Enums\ReceiptStatus;
+use App\Enums\TransactionType;
 use App\Exceptions\DomainException;
 use App\Models\BankFee;
 use App\Models\Disbursement;
@@ -39,7 +40,12 @@ class ReversalService
         }
 
         return DB::transaction(function () use ($receipt, $actor, $reason): Receipt {
-            $this->ledger->reverse($receipt, $actor, 'Reversal penerimaan: '.$reason);
+            $this->ledger->reverse(
+                TransactionType::RECEIPT,
+                $receipt->id,
+                $receipt->id,
+                'Reversal penerimaan: '.$reason,
+            );
 
             $receipt->update([
                 'status' => ReceiptStatus::REVERSED->value,
@@ -68,7 +74,12 @@ class ReversalService
         }
 
         return DB::transaction(function () use ($expense, $actor, $reason): Disbursement {
-            $this->ledger->reverse($expense, $actor, 'Reversal pengeluaran: '.$reason);
+            $this->ledger->reverse(
+                TransactionType::EXPENSE,
+                $expense->id,
+                $expense->id,
+                'Reversal pengeluaran: '.$reason,
+            );
 
             $expense->update([
                 'status' => DisbursementStatus::REVERSED->value,
@@ -90,7 +101,12 @@ class ReversalService
         }
 
         return DB::transaction(function () use ($fee, $actor, $reason): BankFee {
-            $this->ledger->reverse($fee, $actor, 'Reversal biaya bank: '.$reason);
+            $this->ledger->reverse(
+                TransactionType::BANK_FEE,
+                $fee->id,
+                $fee->id,
+                'Reversal biaya bank: '.$reason,
+            );
 
             $fee->update([
                 'status' => BankFeeStatus::REVERSED->value,

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BankFeeStatus;
+use App\Enums\TransactionType;
 use App\Models\Concerns\HasAttachments;
 use App\Models\Concerns\HasLedgerEntries;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -50,6 +51,11 @@ class BankFee extends Model
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    public function ledgerTransactionType(): TransactionType
+    {
+        return TransactionType::BANK_FEE;
     }
 
     public function operationalLiability(): BelongsTo

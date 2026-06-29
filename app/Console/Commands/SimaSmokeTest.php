@@ -2,7 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\LedgerType;
+use App\Enums\LedgerMovement;
+use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Fund;
 use App\Models\User;
@@ -46,11 +47,14 @@ class SimaSmokeTest extends Command
         );
 
         // Saldo awal: kas + 1.000.000 lawan Dana Operasional (untuk uji expense & bank fee)
-        $ledger->post([[
-            'account_id' => $account->id, 'fund_id' => $operasional->id,
-            'amount' => '1000000.00', 'type' => LedgerType::OPENING,
-            'memo' => 'Saldo awal smoke',
-        ]], $actor);
+        $ledger->postAmanahMovement(
+            TransactionType::OPENING,
+            0,
+            $account->id,
+            [['fund_id' => $operasional->id, 'amount' => '1000000.00']],
+            LedgerMovement::IN,
+            'Saldo awal smoke',
+        );
         $this->line('Saldo awal kas: '.$balances->accountBalance($account->id));
 
         // 1) RECEIPT: 500.000 -> alokasi penuh ke Zakat

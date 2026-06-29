@@ -2,14 +2,18 @@
 
 namespace App\Models\Concerns;
 
+use App\Enums\TransactionType;
 use App\Models\LedgerEntry;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 trait HasLedgerEntries
 {
-    /** Semua ledger entry yang bersumber dari transaksi ini. */
-    public function ledgerEntries(): MorphMany
+    abstract public function ledgerTransactionType(): TransactionType;
+
+    /** Entri ledger yang berasal dari transaksi ini. */
+    public function ledgerEntries(): HasMany
     {
-        return $this->morphMany(LedgerEntry::class, 'source');
+        return $this->hasMany(LedgerEntry::class, 'transaction_id')
+            ->where('transaction_type', $this->ledgerTransactionType()->value);
     }
 }

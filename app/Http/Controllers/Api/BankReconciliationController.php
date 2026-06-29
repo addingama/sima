@@ -42,7 +42,7 @@ class BankReconciliationController extends Controller
 
         $bankReconciliation->load([
             'account:id,code,name',
-            'lines.ledgerEntry:id,entry_date,amount,type,memo',
+            'lines.ledgerEntry:id,transaction_type,debit,credit,reference,created_at',
         ]);
 
         $reconciling = $this->service->deferredBankFeeItems(

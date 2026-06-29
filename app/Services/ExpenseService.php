@@ -4,7 +4,8 @@ namespace App\Services;
 
 use App\Enums\ApprovalAction;
 use App\Enums\DisbursementStatus;
-use App\Enums\LedgerType;
+use App\Enums\LedgerMovement;
+use App\Enums\TransactionType;
 use App\Exceptions\DomainException;
 use App\Models\Disbursement;
 use App\Models\User;
@@ -120,18 +121,19 @@ class ExpenseService
         $this->assertFundsAvailable($expense);
 
         return DB::transaction(function () use ($expense, $actor, $notes): Disbursement {
-            $legs = $expense->fundSources->map(fn ($source) => [
-                'entry_date' => $expense->disbursement_date->toDateString(),
-                'account_id' => $expense->account_id,
+            $fundLines = $expense->fundSources->map(fn ($source) => [
                 'fund_id' => $source->fund_id,
-                'program_id' => $source->program_id ?? $expense->program_id,
-                'amount' => bcmul((string) $source->amount, '-1', 2), // credit kas / debit dana (-)
-                'type' => LedgerType::DISBURSEMENT,
-                'source' => $expense,
-                'memo' => 'Pengeluaran '.$expense->disbursement_number,
+                'amount' => bcadd((string) $source->amount, '0', 2),
             ])->all();
 
-            $this->ledger->post($legs, $actor);
+            $this->ledger->postAmanahMovement(
+                TransactionType::EXPENSE,
+                $expense->id,
+                $expense->account_id,
+                $fundLines,
+                LedgerMovement::OUT,
+                'Pengeluaran '.$expense->disbursement_number,
+            );
 
             $expense->update([
                 'status' => DisbursementStatus::APPROVED->value,

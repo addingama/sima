@@ -4,67 +4,56 @@ namespace App\Console\Commands;
 
 use App\Models\Account;
 use App\Models\Fund;
-use App\Models\LedgerEntry;
+use App\Services\LedgerService;
+use App\Services\TrustFundBalanceService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 /**
- * Drift-check: membandingkan saldo termaterialisasi (cache) dengan SUM(ledger_entries)
- * (source of truth). Idealnya dijalankan terjadwal (cron). Exit code != 0 bila ada drift,
- * sehingga bisa dipakai sebagai alarm di monitoring/DevOps.
+ * Verifikasi invariant Amanah Ledger:
+ * - total debit = total credit
+ * - total kas/bank = total dana amanah
+ * - tidak ada saldo negatif
  */
 class CheckBalances extends Command
 {
-    protected $signature = 'sima:check-balances {--fix : Perbaiki otomatis bila ditemukan drift}';
+    protected $signature = 'sima:check-balances';
 
-    protected $description = 'Verifikasi integritas saldo cache vs ledger (source of truth).';
+    protected $description = 'Verifikasi invariant ledger (double-entry & saldo non-negatif).';
 
-    public function handle(): int
+    public function handle(LedgerService $ledger, TrustFundBalanceService $balances): int
     {
-        $accountSums = LedgerEntry::query()
-            ->selectRaw('account_id, COALESCE(SUM(amount),0) as balance')
-            ->groupBy('account_id')->pluck('balance', 'account_id');
-        $fundSums = LedgerEntry::query()
-            ->selectRaw('fund_id, COALESCE(SUM(amount),0) as balance')
-            ->groupBy('fund_id')->pluck('balance', 'fund_id');
+        $issues = [];
 
-        $cacheAccounts = DB::table('account_balances')->pluck('balance', 'account_id');
-        $cacheFunds = DB::table('fund_balances')->pluck('balance', 'fund_id');
+        if (bccomp($ledger->totalDebits(), $ledger->totalCredits(), 2) !== 0) {
+            $issues[] = 'Total debit ≠ total credit.';
+        }
 
-        $drift = [];
+        if (bccomp($balances->totalAccountBalances(), $balances->totalFundBalances(), 2) !== 0) {
+            $issues[] = 'Total kas/bank ≠ total Dana Amanah.';
+        }
 
-        foreach (Account::query()->pluck('name', 'id') as $id => $name) {
-            $truth = bcadd((string) ($accountSums[$id] ?? '0'), '0', 2);
-            $cache = bcadd((string) ($cacheAccounts[$id] ?? '0'), '0', 2);
-            if (bccomp($truth, $cache, 2) !== 0) {
-                $drift[] = ['type' => 'account', 'id' => $id, 'name' => $name, 'ledger' => $truth, 'cache' => $cache];
+        foreach (Account::pluck('name', 'id') as $id => $name) {
+            $balance = $ledger->balanceForAccount((int) $id);
+            if (bccomp($balance, '0', 2) < 0) {
+                $issues[] = "Saldo negatif akun {$name}: {$balance}";
             }
         }
 
-        foreach (Fund::query()->pluck('name', 'id') as $id => $name) {
-            $truth = bcadd((string) ($fundSums[$id] ?? '0'), '0', 2);
-            $cache = bcadd((string) ($cacheFunds[$id] ?? '0'), '0', 2);
-            if (bccomp($truth, $cache, 2) !== 0) {
-                $drift[] = ['type' => 'fund', 'id' => $id, 'name' => $name, 'ledger' => $truth, 'cache' => $cache];
+        foreach (Fund::pluck('name', 'id') as $id => $name) {
+            $balance = $ledger->balanceForFund((int) $id);
+            if (bccomp($balance, '0', 2) < 0) {
+                $issues[] = "Saldo negatif dana {$name}: {$balance}";
             }
         }
 
-        if (empty($drift)) {
-            $this->info('OK: saldo cache konsisten dengan ledger.');
+        if ($issues === []) {
+            $this->info('OK: invariant ledger terpenuhi.');
 
             return self::SUCCESS;
         }
 
-        $this->error('DRIFT terdeteksi pada '.count($drift).' saldo:');
-        $this->table(['Tipe', 'ID', 'Nama', 'Ledger', 'Cache'], array_map(fn ($d) => [
-            $d['type'], $d['id'], $d['name'], $d['ledger'], $d['cache'],
-        ], $drift));
-
-        if ($this->option('fix')) {
-            $this->call('sima:rebuild-balances');
-            $this->info('Drift diperbaiki via rebuild.');
-
-            return self::SUCCESS;
+        foreach ($issues as $issue) {
+            $this->error($issue);
         }
 
         return self::FAILURE;

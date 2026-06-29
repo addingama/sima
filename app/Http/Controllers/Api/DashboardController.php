@@ -6,22 +6,22 @@ use App\Enums\DisbursementStatus;
 use App\Enums\ReceiptStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Disbursement;
-use App\Models\LedgerEntry;
 use App\Models\Receipt;
+use App\Services\TrustFundBalanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    public function __construct(private readonly TrustFundBalanceService $balances) {}
+
     public function index(): JsonResponse
     {
-        $totalAccounts = (string) (LedgerEntry::sum('amount') ?? 0);
-
         $monthStart = now()->startOfMonth()->toDateString();
         $monthEnd = now()->endOfMonth()->toDateString();
 
         return response()->json([
-            'total_kas_bank' => $totalAccounts,
+            'total_kas_bank' => $this->balances->totalAccountBalances(),
             'penerimaan_bulan_ini' => (string) Receipt::where('status', ReceiptStatus::APPROVED->value)
                 ->whereBetween('receipt_date', [$monthStart, $monthEnd])
                 ->sum('amount'),

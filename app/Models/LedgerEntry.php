@@ -2,38 +2,39 @@
 
 namespace App\Models;
 
-use App\Enums\LedgerType;
+use App\Enums\LedgerAccountType;
+use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use LogicException;
 
 /**
- * Buku Besar (ledger) — append-only / immutable.
- * Model ini sengaja TIDAK mengizinkan update maupun delete.
+ * Amanah Ledger — append-only double-entry.
+ * Saldo dihitung dari SUM(debit/credit), bukan disimpan statis.
  */
 class LedgerEntry extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = [
-        'entry_date',
-        'account_id',
-        'fund_id',
-        'program_id',
-        'amount',
-        'type',
-        'source_type',
-        'source_id',
-        'reversal_of_id',
-        'memo',
-        'created_by',
+        'transaction_type',
+        'transaction_id',
+        'ledger_account_type',
+        'ledger_account_id',
+        'debit',
+        'credit',
+        'reference',
+        'created_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'entry_date' => 'date',
-            'amount' => 'decimal:2',
-            'type' => LedgerType::class,
+            'transaction_type' => TransactionType::class,
+            'ledger_account_type' => LedgerAccountType::class,
+            'debit' => 'decimal:2',
+            'credit' => 'decimal:2',
+            'created_at' => 'datetime',
         ];
     }
 
@@ -48,33 +49,13 @@ class LedgerEntry extends Model
         });
     }
 
-    public function account(): BelongsTo
+    public function cashAccount(): BelongsTo
     {
-        return $this->belongsTo(Account::class);
+        return $this->belongsTo(Account::class, 'ledger_account_id');
     }
 
     public function fund(): BelongsTo
     {
-        return $this->belongsTo(Fund::class);
-    }
-
-    public function program(): BelongsTo
-    {
-        return $this->belongsTo(Program::class);
-    }
-
-    public function source(): MorphTo
-    {
-        return $this->morphTo();
-    }
-
-    public function reversalOf(): BelongsTo
-    {
-        return $this->belongsTo(self::class, 'reversal_of_id');
-    }
-
-    public function createdBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(Fund::class, 'ledger_account_id');
     }
 }

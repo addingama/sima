@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\AllocationStatus;
 use App\Enums\ReceiptStatus;
+use App\Enums\TransactionType;
 use App\Models\Concerns\HasApprovals;
 use App\Models\Concerns\HasAttachments;
 use App\Models\Concerns\HasLedgerEntries;
@@ -67,6 +68,11 @@ class Receipt extends Model
     public function allocations(): HasMany
     {
         return $this->hasMany(ReceiptAllocation::class);
+    }
+
+    public function ledgerTransactionType(): TransactionType
+    {
+        return TransactionType::RECEIPT;
     }
 
     public function createdBy(): BelongsTo

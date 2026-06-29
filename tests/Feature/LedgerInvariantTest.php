@@ -3,8 +3,9 @@
 namespace Tests\Feature;
 
 use App\Enums\DisbursementStatus;
-use App\Enums\LedgerType;
+use App\Enums\LedgerMovement;
 use App\Enums\ReceiptStatus;
+use App\Enums\TransactionType;
 use App\Exceptions\DomainException;
 use App\Exceptions\InsufficientBalanceException;
 use App\Models\Account;
@@ -39,10 +40,14 @@ class LedgerInvariantTest extends TestCase
 
     private function seedOpening(string $amount): void
     {
-        app(LedgerService::class)->post([[
-            'account_id' => $this->account->id, 'fund_id' => $this->fund->id,
-            'amount' => $amount, 'type' => LedgerType::OPENING,
-        ]], $this->actor);
+        app(LedgerService::class)->postAmanahMovement(
+            TransactionType::OPENING,
+            0,
+            $this->account->id,
+            [['fund_id' => $this->fund->id, 'amount' => $amount]],
+            LedgerMovement::IN,
+            'Saldo awal',
+        );
     }
 
     public function test_receipt_full_flow_posts_ledger_and_balances(): void
@@ -83,7 +88,6 @@ class LedgerInvariantTest extends TestCase
             'amount' => '100000.00',
         ], [['fund_id' => $this->fund->id, 'amount' => '100000.00']], $this->actor);
 
-        // Saldo dana 0 -> submit harus menolak (advisory) / approve harus menolak (guard).
         $expenses->submit($e, $this->actor);
     }
 
@@ -129,18 +133,19 @@ class LedgerInvariantTest extends TestCase
     {
         $this->seedOpening('300000.00');
         $receipts = app(ReceiptService::class);
+        $balances = app(TrustFundBalanceService::class);
+
         $r = $receipts->create([
             'receipt_date' => now()->toDateString(), 'account_id' => $this->account->id,
             'channel' => 'transfer', 'amount' => '500000.00',
         ], [['fund_id' => $this->fund->id, 'amount' => '500000.00']], $this->actor);
         $receipts->approve($receipts->submit($r, $this->actor), $this->actor);
 
-        $sumAccounts = (string) LedgerEntry::sum('amount');
-        $byAccount = LedgerEntry::selectRaw('account_id, SUM(amount) s')->groupBy('account_id')->sum('s');
-        $byFund = LedgerEntry::selectRaw('fund_id, SUM(amount) s')->groupBy('fund_id')->sum('s');
-
-        $this->assertSame((float) $byAccount, (float) $byFund);
-        $this->assertSame('800000.00', bcadd($sumAccounts, '0', 2));
+        $this->assertSame(
+            $balances->totalAccountBalances(),
+            $balances->totalFundBalances()
+        );
+        $this->assertSame('800000.00', $balances->totalAccountBalances());
     }
 
     public function test_ledger_entry_is_immutable(): void
@@ -149,6 +154,32 @@ class LedgerInvariantTest extends TestCase
         $entry = LedgerEntry::first();
 
         $this->expectException(\LogicException::class);
-        $entry->update(['amount' => '999999.00']);
+        $entry->update(['debit' => '999999.00']);
+    }
+
+    public function test_double_entry_balanced_per_transaction(): void
+    {
+        $this->seedOpening('100000.00');
+        $ledger = app(LedgerService::class);
+
+        $this->assertSame($ledger->totalDebits(), $ledger->totalCredits());
+    }
+
+    public function test_receipt_creates_ledger_entries(): void
+    {
+        $receipts = app(ReceiptService::class);
+        $r = $receipts->create([
+            'receipt_date' => now()->toDateString(), 'account_id' => $this->account->id,
+            'channel' => 'transfer', 'amount' => '100000.00',
+        ], [['fund_id' => $this->fund->id, 'amount' => '100000.00']], $this->actor);
+        $receipts->approve($receipts->submit($r, $this->actor), $this->actor);
+
+        $entries = LedgerEntry::where('transaction_type', TransactionType::RECEIPT->value)
+            ->where('transaction_id', $r->id)
+            ->get();
+
+        $this->assertCount(2, $entries);
+        $this->assertSame('100000.00', bcadd((string) $entries->sum('debit'), '0', 2));
+        $this->assertSame('100000.00', bcadd((string) $entries->sum('credit'), '0', 2));
     }
 }

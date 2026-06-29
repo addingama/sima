@@ -22,8 +22,14 @@ class FundController extends Controller
         $this->authorize('viewAny', Fund::class);
 
         $funds = Fund::query()
-            ->leftJoin('fund_balances', 'fund_balances.fund_id', '=', 'funds.id')
-            ->select('funds.*', DB::raw('COALESCE(fund_balances.balance, 0) as balance'))
+            ->select('funds.*')
+            ->selectSub(
+                DB::table('ledger_entries')
+                    ->selectRaw('COALESCE(SUM(credit),0) - COALESCE(SUM(debit),0)')
+                    ->whereColumn('ledger_entries.ledger_account_id', 'funds.id')
+                    ->where('ledger_entries.ledger_account_type', 'fund'),
+                'balance'
+            )
             ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w
                 ->where('funds.name', 'like', '%'.$request->string('q').'%')
                 ->orWhere('funds.code', 'like', '%'.$request->string('q').'%')))

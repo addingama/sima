@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\LedgerAccountType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -34,7 +35,8 @@ class Account extends Model implements Auditable
 
     public function ledgerEntries(): HasMany
     {
-        return $this->hasMany(LedgerEntry::class);
+        return $this->hasMany(LedgerEntry::class, 'ledger_account_id')
+            ->where('ledger_account_type', LedgerAccountType::ACCOUNT->value);
     }
 
     public function receipts(): HasMany
@@ -55,6 +57,9 @@ class Account extends Model implements Auditable
     /** @deprecated Gunakan LedgerService::balanceForAccount() */
     public function balance(): string
     {
-        return (string) ($this->ledgerEntries()->sum('amount') ?? 0);
+        $debit = (string) ($this->ledgerEntries()->sum('debit') ?? '0');
+        $credit = (string) ($this->ledgerEntries()->sum('credit') ?? '0');
+
+        return bcsub($debit, $credit, 2);
     }
 }

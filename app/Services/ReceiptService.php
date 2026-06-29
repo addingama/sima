@@ -4,8 +4,9 @@ namespace App\Services;
 
 use App\Enums\AllocationStatus;
 use App\Enums\ApprovalAction;
-use App\Enums\LedgerType;
+use App\Enums\LedgerMovement;
 use App\Enums\ReceiptStatus;
+use App\Enums\TransactionType;
 use App\Exceptions\DomainException;
 use App\Models\Receipt;
 use App\Models\User;
@@ -105,18 +106,19 @@ class ReceiptService
         $this->assertAllocationsMatchExisting($receipt);
 
         return DB::transaction(function () use ($receipt, $actor, $notes): Receipt {
-            $legs = $receipt->allocations->map(fn ($alloc) => [
-                'entry_date' => $receipt->receipt_date->toDateString(),
-                'account_id' => $receipt->account_id,
+            $fundLines = $receipt->allocations->map(fn ($alloc) => [
                 'fund_id' => $alloc->fund_id,
-                'program_id' => $alloc->program_id,
-                'amount' => bcadd((string) $alloc->amount, '0', 2), // debit kas / credit dana (+)
-                'type' => LedgerType::RECEIPT,
-                'source' => $receipt,
-                'memo' => 'Penerimaan '.$receipt->receipt_number,
+                'amount' => bcadd((string) $alloc->amount, '0', 2),
             ])->all();
 
-            $this->ledger->post($legs, $actor);
+            $this->ledger->postAmanahMovement(
+                TransactionType::RECEIPT,
+                $receipt->id,
+                $receipt->account_id,
+                $fundLines,
+                LedgerMovement::IN,
+                'Penerimaan '.$receipt->receipt_number,
+            );
 
             $receipt->allocations()->update([
                 'status' => AllocationStatus::POSTED->value,

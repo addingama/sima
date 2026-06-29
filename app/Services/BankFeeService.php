@@ -3,7 +3,8 @@
 namespace App\Services;
 
 use App\Enums\BankFeeStatus;
-use App\Enums\LedgerType;
+use App\Enums\LedgerMovement;
+use App\Enums\TransactionType;
 use App\Exceptions\DomainException;
 use App\Models\BankFee;
 use App\Models\Fund;
@@ -70,15 +71,14 @@ class BankFeeService
                 // Saldo akun juga harus cukup (uang fisik benar keluar dari bank).
                 $this->balances->assertAccountSufficient($fee->account_id, $amount);
 
-                $this->ledger->post([[
-                    'entry_date' => $fee->fee_date->toDateString(),
-                    'account_id' => $fee->account_id,
-                    'fund_id' => $fee->fund_id,
-                    'amount' => bcmul($amount, '-1', 2),
-                    'type' => LedgerType::BANK_FEE,
-                    'source' => $fee,
-                    'memo' => 'Biaya bank '.$fee->fee_number,
-                ]], $actor);
+                $this->ledger->postAmanahMovement(
+                    TransactionType::BANK_FEE,
+                    $fee->id,
+                    $fee->account_id,
+                    [['fund_id' => $fee->fund_id, 'amount' => $amount]],
+                    LedgerMovement::OUT,
+                    'Biaya bank '.$fee->fee_number,
+                );
 
                 $fee->update([
                     'status' => BankFeeStatus::POSTED->value,
