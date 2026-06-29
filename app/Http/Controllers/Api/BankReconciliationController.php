@@ -41,10 +41,25 @@ class BankReconciliationController extends Controller
 
     public function show(BankReconciliation $bankReconciliation): JsonResponse
     {
-        return response()->json($bankReconciliation->load([
+        $bankReconciliation->load([
             'account:id,code,name',
             'lines.ledgerEntry:id,entry_date,amount,type,memo',
-        ]));
+        ]);
+
+        $reconciling = $this->service->deferredBankFeeItems(
+            $bankReconciliation->account_id,
+            $bankReconciliation->period_end->toDateString()
+        );
+
+        return response()->json([
+            ...$bankReconciliation->toArray(),
+            'reconciling_items' => $reconciling['items'],
+            'reconciling_total' => $reconciling['total'],
+            'adjusted_difference' => $this->service->adjustedDifference(
+                (string) $bankReconciliation->difference,
+                $reconciling['total']
+            ),
+        ]);
     }
 
     public function addLine(Request $request, BankReconciliation $bankReconciliation): JsonResponse

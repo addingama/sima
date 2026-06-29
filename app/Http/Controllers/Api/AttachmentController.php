@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Attachment\IndexAttachmentRequest;
+use App\Http\Requests\Attachment\StoreAttachmentRequest;
+use App\Http\Resources\AttachmentResource;
 use App\Models\Attachment;
 use App\Models\BankFee;
 use App\Models\Disbursement;
@@ -11,7 +14,6 @@ use App\Models\Receipt;
 use App\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -27,31 +29,23 @@ class AttachmentController extends Controller
         'liability' => OperationalLiability::class,
     ];
 
-    public function index(Request $request): JsonResponse
+    public function index(IndexAttachmentRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'attachable_type' => ['required', 'in:'.implode(',', array_keys(self::TYPES))],
-            'attachable_id' => ['required', 'integer'],
-        ]);
+        $model = $this->resolve($request->attachableType(), $request->attachableId());
+        $this->authorize('view', $model);
 
-        $model = $this->resolve($data['attachable_type'], (int) $data['attachable_id']);
-
-        return response()->json($model->attachments()->with('uploader:id,name')->get());
+        return AttachmentResource::collection(
+            $model->attachments()->with('uploader:id,name')->get()
+        )->response();
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreAttachmentRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'attachable_type' => ['required', 'in:'.implode(',', array_keys(self::TYPES))],
-            'attachable_id' => ['required', 'integer'],
-            'file' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx'],
-            'title' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        $model = $this->resolve($data['attachable_type'], (int) $data['attachable_id']);
+        $model = $this->resolve($request->attachableType(), $request->attachableId());
+        $this->authorize('create', Attachment::class);
 
         $file = $request->file('file');
-        $path = $file->store('attachments/'.$data['attachable_type'], 'local');
+        $path = $file->store('attachments/'.$request->attachableType(), 'local');
 
         $attachment = $model->attachments()->create([
             'disk' => 'local',
@@ -59,7 +53,7 @@ class AttachmentController extends Controller
             'original_name' => $file->getClientOriginalName(),
             'mime_type' => $file->getClientMimeType(),
             'size' => $file->getSize(),
-            'title' => $data['title'] ?? null,
+            'title' => $request->validated('title'),
             'uploaded_by' => $request->user()->id,
         ]);
 
@@ -69,11 +63,15 @@ class AttachmentController extends Controller
             'size' => $attachment->size,
         ], $request->user(), 'attachment');
 
-        return response()->json($attachment, 201);
+        return (new AttachmentResource($attachment))
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function download(Attachment $attachment): StreamedResponse
     {
+        $this->authorize('download', $attachment);
+
         abort_unless(Storage::disk($attachment->disk)->exists($attachment->path), 404, 'Berkas tidak ditemukan.');
 
         return Storage::disk($attachment->disk)->download($attachment->path, $attachment->original_name);
@@ -81,7 +79,8 @@ class AttachmentController extends Controller
 
     public function destroy(Attachment $attachment): JsonResponse
     {
-        // Lampiran bukan transaksi keuangan; boleh dihapus. File fisik ikut dihapus.
+        $this->authorize('delete', $attachment);
+
         Storage::disk($attachment->disk)->delete($attachment->path);
         $attachment->delete();
 

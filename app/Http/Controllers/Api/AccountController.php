@@ -8,6 +8,7 @@ use App\Models\Account;
 use App\Services\LedgerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AccountController extends Controller
 {
@@ -16,17 +17,14 @@ class AccountController extends Controller
     public function index(Request $request): JsonResponse
     {
         $accounts = Account::query()
-            ->when($request->filled('q'), fn ($q) => $q->where('name', 'like', '%'.$request->string('q').'%')
-                ->orWhere('code', 'like', '%'.$request->string('q').'%'))
-            ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')))
-            ->orderBy('name')
+            ->leftJoin('account_balances', 'account_balances.account_id', '=', 'accounts.id')
+            ->select('accounts.*', DB::raw('COALESCE(account_balances.balance, 0) as balance'))
+            ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w
+                ->where('accounts.name', 'like', '%'.$request->string('q').'%')
+                ->orWhere('accounts.code', 'like', '%'.$request->string('q').'%')))
+            ->when($request->filled('type'), fn ($q) => $q->where('accounts.type', $request->string('type')))
+            ->orderBy('accounts.name')
             ->paginate($request->integer('per_page', 15));
-
-        $accounts->getCollection()->transform(function (Account $account) {
-            $account->balance = $this->ledger->balanceForAccount($account->id);
-
-            return $account;
-        });
 
         return response()->json($accounts);
     }

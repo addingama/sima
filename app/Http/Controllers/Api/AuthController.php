@@ -7,10 +7,17 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    /** Maksimum percobaan login gagal per email+IP sebelum dikunci sementara. */
+    private const MAX_ATTEMPTS = 5;
+
+    private const DECAY_SECONDS = 60;
+
     public function login(Request $request): JsonResponse
     {
         $credentials = $request->validate([
@@ -19,9 +26,19 @@ class AuthController extends Controller
             'device_name' => ['nullable', 'string'],
         ]);
 
+        $throttleKey = Str::lower($credentials['email']).'|'.$request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, self::MAX_ATTEMPTS)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            throw ValidationException::withMessages([
+                'email' => ["Terlalu banyak percobaan. Coba lagi dalam {$seconds} detik."],
+            ])->status(429);
+        }
+
         $user = User::where('email', $credentials['email'])->first();
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+            RateLimiter::hit($throttleKey, self::DECAY_SECONDS);
             throw ValidationException::withMessages([
                 'email' => ['Kredensial tidak valid.'],
             ]);
@@ -32,6 +49,8 @@ class AuthController extends Controller
                 'email' => ['Akun tidak aktif. Hubungi administrator.'],
             ]);
         }
+
+        RateLimiter::clear($throttleKey);
 
         $token = $user->createToken($credentials['device_name'] ?? 'sima-spa')->plainTextToken;
 

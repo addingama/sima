@@ -27,7 +27,7 @@ class ReportController extends Controller
 
         return response()->json([
             'data' => $rows,
-            'total' => (string) $rows->sum(fn ($r) => (float) $r->balance),
+            'total' => $rows->reduce(fn (string $c, $r) => bcadd($c, (string) $r->balance, 2), '0.00'),
         ]);
     }
 
@@ -46,7 +46,7 @@ class ReportController extends Controller
 
         return response()->json([
             'data' => $rows,
-            'total' => (string) $rows->sum(fn ($r) => (float) $r->balance),
+            'total' => $rows->reduce(fn (string $c, $r) => bcadd($c, (string) $r->balance, 2), '0.00'),
         ]);
     }
 
@@ -77,24 +77,22 @@ class ReportController extends Controller
      */
     public function reconciliationSummary(): JsonResponse
     {
-        $totalAccounts = (string) (LedgerEntry::sum('amount') ?? 0);
-        $totalFunds = $totalAccounts; // sumber yang sama (SUM seluruh ledger)
+        // Invariant struktural: SUM seluruh ledger pada dimensi akun == dimensi dana.
+        $ledgerTotal = bcadd((string) (LedgerEntry::sum('amount') ?? 0), '0', 2);
 
-        $byAccount = LedgerEntry::query()
-            ->selectRaw('account_id, COALESCE(SUM(amount),0) as balance')
-            ->groupBy('account_id')->pluck('balance', 'account_id');
-        $byFund = LedgerEntry::query()
-            ->selectRaw('fund_id, COALESCE(SUM(amount),0) as balance')
-            ->groupBy('fund_id')->pluck('balance', 'fund_id');
-
-        $sumAccounts = (string) $byAccount->sum(fn ($v) => (float) $v);
-        $sumFunds = (string) $byFund->sum(fn ($v) => (float) $v);
+        // Integritas cache: total saldo materialized harus = total ledger.
+        $cacheAccounts = bcadd((string) (DB::table('account_balances')->sum('balance') ?? 0), '0', 2);
+        $cacheFunds = bcadd((string) (DB::table('fund_balances')->sum('balance') ?? 0), '0', 2);
 
         return response()->json([
-            'total_kas_bank' => $sumAccounts,
-            'total_dana_amanah' => $sumFunds,
-            'selisih' => bcsub($sumAccounts, $sumFunds, 2),
-            'seimbang' => bccomp($sumAccounts, $sumFunds, 2) === 0,
+            'total_kas_bank' => $cacheAccounts,
+            'total_dana_amanah' => $cacheFunds,
+            'total_ledger' => $ledgerTotal,
+            'selisih_kas_dana' => bcsub($cacheAccounts, $cacheFunds, 2),
+            'selisih_cache_akun_vs_ledger' => bcsub($cacheAccounts, $ledgerTotal, 2),
+            'selisih_cache_dana_vs_ledger' => bcsub($cacheFunds, $ledgerTotal, 2),
+            'seimbang' => bccomp($cacheAccounts, $cacheFunds, 2) === 0
+                && bccomp($cacheAccounts, $ledgerTotal, 2) === 0,
         ]);
     }
 

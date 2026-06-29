@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\DonorController;
 use App\Http\Controllers\Api\FundController;
 use App\Http\Controllers\Api\OperationalLiabilityController;
 use App\Http\Controllers\Api\PortalController;
+use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\ReceiptController;
 use App\Http\Controllers\Api\ReportController;
@@ -19,10 +20,17 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
+| Health (load balancer / monitoring)
+|--------------------------------------------------------------------------
+*/
+Route::get('health', HealthController::class);
+
+/*
+|--------------------------------------------------------------------------
 | Autentikasi
 |--------------------------------------------------------------------------
 */
-Route::post('login', [AuthController::class, 'login']);
+Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('me', [AuthController::class, 'me']);

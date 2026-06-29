@@ -15,20 +15,39 @@ use Illuminate\Support\Facades\DB;
 /**
  * Lapisan inti buku besar.
  *
- * Bertanggung jawab atas:
- *  - Menghitung saldo (sumber kebenaran = SUM ledger_entries.amount).
- *  - Memposting ledger entry secara atomik.
- *  - Menjamin invariant: saldo akun & saldo dana tidak boleh negatif.
- *  - Reversal (negasi) untuk pembatalan transaksi yang sudah ter-post.
+ * Source of truth = ledger_entries (append-only/immutable).
+ * Saldo termaterialisasi (account_balances/fund_balances) adalah CACHE + titik
+ * serialisasi (lockForUpdate) agar invariant "saldo tidak boleh negatif" AMAN dari
+ * race condition pada transaksi konkuren, sekaligus pembacaan saldo O(1).
+ *
+ * Aturan anti-deadlock: penguncian SELALU berurutan — fund (asc id) lalu account (asc id).
  */
 class LedgerService
 {
+    /** Saldo dana (cache O(1)). */
     public function balanceForFund(int $fundId): string
+    {
+        $value = DB::table('fund_balances')->where('fund_id', $fundId)->value('balance');
+
+        return $this->normalize((string) ($value ?? '0'));
+    }
+
+    /** Saldo akun (cache O(1)). */
+    public function balanceForAccount(int $accountId): string
+    {
+        $value = DB::table('account_balances')->where('account_id', $accountId)->value('balance');
+
+        return $this->normalize((string) ($value ?? '0'));
+    }
+
+    /** Saldo dana dihitung ulang dari source of truth (untuk drift-check/rebuild). */
+    public function ledgerSumForFund(int $fundId): string
     {
         return $this->normalize((string) (LedgerEntry::where('fund_id', $fundId)->sum('amount') ?? '0'));
     }
 
-    public function balanceForAccount(int $accountId): string
+    /** Saldo akun dihitung ulang dari source of truth (untuk drift-check/rebuild). */
+    public function ledgerSumForAccount(int $accountId): string
     {
         return $this->normalize((string) (LedgerEntry::where('account_id', $accountId)->sum('amount') ?? '0'));
     }
@@ -44,10 +63,27 @@ class LedgerService
     public function post(array $legs, ?User $actor = null): Collection
     {
         return DB::transaction(function () use ($legs, $actor): Collection {
-            $entries = collect();
-            $accountIds = [];
-            $fundIds = [];
+            // Akumulasi delta saldo per akun & per dana.
+            $accountDeltas = [];
+            $fundDeltas = [];
+            foreach ($legs as $leg) {
+                $amount = (string) $leg['amount'];
+                $accountDeltas[(int) $leg['account_id']] = bcadd($accountDeltas[(int) $leg['account_id']] ?? '0', $amount, 2);
+                $fundDeltas[(int) $leg['fund_id']] = bcadd($fundDeltas[(int) $leg['fund_id']] ?? '0', $amount, 2);
+            }
 
+            // Kunci & terapkan saldo (urutan tetap: fund lalu account, ascending) -> hindari deadlock.
+            ksort($fundDeltas);
+            foreach ($fundDeltas as $fundId => $delta) {
+                $this->applyDelta('fund_balances', 'fund_id', $fundId, $delta, 'fund');
+            }
+            ksort($accountDeltas);
+            foreach ($accountDeltas as $accountId => $delta) {
+                $this->applyDelta('account_balances', 'account_id', $accountId, $delta, 'account');
+            }
+
+            // Tulis entri ledger (source of truth).
+            $entries = collect();
             foreach ($legs as $leg) {
                 /** @var Model|null $source */
                 $source = $leg['source'] ?? null;
@@ -70,13 +106,8 @@ class LedgerService
                 }
 
                 $entry->save();
-
                 $entries->push($entry);
-                $accountIds[$leg['account_id']] = true;
-                $fundIds[$leg['fund_id']] = true;
             }
-
-            $this->assertNonNegativeBalances(array_keys($accountIds), array_keys($fundIds));
 
             return $entries;
         });
@@ -117,34 +148,33 @@ class LedgerService
     }
 
     /**
-     * @param  array<int, int>  $accountIds
-     * @param  array<int, int>  $fundIds
+     * Kunci baris saldo (FOR UPDATE), terapkan delta, tolak bila hasilnya negatif.
      */
-    public function assertNonNegativeBalances(array $accountIds, array $fundIds): void
+    private function applyDelta(string $table, string $key, int $id, string $delta, string $kind): void
     {
-        foreach ($fundIds as $fundId) {
-            $balance = $this->balanceForFund($fundId);
-            if (bccomp($balance, '0', 2) < 0) {
-                $fund = Fund::find($fundId);
-                throw InsufficientBalanceException::fund(
-                    $fund?->name ?? "#{$fundId}",
-                    '0',
-                    bcmul($balance, '-1', 2)
-                );
+        // Pastikan baris ada agar bisa dikunci (idempoten, aman konkuren).
+        DB::table($table)->insertOrIgnore([
+            $key => $id,
+            'balance' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $current = (string) DB::table($table)->where($key, $id)->lockForUpdate()->value('balance');
+        $new = bcadd($current, $delta, 2);
+
+        if (bccomp($new, '0', 2) < 0) {
+            $requested = bcmul($delta, '-1', 2);
+            if ($kind === 'fund') {
+                throw InsufficientBalanceException::fund(Fund::find($id)?->name ?? "#{$id}", $current, $requested);
             }
+            throw InsufficientBalanceException::account(Account::find($id)?->name ?? "#{$id}", $current, $requested);
         }
 
-        foreach ($accountIds as $accountId) {
-            $balance = $this->balanceForAccount($accountId);
-            if (bccomp($balance, '0', 2) < 0) {
-                $account = Account::find($accountId);
-                throw InsufficientBalanceException::account(
-                    $account?->name ?? "#{$accountId}",
-                    '0',
-                    bcmul($balance, '-1', 2)
-                );
-            }
-        }
+        DB::table($table)->where($key, $id)->update([
+            'balance' => $new,
+            'updated_at' => now(),
+        ]);
     }
 
     private function normalize(string $value): string

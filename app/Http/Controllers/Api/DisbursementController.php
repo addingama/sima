@@ -3,8 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Disbursement\ApproveDisbursementRequest;
+use App\Http\Requests\Disbursement\RejectDisbursementRequest;
+use App\Http\Requests\Disbursement\ReverseDisbursementRequest;
+use App\Http\Requests\Disbursement\StoreDisbursementRequest;
+use App\Http\Requests\Disbursement\UpdateDisbursementRequest;
+use App\Http\Requests\Disbursement\VerifyDisbursementRequest;
+use App\Http\Resources\DisbursementResource;
 use App\Models\Disbursement;
 use App\Services\ExpenseService;
+use App\Services\IdempotencyService;
 use App\Services\ReversalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,10 +22,13 @@ class DisbursementController extends Controller
     public function __construct(
         private readonly ExpenseService $service,
         private readonly ReversalService $reversal,
+        private readonly IdempotencyService $idempotency,
     ) {}
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Disbursement::class);
+
         $items = Disbursement::query()
             ->with(['account:id,code,name', 'program:id,code,name', 'fundSources.fund:id,code,name'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
@@ -29,103 +40,82 @@ class DisbursementController extends Controller
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 15));
 
-        return response()->json($items);
+        return DisbursementResource::collection($items)->response();
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreDisbursementRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'disbursement_date' => ['required', 'date'],
-            'account_id' => ['required', 'exists:accounts,id'],
-            'program_id' => ['nullable', 'exists:programs,id'],
-            'amount' => ['required', 'numeric', 'gt:0'],
-            'payee' => ['nullable', 'string', 'max:255'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'reference_number' => ['nullable', 'string', 'max:100'],
-            'description' => ['nullable', 'string'],
-            'sources' => ['required', 'array', 'min:1'],
-            'sources.*.fund_id' => ['required', 'exists:funds,id'],
-            'sources.*.program_id' => ['nullable', 'exists:programs,id'],
-            'sources.*.amount' => ['required', 'numeric', 'gt:0'],
-            'sources.*.note' => ['nullable', 'string', 'max:500'],
-        ]);
+        return $this->idempotency->resolve($request, function () use ($request): JsonResponse {
+            $disbursement = $this->service->create(
+                $request->expenseData(),
+                $request->sources(),
+                $request->user(),
+            );
 
-        $sources = $validated['sources'];
-        unset($validated['sources']);
-
-        $disbursement = $this->service->create($validated, $sources, $request->user());
-
-        return response()->json($disbursement, 201);
+            return (new DisbursementResource($disbursement->load('fundSources.fund', 'fundSources.program')))
+                ->response()
+                ->setStatusCode(201);
+        });
     }
 
     public function show(Disbursement $disbursement): JsonResponse
     {
-        return response()->json($disbursement->load([
+        $this->authorize('view', $disbursement);
+
+        return (new DisbursementResource($disbursement->load([
             'account:id,code,name',
             'program:id,code,name',
             'fundSources.fund:id,code,name',
             'fundSources.program:id,code,name',
             'approvals.actor:id,name',
             'attachments',
-        ]));
+        ])))->response();
     }
 
-    public function update(Request $request, Disbursement $disbursement): JsonResponse
+    public function update(UpdateDisbursementRequest $request, Disbursement $disbursement): JsonResponse
     {
-        $validated = $request->validate([
-            'disbursement_date' => ['sometimes', 'date'],
-            'account_id' => ['sometimes', 'exists:accounts,id'],
-            'program_id' => ['nullable', 'exists:programs,id'],
-            'amount' => ['sometimes', 'numeric', 'gt:0'],
-            'payee' => ['nullable', 'string', 'max:255'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'reference_number' => ['nullable', 'string', 'max:100'],
-            'description' => ['nullable', 'string'],
-            'sources' => ['sometimes', 'array', 'min:1'],
-            'sources.*.fund_id' => ['required_with:sources', 'exists:funds,id'],
-            'sources.*.program_id' => ['nullable', 'exists:programs,id'],
-            'sources.*.amount' => ['required_with:sources', 'numeric', 'gt:0'],
-            'sources.*.note' => ['nullable', 'string', 'max:500'],
-        ]);
+        $disbursement = $this->service->update(
+            $disbursement,
+            $request->expenseData(),
+            $request->sources(),
+            $request->user(),
+        );
 
-        $sources = $validated['sources'] ?? null;
-        unset($validated['sources']);
-
-        $disbursement = $this->service->update($disbursement, $validated, $sources, $request->user());
-
-        return response()->json($disbursement);
+        return (new DisbursementResource($disbursement->load('fundSources.fund', 'fundSources.program')))->response();
     }
 
     public function submit(Disbursement $disbursement, Request $request): JsonResponse
     {
-        return response()->json($this->service->submit($disbursement, $request->user()));
+        $this->authorize('submit', $disbursement);
+
+        return (new DisbursementResource($this->service->submit($disbursement, $request->user())))->response();
     }
 
-    public function verify(Disbursement $disbursement, Request $request): JsonResponse
+    public function verify(VerifyDisbursementRequest $request, Disbursement $disbursement): JsonResponse
     {
-        $data = $request->validate(['notes' => ['nullable', 'string', 'max:500']]);
-
-        return response()->json($this->service->verify($disbursement, $request->user(), $data['notes'] ?? null));
+        return (new DisbursementResource(
+            $this->service->verify($disbursement, $request->user(), $request->validated('notes'))
+        ))->response();
     }
 
-    public function approve(Disbursement $disbursement, Request $request): JsonResponse
+    public function approve(ApproveDisbursementRequest $request, Disbursement $disbursement): JsonResponse
     {
-        $data = $request->validate(['notes' => ['nullable', 'string', 'max:500']]);
-
-        return response()->json($this->service->approve($disbursement, $request->user(), $data['notes'] ?? null));
+        return (new DisbursementResource(
+            $this->service->approve($disbursement, $request->user(), $request->validated('notes'))
+        ))->response();
     }
 
-    public function reject(Disbursement $disbursement, Request $request): JsonResponse
+    public function reject(RejectDisbursementRequest $request, Disbursement $disbursement): JsonResponse
     {
-        $data = $request->validate(['reason' => ['required', 'string', 'max:500']]);
-
-        return response()->json($this->service->reject($disbursement, $request->user(), $data['reason']));
+        return (new DisbursementResource(
+            $this->service->reject($disbursement, $request->user(), $request->validated('reason'))
+        ))->response();
     }
 
-    public function reverse(Disbursement $disbursement, Request $request): JsonResponse
+    public function reverse(ReverseDisbursementRequest $request, Disbursement $disbursement): JsonResponse
     {
-        $data = $request->validate(['reason' => ['required', 'string', 'max:500']]);
-
-        return response()->json($this->reversal->reverseExpense($disbursement, $request->user(), $data['reason']));
+        return (new DisbursementResource(
+            $this->reversal->reverseExpense($disbursement, $request->user(), $request->validated('reason'))
+        ))->response();
     }
 }

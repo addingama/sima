@@ -8,6 +8,7 @@ use App\Models\Fund;
 use App\Services\LedgerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class FundController extends Controller
 {
@@ -15,19 +16,16 @@ class FundController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        // Saldo di-join dari cache materialized (O(1) per baris, tanpa N+1).
         $funds = Fund::query()
-            ->when($request->filled('q'), fn ($q) => $q->where('name', 'like', '%'.$request->string('q').'%')
-                ->orWhere('code', 'like', '%'.$request->string('q').'%'))
-            ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')))
-            ->orderBy('name')
+            ->leftJoin('fund_balances', 'fund_balances.fund_id', '=', 'funds.id')
+            ->select('funds.*', DB::raw('COALESCE(fund_balances.balance, 0) as balance'))
+            ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w
+                ->where('funds.name', 'like', '%'.$request->string('q').'%')
+                ->orWhere('funds.code', 'like', '%'.$request->string('q').'%')))
+            ->when($request->filled('type'), fn ($q) => $q->where('funds.type', $request->string('type')))
+            ->orderBy('funds.name')
             ->paginate($request->integer('per_page', 15));
-
-        // Sertakan saldo turunan (dari ledger) untuk tiap dana.
-        $funds->getCollection()->transform(function (Fund $fund) {
-            $fund->balance = $this->ledger->balanceForFund($fund->id);
-
-            return $fund;
-        });
 
         return response()->json($funds);
     }

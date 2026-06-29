@@ -1,0 +1,154 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Enums\DisbursementStatus;
+use App\Enums\LedgerType;
+use App\Enums\ReceiptStatus;
+use App\Exceptions\DomainException;
+use App\Exceptions\InsufficientBalanceException;
+use App\Models\Account;
+use App\Models\Fund;
+use App\Models\LedgerEntry;
+use App\Models\User;
+use App\Services\ExpenseService;
+use App\Services\LedgerService;
+use App\Services\ReceiptService;
+use App\Services\ReversalService;
+use App\Services\TrustFundBalanceService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class LedgerInvariantTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private User $actor;
+
+    private Account $account;
+
+    private Fund $fund;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->actor = User::factory()->create();
+        $this->account = Account::create(['code' => 'KAS', 'name' => 'Kas', 'type' => 'cash', 'is_active' => true, 'created_by' => $this->actor->id]);
+        $this->fund = Fund::create(['code' => 'ZKT', 'name' => 'Zakat', 'type' => 'restricted', 'is_active' => true, 'created_by' => $this->actor->id]);
+    }
+
+    private function seedOpening(string $amount): void
+    {
+        app(LedgerService::class)->post([[
+            'account_id' => $this->account->id, 'fund_id' => $this->fund->id,
+            'amount' => $amount, 'type' => LedgerType::OPENING,
+        ]], $this->actor);
+    }
+
+    public function test_receipt_full_flow_posts_ledger_and_balances(): void
+    {
+        $receipts = app(ReceiptService::class);
+        $balances = app(TrustFundBalanceService::class);
+
+        $r = $receipts->create([
+            'receipt_date' => now()->toDateString(), 'account_id' => $this->account->id,
+            'channel' => 'transfer', 'amount' => '500000.00',
+        ], [['fund_id' => $this->fund->id, 'amount' => '500000.00']], $this->actor);
+
+        $r = $receipts->submit($r, $this->actor);
+        $r = $receipts->approve($r, $this->actor);
+
+        $this->assertSame(ReceiptStatus::APPROVED, $r->status);
+        $this->assertSame('500000.00', $balances->fundBalance($this->fund->id));
+        $this->assertSame('500000.00', $balances->accountBalance($this->account->id));
+    }
+
+    public function test_receipt_allocation_must_equal_total(): void
+    {
+        $this->expectException(DomainException::class);
+
+        app(ReceiptService::class)->create([
+            'receipt_date' => now()->toDateString(), 'account_id' => $this->account->id,
+            'channel' => 'cash', 'amount' => '500000.00',
+        ], [['fund_id' => $this->fund->id, 'amount' => '400000.00']], $this->actor);
+    }
+
+    public function test_expense_rejected_when_fund_insufficient(): void
+    {
+        $this->expectException(InsufficientBalanceException::class);
+
+        $expenses = app(ExpenseService::class);
+        $e = $expenses->create([
+            'disbursement_date' => now()->toDateString(), 'account_id' => $this->account->id,
+            'amount' => '100000.00',
+        ], [['fund_id' => $this->fund->id, 'amount' => '100000.00']], $this->actor);
+
+        // Saldo dana 0 -> submit harus menolak (advisory) / approve harus menolak (guard).
+        $expenses->submit($e, $this->actor);
+    }
+
+    public function test_expense_flow_decrements_balances(): void
+    {
+        $this->seedOpening('300000.00');
+        $expenses = app(ExpenseService::class);
+        $balances = app(TrustFundBalanceService::class);
+
+        $e = $expenses->create([
+            'disbursement_date' => now()->toDateString(), 'account_id' => $this->account->id,
+            'amount' => '120000.00',
+        ], [['fund_id' => $this->fund->id, 'amount' => '120000.00']], $this->actor);
+        $e = $expenses->submit($e, $this->actor);
+        $e = $expenses->verify($e, $this->actor);
+        $e = $expenses->approve($e, $this->actor);
+
+        $this->assertSame(DisbursementStatus::APPROVED, $e->status);
+        $this->assertSame('180000.00', $balances->fundBalance($this->fund->id));
+        $this->assertSame('180000.00', $balances->accountBalance($this->account->id));
+    }
+
+    public function test_reversal_restores_balance(): void
+    {
+        $this->seedOpening('300000.00');
+        $expenses = app(ExpenseService::class);
+        $reversal = app(ReversalService::class);
+        $balances = app(TrustFundBalanceService::class);
+
+        $e = $expenses->create([
+            'disbursement_date' => now()->toDateString(), 'account_id' => $this->account->id,
+            'amount' => '120000.00',
+        ], [['fund_id' => $this->fund->id, 'amount' => '120000.00']], $this->actor);
+        $e = $expenses->approve($expenses->verify($expenses->submit($e, $this->actor), $this->actor), $this->actor);
+
+        $e = $reversal->reverseExpense($e, $this->actor, 'salah input');
+
+        $this->assertSame(DisbursementStatus::REVERSED, $e->status);
+        $this->assertSame('300000.00', $balances->fundBalance($this->fund->id));
+    }
+
+    public function test_global_invariant_accounts_equal_funds(): void
+    {
+        $this->seedOpening('300000.00');
+        $receipts = app(ReceiptService::class);
+        $r = $receipts->create([
+            'receipt_date' => now()->toDateString(), 'account_id' => $this->account->id,
+            'channel' => 'transfer', 'amount' => '500000.00',
+        ], [['fund_id' => $this->fund->id, 'amount' => '500000.00']], $this->actor);
+        $receipts->approve($receipts->submit($r, $this->actor), $this->actor);
+
+        $sumAccounts = (string) LedgerEntry::sum('amount');
+        $byAccount = LedgerEntry::selectRaw('account_id, SUM(amount) s')->groupBy('account_id')->sum('s');
+        $byFund = LedgerEntry::selectRaw('fund_id, SUM(amount) s')->groupBy('fund_id')->sum('s');
+
+        $this->assertSame((float) $byAccount, (float) $byFund);
+        $this->assertSame('800000.00', bcadd($sumAccounts, '0', 2));
+    }
+
+    public function test_ledger_entry_is_immutable(): void
+    {
+        $this->seedOpening('100000.00');
+        $entry = LedgerEntry::first();
+
+        $this->expectException(\LogicException::class);
+        $entry->update(['amount' => '999999.00']);
+    }
+}

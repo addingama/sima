@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BankFee\ReverseBankFeeRequest;
+use App\Http\Requests\BankFee\StoreBankFeeRequest;
+use App\Http\Resources\BankFeeResource;
 use App\Models\BankFee;
 use App\Services\BankFeeService;
 use App\Services\ReversalService;
@@ -18,6 +21,8 @@ class BankFeeController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', BankFee::class);
+
         $items = BankFee::query()
             ->with(['account:id,code,name', 'fund:id,code,name'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
@@ -26,39 +31,41 @@ class BankFeeController extends Controller
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 15));
 
-        return response()->json($items);
+        return BankFeeResource::collection($items)->response();
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreBankFeeRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'fee_date' => ['required', 'date'],
-            'account_id' => ['required', 'exists:accounts,id'],
-            'fund_id' => ['nullable', 'exists:funds,id'],
-            'fee_type' => ['required', 'in:admin,transfer,tax,other'],
-            'amount' => ['required', 'numeric', 'gt:0'],
-            'description' => ['nullable', 'string'],
-        ]);
+        $fee = $this->service->create($request->validated(), $request->user());
 
-        $fee = $this->service->create($data, $request->user());
-
-        return response()->json($fee, 201);
+        return (new BankFeeResource($fee->load('account:id,code,name', 'fund:id,code,name')))
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function show(BankFee $bankFee): JsonResponse
     {
-        return response()->json($bankFee->load(['account:id,code,name', 'fund:id,code,name']));
+        $this->authorize('view', $bankFee);
+
+        return (new BankFeeResource($bankFee->load([
+            'account:id,code,name',
+            'fund:id,code,name',
+            'operationalLiability',
+            'attachments',
+        ])))->response();
     }
 
     public function post(BankFee $bankFee, Request $request): JsonResponse
     {
-        return response()->json($this->service->post($bankFee, $request->user()));
+        $this->authorize('post', $bankFee);
+
+        return (new BankFeeResource($this->service->post($bankFee, $request->user())))->response();
     }
 
-    public function reverse(BankFee $bankFee, Request $request): JsonResponse
+    public function reverse(ReverseBankFeeRequest $request, BankFee $bankFee): JsonResponse
     {
-        $data = $request->validate(['reason' => ['required', 'string', 'max:500']]);
-
-        return response()->json($this->reversal->reverseBankFee($bankFee, $request->user(), $data['reason']));
+        return (new BankFeeResource(
+            $this->reversal->reverseBankFee($bankFee, $request->user(), $request->validated('reason'))
+        ))->response();
     }
 }
