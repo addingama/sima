@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domains/Reconciliation\Events;
+namespace App\Domains\Reconciliation\Events;
 
 use App\Models\BankReconciliation;
 use App\Models\User;

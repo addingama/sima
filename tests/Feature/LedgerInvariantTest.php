@@ -8,7 +8,6 @@ use App\Domains\Ledger\Services\BalanceService;
 use App\Domains\Ledger\Services\LedgerService;
 use App\Domains\Receipt\Services\ReceiptService;
 use App\Enums\DisbursementStatus;
-use App\Enums\LedgerMovement;
 use App\Enums\ReceiptStatus;
 use App\Enums\TransactionType;
 use App\Exceptions\DomainException;
@@ -33,21 +32,15 @@ class LedgerInvariantTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seedSimaBasics();
         $this->actor = User::factory()->create();
-        $this->account = Account::create(['code' => 'KAS', 'name' => 'Kas', 'type' => 'cash', 'is_active' => true, 'created_by' => $this->actor->id]);
-        $this->fund = Fund::create(['code' => 'ZKT', 'name' => 'Zakat', 'type' => 'restricted', 'is_active' => true, 'created_by' => $this->actor->id]);
+        $this->account = $this->makeAccount($this->actor);
+        $this->fund = $this->makeFund($this->actor);
     }
 
-    private function seedOpening(string $amount): void
+    private function seedOpeningBalance(string $amount): void
     {
-        app(LedgerService::class)->postAmanahMovement(
-            TransactionType::OPENING,
-            0,
-            $this->account->id,
-            [['fund_id' => $this->fund->id, 'amount' => $amount]],
-            LedgerMovement::IN,
-            'Saldo awal',
-        );
+        $this->seedOpening($this->account, $this->fund, $amount);
     }
 
     public function test_receipt_full_flow_posts_ledger_and_balances(): void
@@ -93,7 +86,7 @@ class LedgerInvariantTest extends TestCase
 
     public function test_expense_flow_decrements_balances(): void
     {
-        $this->seedOpening('300000.00');
+        $this->seedOpeningBalance('300000.00');
         $expenses = app(ExpenseService::class);
         $balances = app(BalanceService::class);
 
@@ -112,7 +105,7 @@ class LedgerInvariantTest extends TestCase
 
     public function test_reversal_restores_balance(): void
     {
-        $this->seedOpening('300000.00');
+        $this->seedOpeningBalance('300000.00');
         $expenses = app(ExpenseService::class);
         $reversal = app(ExpenseReversalService::class);
         $balances = app(BalanceService::class);
@@ -131,7 +124,7 @@ class LedgerInvariantTest extends TestCase
 
     public function test_global_invariant_accounts_equal_funds(): void
     {
-        $this->seedOpening('300000.00');
+        $this->seedOpeningBalance('300000.00');
         $receipts = app(ReceiptService::class);
         $balances = app(BalanceService::class);
 
@@ -150,7 +143,7 @@ class LedgerInvariantTest extends TestCase
 
     public function test_ledger_entry_is_immutable(): void
     {
-        $this->seedOpening('100000.00');
+        $this->seedOpeningBalance('100000.00');
         $entry = LedgerEntry::first();
 
         $this->expectException(\LogicException::class);
@@ -159,7 +152,7 @@ class LedgerInvariantTest extends TestCase
 
     public function test_double_entry_balanced_per_transaction(): void
     {
-        $this->seedOpening('100000.00');
+        $this->seedOpeningBalance('100000.00');
         $ledger = app(LedgerService::class);
 
         $this->assertSame($ledger->totalDebits(), $ledger->totalCredits());
