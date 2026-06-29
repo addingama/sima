@@ -17,9 +17,9 @@ return [
         'account.view', 'account.manage',
         'program.view', 'program.manage',
 
-        // Penerimaan & alokasi
-        'receipt.view', 'receipt.create', 'receipt.post', 'receipt.reverse',
-        'allocation.view', 'allocation.manage',
+        // Penerimaan (alokasi menyatu dengan penerimaan)
+        'receipt.view', 'receipt.create',
+        'receipt.submit', 'receipt.approve', 'receipt.reject', 'receipt.reverse',
 
         // Pengeluaran & approval
         'disbursement.view', 'disbursement.create',
@@ -59,8 +59,7 @@ return [
             'fund.view',
             'account.view',
             'program.view', 'program.manage',
-            'receipt.view', 'receipt.create', 'receipt.post', 'receipt.reverse',
-            'allocation.view', 'allocation.manage',
+            'receipt.view', 'receipt.create', 'receipt.submit',
             'disbursement.view', 'disbursement.create', 'disbursement.submit',
             'bankfee.view', 'bankfee.manage', 'bankfee.post', 'bankfee.reverse',
             'reconciliation.view', 'reconciliation.manage',
@@ -71,7 +70,7 @@ return [
 
         UserRole::VERIFIKATOR->value => [
             'donor.view', 'fund.view', 'account.view', 'program.view',
-            'receipt.view', 'allocation.view',
+            'receipt.view',
             'disbursement.view', 'disbursement.verify', 'disbursement.reject',
             'bankfee.view',
             'liability.view',
@@ -81,7 +80,7 @@ return [
 
         UserRole::KETUA->value => [
             'donor.view', 'fund.view', 'account.view', 'program.view',
-            'receipt.view', 'allocation.view',
+            'receipt.view', 'receipt.approve', 'receipt.reject', 'receipt.reverse',
             'disbursement.view', 'disbursement.approve', 'disbursement.reject',
             'bankfee.view',
             'reconciliation.view',
@@ -92,7 +91,7 @@ return [
 
         UserRole::AUDITOR->value => [
             'donor.view', 'fund.view', 'account.view', 'program.view',
-            'receipt.view', 'allocation.view', 'disbursement.view',
+            'receipt.view', 'disbursement.view',
             'bankfee.view', 'reconciliation.view',
             'liability.view', 'attachment.view',
             'audit.view', 'report.view',
@@ -117,11 +116,18 @@ return [
             'description' => 'Penampung sementara penerimaan sebelum dialokasikan ke Dana Amanah.',
         ],
         [
+            'system_key' => 'operational',
+            'code' => 'SYS-OPERASIONAL',
+            'name' => 'Dana Operasional',
+            'type' => 'unrestricted',
+            'description' => 'Dana umum/operasional. Default penanggung biaya administrasi bank.',
+        ],
+        [
             'system_key' => 'bank_admin',
             'code' => 'SYS-BANKADMIN',
             'name' => 'Dana Biaya Administrasi Bank',
             'type' => 'unrestricted',
-            'description' => 'Dana penanggung biaya administrasi/transfer bank.',
+            'description' => 'Dana khusus penanggung biaya administrasi/transfer bank (opsional).',
         ],
         [
             'system_key' => 'opening_equity',

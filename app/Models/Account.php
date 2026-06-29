@@ -11,7 +11,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class Account extends Model implements Auditable
 {
-    use HasFactory, SoftDeletes, AuditableTrait;
+    use AuditableTrait, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'code',

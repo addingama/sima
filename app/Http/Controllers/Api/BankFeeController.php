@@ -5,12 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\BankFee;
 use App\Services\BankFeeService;
+use App\Services\ReversalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class BankFeeController extends Controller
 {
-    public function __construct(private readonly BankFeeService $service) {}
+    public function __construct(
+        private readonly BankFeeService $service,
+        private readonly ReversalService $reversal,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -55,6 +59,6 @@ class BankFeeController extends Controller
     {
         $data = $request->validate(['reason' => ['required', 'string', 'max:500']]);
 
-        return response()->json($this->service->reverse($bankFee, $request->user(), $data['reason']));
+        return response()->json($this->reversal->reverseBankFee($bankFee, $request->user(), $data['reason']));
     }
 }

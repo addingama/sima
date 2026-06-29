@@ -22,7 +22,12 @@ return new class extends Migration
             $table->decimal('amount', 18, 2);
             $table->text('description')->nullable();
 
-            $table->enum('status', ['draft', 'posted', 'reversed'])->default('draft');
+            // deferred = dana operasional tidak cukup -> dicatat sebagai operational_liability
+            $table->enum('status', ['draft', 'posted', 'deferred', 'reversed'])->default('draft');
+
+            // Bila deferred, tautkan ke liabilitas operasional yang dibuat.
+            // FK ditambahkan di migrasi terpisah (operational_liabilities dibuat setelahnya).
+            $table->foreignId('operational_liability_id')->nullable();
 
             $table->timestamp('posted_at')->nullable();
             $table->foreignId('posted_by')->nullable()->constrained('users')->nullOnDelete();

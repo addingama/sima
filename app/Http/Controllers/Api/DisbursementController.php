@@ -4,13 +4,17 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Disbursement;
-use App\Services\DisbursementService;
+use App\Services\ExpenseService;
+use App\Services\ReversalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DisbursementController extends Controller
 {
-    public function __construct(private readonly DisbursementService $service) {}
+    public function __construct(
+        private readonly ExpenseService $service,
+        private readonly ReversalService $reversal,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -122,6 +126,6 @@ class DisbursementController extends Controller
     {
         $data = $request->validate(['reason' => ['required', 'string', 'max:500']]);
 
-        return response()->json($this->service->reverse($disbursement, $request->user(), $data['reason']));
+        return response()->json($this->reversal->reverseExpense($disbursement, $request->user(), $data['reason']));
     }
 }

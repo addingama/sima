@@ -13,7 +13,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class BankFee extends Model implements Auditable
 {
-    use HasFactory, HasAttachments, HasLedgerEntries, AuditableTrait;
+    use AuditableTrait, HasAttachments, HasFactory, HasLedgerEntries;
 
     protected $fillable = [
         'fee_number',
@@ -24,6 +24,7 @@ class BankFee extends Model implements Auditable
         'amount',
         'description',
         'status',
+        'operational_liability_id',
         'posted_at',
         'posted_by',
         'reversed_at',
@@ -51,5 +52,10 @@ class BankFee extends Model implements Auditable
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    public function operationalLiability(): BelongsTo
+    {
+        return $this->belongsTo(OperationalLiability::class);
     }
 }

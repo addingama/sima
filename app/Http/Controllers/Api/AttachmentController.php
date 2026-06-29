@@ -8,6 +8,7 @@ use App\Models\BankFee;
 use App\Models\Disbursement;
 use App\Models\OperationalLiability;
 use App\Models\Receipt;
+use App\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttachmentController extends Controller
 {
+    public function __construct(private readonly AuditLogService $audit) {}
+
     /** Pemetaan kunci tipe -> kelas model yang boleh dilampiri. */
     private const TYPES = [
         'receipt' => Receipt::class,
@@ -59,6 +62,12 @@ class AttachmentController extends Controller
             'title' => $data['title'] ?? null,
             'uploaded_by' => $request->user()->id,
         ]);
+
+        $this->audit->log($model, 'attachment_uploaded', null, [
+            'attachment_id' => $attachment->id,
+            'original_name' => $attachment->original_name,
+            'size' => $attachment->size,
+        ], $request->user(), 'attachment');
 
         return response()->json($attachment, 201);
     }

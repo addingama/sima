@@ -22,7 +22,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'total_kas_bank' => $totalAccounts,
-            'penerimaan_bulan_ini' => (string) Receipt::where('status', ReceiptStatus::POSTED->value)
+            'penerimaan_bulan_ini' => (string) Receipt::where('status', ReceiptStatus::APPROVED->value)
                 ->whereBetween('receipt_date', [$monthStart, $monthEnd])
                 ->sum('amount'),
             'pengeluaran_bulan_ini' => (string) Disbursement::where('status', DisbursementStatus::APPROVED->value)

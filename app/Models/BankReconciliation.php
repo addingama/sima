@@ -11,7 +11,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class BankReconciliation extends Model implements Auditable
 {
-    use HasFactory, AuditableTrait;
+    use AuditableTrait, HasFactory;
 
     protected $fillable = [
         'account_id',

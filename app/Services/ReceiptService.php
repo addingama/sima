@@ -2,104 +2,208 @@
 
 namespace App\Services;
 
-use App\Enums\AllocationStatus;
 use App\Enums\ApprovalAction;
 use App\Enums\LedgerType;
 use App\Enums\ReceiptStatus;
 use App\Exceptions\DomainException;
-use App\Models\Fund;
 use App\Models\Receipt;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Penerimaan (uang masuk).
+ *
+ * Aturan:
+ *  - Alokasi Dana Amanah disimpan bersama penerimaan.
+ *  - Total alokasi WAJIB sama dengan total penerimaan (tidak ada sisa).
+ *  - draft -> submitted -> approved -> [reversed] / rejected.
+ *  - APPROVE memposting ledger per alokasi: debit kas/bank (+), credit tiap Dana Amanah (+).
+ */
 class ReceiptService
 {
     public function __construct(
         private readonly LedgerService $ledger,
         private readonly DocumentNumberService $numbers,
+        private readonly ApprovalService $approvals,
+        private readonly AuditLogService $audit,
     ) {}
 
-    /** @param array<string, mixed> $data */
-    public function create(array $data, User $actor): Receipt
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<int, array{fund_id:int, amount:string|float, program_id?:int|null, note?:string|null}>  $allocations
+     */
+    public function create(array $data, array $allocations, User $actor): Receipt
     {
-        $data['receipt_number'] = $data['receipt_number'] ?? $this->numbers->next('RCP');
-        $data['status'] = ReceiptStatus::DRAFT->value;
-        $data['created_by'] = $actor->getKey();
+        $this->assertAllocationsMatch((string) $data['amount'], $allocations);
 
-        return Receipt::create($data);
+        return DB::transaction(function () use ($data, $allocations, $actor): Receipt {
+            $receipt = Receipt::create([
+                ...$data,
+                'amount' => bcadd((string) $data['amount'], '0', 2),
+                'receipt_number' => $data['receipt_number'] ?? $this->numbers->next('RCP'),
+                'status' => ReceiptStatus::DRAFT->value,
+                'created_by' => $actor->getKey(),
+            ]);
+
+            $this->syncAllocations($receipt, $allocations);
+            $this->audit->log($receipt, 'created', null, $receipt->toArray(), $actor);
+
+            return $receipt->load('allocations');
+        });
     }
 
-    /** Posting penerimaan: uang masuk ke akun, ditampung di dana suspense. */
-    public function post(Receipt $receipt, User $actor): Receipt
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<int, array<string, mixed>>|null  $allocations
+     */
+    public function update(Receipt $receipt, array $data, ?array $allocations, User $actor): Receipt
     {
-        if ($receipt->status !== ReceiptStatus::DRAFT) {
-            throw new DomainException('Hanya penerimaan berstatus draft yang dapat diposting.');
+        $this->assertStatus($receipt, [ReceiptStatus::DRAFT]);
+
+        return DB::transaction(function () use ($receipt, $data, $allocations, $actor): Receipt {
+            $before = $receipt->toArray();
+            $receipt->update($data);
+
+            if ($allocations !== null) {
+                $this->assertAllocationsMatch((string) $receipt->amount, $allocations);
+                $receipt->allocations()->delete();
+                $this->syncAllocations($receipt, $allocations);
+            }
+
+            $this->audit->log($receipt, 'updated', $before, $receipt->fresh()->toArray(), $actor);
+
+            return $receipt->refresh()->load('allocations');
+        });
+    }
+
+    public function submit(Receipt $receipt, User $actor): Receipt
+    {
+        $this->assertStatus($receipt, [ReceiptStatus::DRAFT]);
+
+        if ($receipt->allocations()->count() === 0) {
+            throw new DomainException('Penerimaan harus memiliki minimal satu alokasi Dana Amanah.');
         }
+        $this->assertAllocationsMatchExisting($receipt);
 
-        return DB::transaction(function () use ($receipt, $actor): Receipt {
-            $suspense = $this->suspenseFund();
+        $receipt->update([
+            'status' => ReceiptStatus::SUBMITTED->value,
+            'submitted_at' => now(),
+            'submitted_by' => $actor->getKey(),
+        ]);
+        $this->approvals->record($receipt, ApprovalAction::SUBMITTED, $actor);
 
-            $this->ledger->post([[
+        return $receipt->refresh();
+    }
+
+    /** Persetujuan final — memposting ledger per alokasi. */
+    public function approve(Receipt $receipt, User $actor, ?string $notes = null): Receipt
+    {
+        $this->assertStatus($receipt, [ReceiptStatus::SUBMITTED]);
+        $this->assertAllocationsMatchExisting($receipt);
+
+        return DB::transaction(function () use ($receipt, $actor, $notes): Receipt {
+            $legs = $receipt->allocations->map(fn ($alloc) => [
                 'entry_date' => $receipt->receipt_date->toDateString(),
                 'account_id' => $receipt->account_id,
-                'fund_id' => $suspense->id,
-                'amount' => bcadd((string) $receipt->amount, '0', 2),
+                'fund_id' => $alloc->fund_id,
+                'program_id' => $alloc->program_id,
+                'amount' => bcadd((string) $alloc->amount, '0', 2), // debit kas / credit dana (+)
                 'type' => LedgerType::RECEIPT,
                 'source' => $receipt,
                 'memo' => 'Penerimaan '.$receipt->receipt_number,
-            ]], $actor);
+            ])->all();
 
-            $receipt->update([
-                'status' => ReceiptStatus::POSTED->value,
+            $this->ledger->post($legs, $actor);
+
+            $receipt->allocations()->update([
                 'posted_at' => now(),
                 'posted_by' => $actor->getKey(),
             ]);
 
-            $receipt->recordApproval(ApprovalAction::POSTED, $actor, 'Penerimaan diposting');
-
-            return $receipt->refresh();
-        });
-    }
-
-    /** Reversal penerimaan. Wajib tidak ada alokasi aktif yang masih ter-post. */
-    public function reverse(Receipt $receipt, User $actor, string $reason): Receipt
-    {
-        if ($receipt->status !== ReceiptStatus::POSTED) {
-            throw new DomainException('Hanya penerimaan berstatus posted yang dapat dibatalkan.');
-        }
-
-        $activeAllocations = $receipt->allocations()
-            ->where('status', AllocationStatus::POSTED->value)
-            ->count();
-
-        if ($activeAllocations > 0) {
-            throw new DomainException('Batalkan alokasi penerimaan ini terlebih dahulu sebelum membatalkan penerimaan.');
-        }
-
-        return DB::transaction(function () use ($receipt, $actor, $reason): Receipt {
-            $this->ledger->reverse($receipt, $actor, 'Reversal penerimaan: '.$reason);
-
             $receipt->update([
-                'status' => ReceiptStatus::REVERSED->value,
-                'reversed_at' => now(),
-                'reversed_by' => $actor->getKey(),
-                'reversal_reason' => $reason,
+                'status' => ReceiptStatus::APPROVED->value,
+                'approved_at' => now(),
+                'approved_by' => $actor->getKey(),
+                'posted_at' => now(),
             ]);
 
-            $receipt->recordApproval(ApprovalAction::REVERSED, $actor, $reason);
+            $this->approvals->record($receipt, ApprovalAction::APPROVED, $actor, $notes);
+            $this->approvals->record($receipt, ApprovalAction::POSTED, $actor);
 
             return $receipt->refresh();
         });
     }
 
-    private function suspenseFund(): Fund
+    public function reject(Receipt $receipt, User $actor, string $reason): Receipt
     {
-        $fund = Fund::findBySystemKey(Fund::KEY_SUSPENSE);
+        $this->assertStatus($receipt, [ReceiptStatus::SUBMITTED]);
 
-        if ($fund === null) {
-            throw new DomainException('Dana sistem "suspense" belum tersedia. Jalankan seeder terlebih dahulu.');
+        $receipt->update([
+            'status' => ReceiptStatus::REJECTED->value,
+            'rejected_at' => now(),
+            'rejected_by' => $actor->getKey(),
+            'rejection_reason' => $reason,
+        ]);
+        $this->approvals->record($receipt, ApprovalAction::REJECTED, $actor, $reason);
+
+        return $receipt->refresh();
+    }
+
+    /** @param array<int, array<string, mixed>> $allocations */
+    private function syncAllocations(Receipt $receipt, array $allocations): void
+    {
+        foreach ($allocations as $a) {
+            $receipt->allocations()->create([
+                'fund_id' => $a['fund_id'],
+                'program_id' => $a['program_id'] ?? null,
+                'amount' => bcadd((string) $a['amount'], '0', 2),
+                'note' => $a['note'] ?? null,
+                'status' => 'posted',
+                'created_by' => $receipt->created_by,
+            ]);
+        }
+    }
+
+    /** @param array<int, array<string, mixed>> $allocations */
+    private function assertAllocationsMatch(string $amount, array $allocations): void
+    {
+        if (count($allocations) === 0) {
+            throw new DomainException('Penerimaan harus memiliki minimal satu alokasi Dana Amanah.');
         }
 
-        return $fund;
+        $total = '0.00';
+        foreach ($allocations as $a) {
+            if (bccomp((string) $a['amount'], '0', 2) <= 0) {
+                throw new DomainException('Nominal tiap alokasi harus lebih besar dari nol.');
+            }
+            $total = bcadd($total, (string) $a['amount'], 2);
+        }
+
+        if (bccomp($total, bcadd($amount, '0', 2), 2) !== 0) {
+            throw new DomainException(
+                "Total alokasi ({$total}) harus sama dengan total penerimaan ({$amount})."
+            );
+        }
+    }
+
+    private function assertAllocationsMatchExisting(Receipt $receipt): void
+    {
+        $total = (string) $receipt->allocations()->sum('amount');
+        if (bccomp(bcadd($total, '0', 2), bcadd((string) $receipt->amount, '0', 2), 2) !== 0) {
+            throw new DomainException(
+                "Total alokasi ({$total}) harus sama dengan total penerimaan ({$receipt->amount})."
+            );
+        }
+    }
+
+    /** @param array<int, ReceiptStatus> $allowed */
+    private function assertStatus(Receipt $receipt, array $allowed): void
+    {
+        if (! in_array($receipt->status, $allowed, true)) {
+            $allowedLabels = implode(', ', array_map(fn (ReceiptStatus $s) => $s->value, $allowed));
+            throw new DomainException(
+                "Aksi tidak valid untuk status \"{$receipt->status->value}\". Status diizinkan: {$allowedLabels}."
+            );
+        }
     }
 }

@@ -12,7 +12,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class ReceiptAllocation extends Model implements Auditable
 {
-    use HasFactory, HasLedgerEntries, AuditableTrait;
+    use AuditableTrait, HasFactory, HasLedgerEntries;
 
     protected $fillable = [
         'receipt_id',

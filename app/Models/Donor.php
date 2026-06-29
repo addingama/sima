@@ -12,7 +12,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class Donor extends Model implements Auditable
 {
-    use HasFactory, SoftDeletes, AuditableTrait;
+    use AuditableTrait, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',

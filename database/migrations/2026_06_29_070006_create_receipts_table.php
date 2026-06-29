@@ -7,8 +7,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Penerimaan (uang masuk). Saat di-post, dana masuk ke akun dan ditampung sementara
-     * di Dana Sistem "suspense" sampai dialokasikan ke Dana Amanah tujuan.
+     * Penerimaan (uang masuk). Alokasi Dana Amanah wajib lengkap (total alokasi = amount).
+     * Alur: draft -> submitted -> approved -> [reversed] / rejected.
+     * Saat APPROVE: ledger diposting per alokasi (debit kas/bank, credit tiap Dana Amanah).
      */
     public function up(): void
     {
@@ -23,10 +24,18 @@ return new class extends Migration
             $table->decimal('amount', 18, 2);
             $table->text('description')->nullable();
 
-            $table->enum('status', ['draft', 'posted', 'reversed'])->default('draft');
+            $table->enum('status', ['draft', 'submitted', 'approved', 'rejected', 'reversed'])->default('draft');
 
+            $table->timestamp('submitted_at')->nullable();
+            $table->foreignId('submitted_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('approved_at')->nullable();
+            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('rejected_at')->nullable();
+            $table->foreignId('rejected_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('rejection_reason')->nullable();
+
+            // posted_at = waktu ledger diposting (saat approve)
             $table->timestamp('posted_at')->nullable();
-            $table->foreignId('posted_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('reversed_at')->nullable();
             $table->foreignId('reversed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->text('reversal_reason')->nullable();

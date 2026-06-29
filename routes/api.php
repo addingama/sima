@@ -13,7 +13,6 @@ use App\Http\Controllers\Api\FundController;
 use App\Http\Controllers\Api\OperationalLiabilityController;
 use App\Http\Controllers\Api\PortalController;
 use App\Http\Controllers\Api\ProgramController;
-use App\Http\Controllers\Api\ReceiptAllocationController;
 use App\Http\Controllers\Api\ReceiptController;
 use App\Http\Controllers\Api\ReportController;
 use Illuminate\Support\Facades\Route;
@@ -68,13 +67,13 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::get('receipts', [ReceiptController::class, 'index'])->middleware('permission:receipt.view');
     Route::get('receipts/{receipt}', [ReceiptController::class, 'show'])->middleware('permission:receipt.view');
+    Route::get('receipts/{receipt}/allocations', [ReceiptController::class, 'allocations'])->middleware('permission:receipt.view');
     Route::post('receipts', [ReceiptController::class, 'store'])->middleware('permission:receipt.create');
-    Route::post('receipts/{receipt}/post', [ReceiptController::class, 'post'])->middleware('permission:receipt.post');
+    Route::put('receipts/{receipt}', [ReceiptController::class, 'update'])->middleware('permission:receipt.create');
+    Route::post('receipts/{receipt}/submit', [ReceiptController::class, 'submit'])->middleware('permission:receipt.submit');
+    Route::post('receipts/{receipt}/approve', [ReceiptController::class, 'approve'])->middleware('permission:receipt.approve');
+    Route::post('receipts/{receipt}/reject', [ReceiptController::class, 'reject'])->middleware('permission:receipt.reject');
     Route::post('receipts/{receipt}/reverse', [ReceiptController::class, 'reverse'])->middleware('permission:receipt.reverse');
-
-    Route::get('receipts/{receipt}/allocations', [ReceiptAllocationController::class, 'index'])->middleware('permission:allocation.view');
-    Route::post('receipts/{receipt}/allocations', [ReceiptAllocationController::class, 'store'])->middleware('permission:allocation.manage');
-    Route::post('allocations/{allocation}/reverse', [ReceiptAllocationController::class, 'reverse'])->middleware('permission:allocation.manage');
 
     /*
     |----------------------------------------------------------------------

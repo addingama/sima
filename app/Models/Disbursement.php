@@ -15,7 +15,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class Disbursement extends Model implements Auditable
 {
-    use HasFactory, HasApprovals, HasAttachments, HasLedgerEntries, AuditableTrait;
+    use AuditableTrait, HasApprovals, HasAttachments, HasFactory, HasLedgerEntries;
 
     protected $fillable = [
         'disbursement_number',

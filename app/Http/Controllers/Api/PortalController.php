@@ -31,7 +31,7 @@ class PortalController extends Controller
 
         $receipts = Receipt::query()
             ->where('donor_id', $donor->id)
-            ->where('status', ReceiptStatus::POSTED->value)
+            ->where('status', ReceiptStatus::APPROVED->value)
             ->with([
                 'account:id,code,name',
                 'allocations.fund:id,code,name',
@@ -50,14 +50,14 @@ class PortalController extends Controller
         abort_if($donor === null, 404, 'Akun ini belum tertaut dengan data donatur.');
 
         $total = Receipt::where('donor_id', $donor->id)
-            ->where('status', ReceiptStatus::POSTED->value)
+            ->where('status', ReceiptStatus::APPROVED->value)
             ->sum('amount');
 
         return response()->json([
             'donor' => $donor->only(['id', 'code', 'name']),
             'total_donasi' => (string) $total,
             'jumlah_transaksi' => Receipt::where('donor_id', $donor->id)
-                ->where('status', ReceiptStatus::POSTED->value)->count(),
+                ->where('status', ReceiptStatus::APPROVED->value)->count(),
         ]);
     }
 }

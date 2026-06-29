@@ -16,7 +16,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class Receipt extends Model implements Auditable
 {
-    use HasFactory, HasApprovals, HasAttachments, HasLedgerEntries, AuditableTrait;
+    use AuditableTrait, HasApprovals, HasAttachments, HasFactory, HasLedgerEntries;
 
     protected $fillable = [
         'receipt_number',
@@ -28,8 +28,14 @@ class Receipt extends Model implements Auditable
         'amount',
         'description',
         'status',
+        'submitted_at',
+        'submitted_by',
+        'approved_at',
+        'approved_by',
+        'rejected_at',
+        'rejected_by',
+        'rejection_reason',
         'posted_at',
-        'posted_by',
         'reversed_at',
         'reversed_by',
         'reversal_reason',
@@ -42,6 +48,9 @@ class Receipt extends Model implements Auditable
             'receipt_date' => 'date',
             'amount' => 'decimal:2',
             'status' => ReceiptStatus::class,
+            'submitted_at' => 'datetime',
+            'approved_at' => 'datetime',
+            'rejected_at' => 'datetime',
             'posted_at' => 'datetime',
             'reversed_at' => 'datetime',
         ];

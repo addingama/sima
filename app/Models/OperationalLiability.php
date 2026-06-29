@@ -11,7 +11,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class OperationalLiability extends Model implements Auditable
 {
-    use HasFactory, HasAttachments, AuditableTrait;
+    use AuditableTrait, HasAttachments, HasFactory;
 
     protected $fillable = [
         'liability_number',

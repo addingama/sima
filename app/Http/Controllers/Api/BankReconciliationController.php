@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BankReconciliation;
-use App\Models\LedgerEntry;
+use App\Services\ReconciliationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class BankReconciliationController extends Controller
 {
+    public function __construct(private readonly ReconciliationService $service) {}
+
     public function index(Request $request): JsonResponse
     {
         $items = BankReconciliation::query()
@@ -32,18 +34,7 @@ class BankReconciliationController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        // Snapshot saldo sistem berdasarkan ledger s/d akhir periode.
-        $systemBalance = (string) (LedgerEntry::where('account_id', $data['account_id'])
-            ->whereDate('entry_date', '<=', $data['period_end'])
-            ->sum('amount') ?? 0);
-
-        $reconciliation = BankReconciliation::create([
-            ...$data,
-            'system_balance' => $systemBalance,
-            'difference' => bcsub((string) $data['statement_balance'], $systemBalance, 2),
-            'status' => 'draft',
-            'created_by' => $request->user()->id,
-        ]);
+        $reconciliation = $this->service->create($data, $request->user());
 
         return response()->json($reconciliation->load('account:id,code,name'), 201);
     }
@@ -67,19 +58,13 @@ class BankReconciliationController extends Controller
             'note' => ['nullable', 'string'],
         ]);
 
-        $line = $bankReconciliation->lines()->create($data);
+        $line = $this->service->addLine($bankReconciliation, $data);
 
         return response()->json($line, 201);
     }
 
-    public function complete(BankReconciliation $bankReconciliation): JsonResponse
+    public function complete(BankReconciliation $bankReconciliation, Request $request): JsonResponse
     {
-        $bankReconciliation->update([
-            'status' => 'completed',
-            'reconciled_at' => now(),
-            'reconciled_by' => request()->user()->id,
-        ]);
-
-        return response()->json($bankReconciliation);
+        return response()->json($this->service->complete($bankReconciliation, $request->user()));
     }
 }
