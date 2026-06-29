@@ -27,9 +27,4 @@ class ListLedgerRequest extends FormRequest
             'to' => ['nullable', 'date'],
         ]);
     }
-
-    public function listQuery(int $defaultPerPage = 50): \App\Support\Query\ListQueryDto
-    {
-        return parent::listQuery($defaultPerPage);
-    }
 }
