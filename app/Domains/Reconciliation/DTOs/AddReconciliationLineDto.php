@@ -2,13 +2,13 @@
 
 namespace App\Domains\Reconciliation\DTOs;
 
-use App\Models\User;
+use App\Models\BankReconciliation;
 
-readonly class CreateReconciliationDto
+readonly class AddReconciliationLineDto
 {
     /** @param array<string, mixed> $data */
     public function __construct(
+        public BankReconciliation $reconciliation,
         public array $data,
-        public User $actor,
     ) {}
 }
