@@ -65,6 +65,10 @@ Reversal               →  Negasi seluruh leg transaksi sumber
 
 Invariant: saldo akun ≥ 0, saldo dana ≥ 0, total akun = total dana (rekonsiliasi global).
 
+## Domain: Dana Amanah
+
+Tipe **`restricted`** vs **`unrestricted`**, dana sistem, dan aturan pemakaian (mis. biaya bank) dijelaskan di **[docs/DANA-AMANAH.md](DANA-AMANAH.md)**.
+
 ## Keamanan & audit
 
 - **Auth**: Laravel Sanctum (token API + cookie SPA untuk frontend same-origin)

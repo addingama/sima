@@ -14,6 +14,7 @@ Backend + frontend untuk lembaga sosial yang mencatat dan mengelola **dana titip
 | Dokumen | Isi |
 |---------|-----|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Diagram arsitektur & aliran data |
+| [docs/DANA-AMANAH.md](docs/DANA-AMANAH.md) | Tipe Dana Amanah: restricted vs unrestricted |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deploy produksi (Docker, TLS, backup) |
 | [docs/CODING_STANDARDS.md](docs/CODING_STANDARDS.md) | Standar kode backend & frontend |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Alur kontribusi & PR checklist |
@@ -61,7 +62,7 @@ make health      # GET /api/health
 | Konsep | Penjelasan |
 |---|---|
 | **Kas/Bank** (`accounts`) | Tempat uang fisik berada (kas tunai / rekening bank). |
-| **Dana Amanah** (`funds`) | Batasan/peruntukan penggunaan uang (restricted/unrestricted). |
+| **Dana Amanah** (`funds`) | Batasan/peruntukan penggunaan uang. Tipe: **`restricted`** (terikat niat donatur) vs **`unrestricted`** (dana umum). Detail: [docs/DANA-AMANAH.md](docs/DANA-AMANAH.md). |
 | **Ledger** (`ledger_entries`) | **Sumber kebenaran tunggal**, append-only/immutable. Setiap baris mencatat pergerakan uang pada **dua dimensi**: `account_id` (di kas mana) dan `fund_id` (peruntukan apa). |
 
 ### Mengapa satu ledger dua dimensi?
@@ -72,6 +73,17 @@ Setiap entri ledger membawa `amount` bertanda (+ masuk / − keluar) yang berlak
 - **Saldo Dana Amanah** = `SUM(amount)` per `fund_id`
 
 Tidak ada kolom saldo yang disimpan terpisah → tidak ada risiko saldo "drift". Saldo selalu dihitung dari ledger.
+
+### Tipe Dana Amanah (restricted vs unrestricted)
+
+| Tipe | Arti singkat |
+|------|--------------|
+| **Restricted** | Dana **terikat peruntukan/niat donatur** (mis. Zakat, Infaq program tertentu). Default saat buat master baru. |
+| **Unrestricted** | Dana **umum/bebas** lembaga; lebih fleksibel untuk operasional. Semua dana sistem (Suspense, Operasional, dll.) bertipe ini. |
+
+Perbedaan teknis penting: **biaya bank tidak boleh dibebankan ke dana restricted** — sistem otomatis menolak; gunakan Dana Operasional (unrestricted). Pengeluaran biasa boleh memakai kedua tipe selama saldo dana cukup.
+
+Penjelasan lengkap, contoh, dan referensi kode: **[docs/DANA-AMANAH.md](docs/DANA-AMANAH.md)**.
 
 ### Invariant yang dijaga
 
