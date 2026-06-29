@@ -17,7 +17,7 @@ class StoreDonorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['required', 'string', 'max:50', new UniqueActiveCode('donors')],
+            'code' => ['nullable', 'string', 'max:50', new UniqueActiveCode('donors')],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:individu,lembaga'],
             'email' => ['nullable', 'email', 'max:255'],

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Master;
 
 use App\Models\Donor;
-use App\Rules\UniqueActiveCode;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateDonorRequest extends FormRequest
@@ -23,7 +22,6 @@ class UpdateDonorRequest extends FormRequest
         $donor = $this->route('donor');
 
         return [
-            'code' => ['sometimes', 'string', 'max:50', new UniqueActiveCode('donors', $donor->id)],
             'name' => ['sometimes', 'string', 'max:255'],
             'type' => ['sometimes', 'in:individu,lembaga'],
             'email' => ['nullable', 'email', 'max:255'],
