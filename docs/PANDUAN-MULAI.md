@@ -320,8 +320,16 @@ Ini fase **paling kritis**. Tanpa saldo awal, Kas/Bank dan Dana Amanah tetap nol
 - Saldo awal = uang yang **sudah ada** sebelum SIMA jalan.
 - **Bukan** penerimaan donasi — jangan buat penerimaan fiktif untuk “menyisakan” saldo.
 - Secara konsep akuntansi SIMA, lawan saldo awal adalah dana sistem **Opening Equity** (`SYS-OPENING`) — lihat [DANA-AMANAH.md](DANA-AMANAH.md).
+- Di worksheet/wizard, Anda hanya memilih **Dana Amanah tujuan** (restricted/unrestricted/operasional organisasi). **Jangan** pilih `SYS-SUSPENSE` atau `SYS-OPENING` — keduanya ditolak sistem.
 
-Posting teknis memakai transaksi bertipe **`opening`** ke ledger (`TransactionType::OPENING`).
+**Mekanisme posting (per baris worksheet):**
+
+1. **Kas masuk** — akun kas/bank debit, lawan **`SYS-OPENING`** (transaksi `opening`).
+2. **Alokasi fund-only** — saldo dipindahkan dari `SYS-OPENING` ke **dana tujuan** yang Anda pilih (masih transaksi `opening`, referensi alokasi).
+
+Hasil akhir per baris: saldo akun naik sesuai nominal, saldo dana tujuan naik sesuai nominal, saldo **`SYS-OPENING` net 0** (bukan sumber saldo operasional). Invariant global tetap: total kas/bank = total Dana Amanah.
+
+Posting teknis memakai `TransactionType::OPENING` di Amanah Ledger. Satu batch opening (`OPN/…`) bisa berisi banyak baris (banyak akun × banyak dana).
 
 ### 4.3 Status fitur saat ini
 
@@ -329,9 +337,11 @@ Posting teknis memakai transaksi bertipe **`opening`** ke ledger (`TransactionTy
 |-------|--------|
 | UI **Posting Saldo Awal** | **Ada** — `/dashboard/opening-balances` (wizard 3 langkah) |
 | API `POST/GET /opening-balances` | **Ada** — permission `opening.manage` / `opening.view` |
+| Lawan **`SYS-OPENING`** otomatis | **Ada** — dua langkah journal per baris (lihat §4.2) |
+| **Laporan Saldo Awal** (audit cutover) | **Ada** — Laporan → Saldo Awal (`/dashboard/reports/opening-balances`) atau `GET /api/reports/opening-balances` (`report.view`) |
 | Form Kas/Bank → isi saldo manual | **Tidak bisa** (saldo read-only dari ledger) |
 | Upload worksheet Excel | **Belum ada** — input manual di wizard atau worksheet lokal |
-| Cetak bukti PDF batch opening | **Belum ada** |
+| Cetak bukti PDF batch opening | **Belum ada** — gunakan ekspor PDF/Excel di **Laporan Saldo Awal** |
 
 ### 4.4 Prosedur go-live yang disarankan
 
@@ -347,10 +357,12 @@ Posting teknis memakai transaksi bertipe **`opening`** ke ledger (`TransactionTy
 
 2. **Admin** buka **Saldo Awal** → **Posting Saldo Awal** (`/dashboard/opening-balances/new`):
    - Langkah 1: tanggal cutover + referensi
-   - Langkah 2: satu baris per pasangan akun + dana + nominal
+   - Langkah 2: satu baris per pasangan akun + dana + nominal (bukan `SYS-OPENING`)
    - Langkah 3: review total → **Posting ke Ledger**
 
-3. Bendahara **verifikasi** (Fase 5) — bandingkan dengan rekening koran / hitung kas fisik.
+3. **Auditor / bendahara** buka **Laporan → Saldo Awal** — bandingkan baris laporan dengan worksheet (filter tanggal cutover, ekspor Excel/PDF untuk arsip go-live).
+
+4. Bendahara **verifikasi** (Fase 5) — bandingkan dengan rekening koran / hitung kas fisik.
 
 **Alternatif teknis (tanpa UI):** tim IT dapat memanggil `POST /api/opening-balances` atau script one-off — koordinasi dengan pengembang.
 
@@ -383,10 +395,11 @@ Lakukan sebagai **admin + bendahara + auditor** bersama.
 
 | Laporan | Menu | Yang dicek |
 |---------|------|------------|
+| **Saldo Awal (cutover)** | Laporan → Saldo Awal | Setiap baris worksheet tercatat; total nominal = worksheet; filter tanggal cutover |
 | **Saldo Dana Amanah** | Laporan → Saldo Dana Amanah | Sesuai worksheet per dana |
 | **Saldo rekening** | Master → Kas/Bank (kolom saldo) | Sesuai mutasi bank / hitung kas |
 | **Rekonsiliasi global** | API `GET /reports/reconciliation-summary` atau dashboard | **Selisih = 0** (total kas/bank = total dana) |
-| **Ledger** | Laporan → Ledger | Ada baris `opening` per pemetaan |
+| **Ledger** | Laporan → Ledger | Ada baris `opening` per pemetaan (filter tipe transaksi `opening`) |
 
 ### 5.2 Checklist angka
 
@@ -463,6 +476,7 @@ Workflow approval: menu **Approval** atau laporan Approval.
 
 - [ ] Worksheet opening disetujui ketua
 - [ ] Posting opening via **Saldo Awal** (admin) atau API
+- [ ] **Laporan Saldo Awal** diekspor/diarsipkan untuk audit go-live
 - [ ] Saldo per rekening cocok
 - [ ] Rekonsiliasi global selisih = 0
 
@@ -500,6 +514,7 @@ Workflow approval: menu **Approval** atau laporan Approval.
 | Pengeluaran | `/dashboard/disbursements` |
 | Biaya Bank | `/dashboard/bank-fees` |
 | Saldo Awal | `/dashboard/opening-balances` |
+| Laporan Saldo Awal | `/dashboard/reports/opening-balances` |
 | Laporan | `/dashboard/reports` |
 
 ---
@@ -520,3 +535,4 @@ Workflow approval: menu **Approval** atau laporan Approval.
 |---------|---------|
 | Jun 2026 | Draft awal |
 | Jun 2026 | Tambah §4.1 kapan memakai opening balance; update status UI/API Saldo Awal |
+| Jun 2026 | §4.2 mekanisme SYS-OPENING; laporan cutover; checklist & Fase 5 audit opening |
