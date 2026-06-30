@@ -240,6 +240,13 @@ export const sidebarItems: NavGroup[] = [
             permission: "report.view",
           },
           {
+            id: "report-opening-balances",
+            title: "Saldo Awal",
+            url: "/dashboard/reports/opening-balances",
+            icon: Landmark,
+            permission: "report.view",
+          },
+          {
             id: "report-approval",
             title: "Approval",
             url: "/dashboard/reports/approval",

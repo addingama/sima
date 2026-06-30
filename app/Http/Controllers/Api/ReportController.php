@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Report\FundStatementRequest;
 use App\Http\Requests\Report\ListLedgerRequest;
+use App\Http\Requests\Report\ListOpeningBalanceReportRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\LedgerEntryResource;
+use App\Http\Resources\OpeningBalanceReportLineResource;
+use App\Http\Responses\ApiResponse;
 use App\Services\Report\ReportService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
@@ -88,5 +91,28 @@ class ReportController extends Controller
             'outflow' => $result['outflow'],
             'net' => $result['net'],
         ]);
+    }
+
+    #[OA\Get(
+        path: '/reports/opening-balances',
+        summary: 'Laporan saldo awal (audit go-live)',
+        tags: ['Report'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
+    public function openingBalances(ListOpeningBalanceReportRequest $request): JsonResponse
+    {
+        $result = $this->service->openingBalances($request->listQuery(50));
+        $paginator = $result['paginator'];
+
+        return ApiResponse::success(
+            OpeningBalanceReportLineResource::collection($paginator)->resolve($request),
+            null,
+            [
+                'pagination' => ApiResponse::lengthAwareMeta($paginator),
+                'total_amount' => $result['total_amount'],
+                'batch_count' => $result['batch_count'],
+            ],
+        );
     }
 }

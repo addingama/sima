@@ -25,6 +25,19 @@ export async function fetchLedgerReport(params: ListParams): Promise<ReportFetch
   return fetchReportRows("/reports/ledger", params);
 }
 
+export async function fetchOpeningBalanceReport(params: ListParams): Promise<ReportFetchResult> {
+  const response = await apiGet<Array<Record<string, unknown>>>("/reports/opening-balances", params);
+
+  return {
+    rows: response.data,
+    pagination: response.meta?.pagination,
+    summary: {
+      total: response.meta?.total_amount,
+      batch_count: response.meta?.batch_count,
+    },
+  };
+}
+
 export async function fetchCashAccounts(): Promise<Array<Record<string, unknown>>> {
   const response = await apiGet<Array<Record<string, unknown>>>("/accounts", {
     type: "cash",

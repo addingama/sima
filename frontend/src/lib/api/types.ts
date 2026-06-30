@@ -13,6 +13,8 @@ export interface ApiErrors {
 
 export interface ApiMeta {
   pagination?: PaginationMeta;
+  total_amount?: string;
+  batch_count?: number;
 }
 
 export interface PaginationMeta {
