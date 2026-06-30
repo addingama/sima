@@ -54,6 +54,30 @@ class OpeningBalanceApiTest extends TestCase
         $ledger = app(LedgerService::class);
         $this->assertSame('1500000.00', $ledger->balanceForAccount($this->account->id));
         $this->assertSame('1500000.00', $ledger->balanceForFund($this->fund->id));
+        $this->assertSame('0.00', $ledger->balanceForFund(Fund::findBySystemKey(Fund::KEY_OPENING_EQUITY)->id));
+    }
+
+    #[Test]
+    public function opening_posts_cash_through_opening_equity_counterparty(): void
+    {
+        $this->actingAsRole('admin');
+        $openingEquity = Fund::findBySystemKey(Fund::KEY_OPENING_EQUITY);
+
+        $this->postJson('/api/opening-balances', [
+            'opening_date' => '2026-01-01',
+            'lines' => [
+                [
+                    'account_id' => $this->account->id,
+                    'fund_id' => $this->fund->id,
+                    'amount' => '500000.00',
+                ],
+            ],
+        ])->assertCreated();
+
+        $ledger = app(LedgerService::class);
+        $this->assertSame('500000.00', $ledger->balanceForAccount($this->account->id));
+        $this->assertSame('500000.00', $ledger->balanceForFund($this->fund->id));
+        $this->assertSame('0.00', $ledger->balanceForFund($openingEquity->id));
     }
 
     #[Test]

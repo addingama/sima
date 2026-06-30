@@ -4,8 +4,7 @@ namespace App\Domains\Opening\Services;
 
 use App\Domains\Ledger\Services\LedgerService;
 use App\Domains\Opening\Validators\OpeningBalanceValidator;
-use App\Enums\LedgerMovement;
-use App\Enums\TransactionType;
+use App\Models\Fund;
 use App\Models\OpeningBalanceBatch;
 use App\Models\OpeningBalanceLine;
 use App\Models\User;
@@ -44,6 +43,7 @@ class OpeningBalanceService
 
             $batchNumber = $this->numbers->next('OPN');
             $reference = $data['reference'] ?? "Saldo awal {$batchNumber}";
+            $openingEquity = Fund::findBySystemKey(Fund::KEY_OPENING_EQUITY);
 
             $batch = OpeningBalanceBatch::create([
                 'batch_number' => $batchNumber,
@@ -68,12 +68,12 @@ class OpeningBalanceService
                     'amount' => $amount,
                 ]);
 
-                $this->ledger->postAmanahMovement(
-                    TransactionType::OPENING,
+                $this->ledger->postOpeningBalanceLine(
                     $batch->id,
                     $accountId,
-                    [['fund_id' => $fundId, 'amount' => $amount]],
-                    LedgerMovement::IN,
+                    $fundId,
+                    $openingEquity->id,
+                    $amount,
                     $reference,
                 );
             }

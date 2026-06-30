@@ -9,8 +9,6 @@ use App\Domains\Ledger\Services\BalanceService;
 use App\Domains\Ledger\Services\LedgerService;
 use App\Domains\Receipt\Services\ReceiptService;
 use App\Domains\Reconciliation\Services\ReconciliationService;
-use App\Enums\LedgerMovement;
-use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Fund;
 use App\Models\User;
@@ -41,18 +39,19 @@ class SimaSmokeTest extends Command
             ['name' => 'Kas Smoke Test', 'type' => 'cash', 'is_active' => true, 'created_by' => $actor->id]
         );
         $operasional = Fund::findBySystemKey(Fund::KEY_OPERATIONAL);
+        $openingEquity = Fund::findBySystemKey(Fund::KEY_OPENING_EQUITY);
         $zakat = Fund::firstOrCreate(
             ['code' => 'SMOKE-ZAKAT'],
             ['name' => 'Dana Zakat', 'type' => 'restricted', 'is_active' => true, 'created_by' => $actor->id]
         );
 
-        // Saldo awal: kas + 1.000.000 lawan Dana Operasional (untuk uji expense & bank fee)
-        $ledger->postAmanahMovement(
-            TransactionType::OPENING,
+        // Saldo awal: kas + 1.000.000 ke Dana Operasional (via opening_equity)
+        $ledger->postOpeningBalanceLine(
             0,
             $account->id,
-            [['fund_id' => $operasional->id, 'amount' => '1000000.00']],
-            LedgerMovement::IN,
+            $operasional->id,
+            $openingEquity->id,
+            '1000000.00',
             'Saldo awal smoke',
         );
         $this->line('Saldo awal kas: '.$balances->accountBalance($account->id));

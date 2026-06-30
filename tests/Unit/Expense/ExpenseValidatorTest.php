@@ -6,8 +6,6 @@ use App\Domains\Expense\Validators\ExpenseValidator;
 use App\Domains\Ledger\Services\BalanceService;
 use App\Domains\Ledger\Services\LedgerService;
 use App\Enums\DisbursementStatus;
-use App\Enums\LedgerMovement;
-use App\Enums\TransactionType;
 use App\Exceptions\DomainException;
 use App\Exceptions\InsufficientBalanceException;
 use App\Models\Account;
@@ -86,12 +84,13 @@ class ExpenseValidatorTest extends TestCase
     #[Test]
     public function it_passes_when_fund_and_account_have_sufficient_balance(): void
     {
-        app(LedgerService::class)->postAmanahMovement(
-            TransactionType::OPENING,
+        $openingEquity = Fund::findBySystemKey(Fund::KEY_OPENING_EQUITY);
+        app(LedgerService::class)->postOpeningBalanceLine(
             0,
             $this->account->id,
-            [['fund_id' => $this->fund->id, 'amount' => '300000.00']],
-            LedgerMovement::IN,
+            $this->fund->id,
+            $openingEquity->id,
+            '300000.00',
             'Saldo awal',
         );
 
