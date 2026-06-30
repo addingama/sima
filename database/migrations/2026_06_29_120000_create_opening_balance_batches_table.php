@@ -34,7 +34,7 @@ return new class extends Migration
             $table->decimal('amount', 18, 2);
             $table->timestamps();
 
-            $table->unique(['opening_balance_batch_id', 'line_number']);
+            $table->unique(['opening_balance_batch_id', 'line_number'], 'obl_batch_line_unique');
             $table->index('account_id');
             $table->index('fund_id');
         });

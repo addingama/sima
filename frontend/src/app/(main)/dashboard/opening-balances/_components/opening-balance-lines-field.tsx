@@ -5,6 +5,7 @@ import { type Control, Controller, useFieldArray } from "react-hook-form";
 
 import { RelationSelect } from "@/components/sima/crud/relation-select";
 import { MoneyInput } from "@/components/sima/money-input";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -36,6 +37,24 @@ export function OpeningBalanceLinesField({ control }: { control: Control<Opening
           Setiap baris = satu pasangan rekening kas/bank + Dana Amanah + nominal. Akun yang sudah pernah diposting saldo
           awal akan ditolak oleh sistem.
         </p>
+        <Alert>
+          <AlertTitle>Dana yang boleh (dan tidak) dipilih</AlertTitle>
+          <AlertDescription className="space-y-2 text-sm">
+            <p>
+              Pilih <strong>Dana Amanah organisasi</strong> (mis. Zakat, Infaq, UMUM) atau{" "}
+              <strong>Dana Operasional (SYS-OPERASIONAL)</strong> jika seluruh saldo rekening memang operasional.
+            </p>
+            <p>
+              <strong>SYS-SUSPENSE</strong> tidak tersedia — saldo awal sudah pasti pemetaannya di worksheet cutover,
+              bukan dana sementara seperti penerimaan belum dialokasikan.
+            </p>
+            <p>
+              <strong>SYS-OPENING (Opening Equity)</strong> tidak dipilih di sini — itu lawan akuntansi buku, bukan
+              tujuan peruntukan dana. Pilih dana program/operasional sesuai worksheet; lawan equity ditangani sistem
+              (fitur counterparty otomatis masih dalam pengembangan).
+            </p>
+          </AlertDescription>
+        </Alert>
         {fields.map((field, index) => (
           <div key={field.id} className="grid grid-cols-1 gap-3 rounded-lg border p-4 md:grid-cols-12">
             <Controller
@@ -68,7 +87,7 @@ export function OpeningBalanceLinesField({ control }: { control: Control<Opening
                     params={{ is_active: 1, per_page: 100 }}
                     value={String(formField.value ?? "")}
                     onChange={formField.onChange}
-                    placeholder="Pilih dana..."
+                    placeholder="Pilih dana program atau operasional..."
                   />
                   {fieldState.error ? <p className="text-destructive text-xs">{fieldState.error.message}</p> : null}
                 </Field>
