@@ -4,9 +4,9 @@ import Link from "next/link";
 
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CurrencyDisplay } from "@/components/sima/currency-display";
 import { ErrorState } from "@/components/sima/error-state";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRecentLedgerQuery } from "@/hooks/use-resource-query";
 import { parseAmount } from "@/lib/format/amount";
@@ -55,10 +55,7 @@ export function RecentActivity() {
               const amount = isInflow ? credit : debit;
 
               return (
-                <li
-                  key={entry.id}
-                  className="flex items-start justify-between gap-3 rounded-lg border px-3 py-2.5"
-                >
+                <li key={entry.id} className="flex items-start justify-between gap-3 rounded-lg border px-3 py-2.5">
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2">
                       <span
@@ -69,11 +66,7 @@ export function RecentActivity() {
                             : "bg-destructive/10 text-destructive",
                         )}
                       >
-                        {isInflow ? (
-                          <ArrowDownLeft className="size-3.5" />
-                        ) : (
-                          <ArrowUpRight className="size-3.5" />
-                        )}
+                        {isInflow ? <ArrowDownLeft className="size-3.5" /> : <ArrowUpRight className="size-3.5" />}
                       </span>
                       <span className="truncate font-medium text-sm capitalize">
                         {formatTransactionType(entry.transaction_type)}
@@ -86,7 +79,10 @@ export function RecentActivity() {
                   </div>
                   <CurrencyDisplay
                     value={amount}
-                    className={cn("shrink-0 font-medium text-sm", isInflow ? "text-emerald-600 dark:text-emerald-400" : "")}
+                    className={cn(
+                      "shrink-0 font-medium text-sm",
+                      isInflow ? "text-emerald-600 dark:text-emerald-400" : "",
+                    )}
                   />
                 </li>
               );

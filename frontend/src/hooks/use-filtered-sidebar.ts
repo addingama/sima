@@ -1,8 +1,8 @@
 "use client";
 
-import { useAuth } from "@/providers/auth-provider";
 import { hasPermission } from "@/lib/auth/permissions";
 import type { NavGroup, NavMainItem, NavMainParentItem } from "@/navigation/sidebar/sidebar-items";
+import { useAuth } from "@/providers/auth-provider";
 
 function filterItems(items: NavMainItem[], user: ReturnType<typeof useAuth>["user"]): NavMainItem[] {
   return items

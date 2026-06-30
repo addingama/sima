@@ -2,10 +2,10 @@
 
 namespace App\Services\Master;
 
+use App\Domains\Ledger\Services\LedgerService;
 use App\Exceptions\DomainException;
 use App\Models\Account;
 use App\Models\User;
-use App\Domains\Ledger\Services\LedgerService;
 use App\Support\Query\ListQueryApplier;
 use App\Support\Query\ListQueryDto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;

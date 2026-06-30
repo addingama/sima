@@ -18,7 +18,6 @@ import { APP_CONFIG } from "@/config/app-config";
 import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
-import { AuthNavUser } from "./auth-nav-user";
 import { NavMain } from "./nav-main";
 
 const _data = {
@@ -78,7 +77,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton asChild>
               <Link prefetch={false} href="/dashboard/default">
                 <Command />
-                <span className="text-base font-semibold">{APP_CONFIG.name}</span>
+                <span className="font-semibold text-base">{APP_CONFIG.name}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -89,9 +88,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* <NavDocuments items={data.documents} /> */}
         {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
-      <SidebarFooter>
-        {/* <AuthNavUser /> */}
-      </SidebarFooter>
+      <SidebarFooter>{/* <AuthNavUser /> */}</SidebarFooter>
     </Sidebar>
   );
 }

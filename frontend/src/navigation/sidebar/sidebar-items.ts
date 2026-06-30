@@ -1,6 +1,6 @@
 import {
-  ArrowLeftRight,
   ArrowDownToLine,
+  ArrowLeftRight,
   ArrowUpFromLine,
   Banknote,
   CalendarDays,

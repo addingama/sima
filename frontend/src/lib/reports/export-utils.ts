@@ -25,10 +25,7 @@ export async function exportReportToPdf(
   columns: ExportColumn[],
   rows: Array<Record<string, unknown>>,
 ) {
-  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
-    import("jspdf"),
-    import("jspdf-autotable"),
-  ]);
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
 
   const doc = new jsPDF({ orientation: columns.length > 5 ? "landscape" : "portrait", unit: "pt" });
   const generatedAt = new Intl.DateTimeFormat("id-ID", {

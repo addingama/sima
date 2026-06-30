@@ -9,15 +9,15 @@ import type { GroupingState } from "@tanstack/react-table";
 import { FileDown, FileSpreadsheet, Printer, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { CurrencyDisplay } from "@/components/sima/currency-display";
 import { ErrorState } from "@/components/sima/error-state";
 import { PageHeader } from "@/components/sima/page-header";
 import { ReportDataTable } from "@/components/sima/reports/report-data-table";
 import { ReportFiltersBar, useReportFilterDefaults } from "@/components/sima/reports/report-filters";
 import { TableSkeleton } from "@/components/sima/skeletons";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { hasPermission } from "@/lib/auth/permissions";
 import { columnsToExportColumns } from "@/lib/reports/export-columns";
 import type { ReportDef } from "@/lib/reports/types";
@@ -87,12 +87,7 @@ export function ReportPage({ config }: { config: ReportDef }) {
   );
 
   if (config.permission && !hasPermission(user, config.permission)) {
-    return (
-      <ErrorState
-        title="Akses ditolak"
-        description="Anda tidak memiliki permission untuk melihat laporan ini."
-      />
-    );
+    return <ErrorState title="Akses ditolak" description="Anda tidak memiliki permission untuk melihat laporan ini." />;
   }
 
   return (
@@ -172,11 +167,7 @@ export function ReportPage({ config }: { config: ReportDef }) {
                 <div key={key}>
                   <p className="text-muted-foreground text-xs capitalize">{key.replaceAll("_", " ")}</p>
                   <p className="font-medium text-sm">
-                    {typeof value === "string" && /^\d/.test(value) ? (
-                      <CurrencyDisplay value={value} />
-                    ) : (
-                      String(value)
-                    )}
+                    {typeof value === "string" && /^\d/.test(value) ? <CurrencyDisplay value={value} /> : String(value)}
                   </p>
                 </div>
               ))}

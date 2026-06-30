@@ -13,9 +13,7 @@ export async function fetchReportRows(path: string, params: ListParams = {}): Pr
 }
 
 export async function fetchFundBalances(): Promise<ReportFetchResult> {
-  const response = await apiGet<{ rows: Array<Record<string, unknown>>; total: string }>(
-    "/reports/fund-balances",
-  );
+  const response = await apiGet<{ rows: Array<Record<string, unknown>>; total: string }>("/reports/fund-balances");
 
   return {
     rows: response.data.rows,
@@ -64,9 +62,9 @@ export async function fetchCombinedTransactions(
     }),
   );
 
-  const rows = responses.flat().sort((left, right) =>
-    String(right.document_date ?? "").localeCompare(String(left.document_date ?? "")),
-  );
+  const rows = responses
+    .flat()
+    .sort((left, right) => String(right.document_date ?? "").localeCompare(String(left.document_date ?? "")));
 
   return { rows };
 }
@@ -105,7 +103,9 @@ export async function fetchApprovalReport(params: ListParams): Promise<ReportFet
 
   const [receipts, disbursements] = await Promise.all([
     Promise.all(receiptStatuses.map((value) => fetchReportRows("/receipts", { ...listParams, status: value }))),
-    Promise.all(disbursementStatuses.map((value) => fetchReportRows("/disbursements", { ...listParams, status: value }))),
+    Promise.all(
+      disbursementStatuses.map((value) => fetchReportRows("/disbursements", { ...listParams, status: value })),
+    ),
   ]);
 
   const rows = [

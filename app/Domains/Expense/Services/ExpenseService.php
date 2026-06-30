@@ -3,6 +3,7 @@
 namespace App\Domains\Expense\Services;
 
 use App\Domains\Expense\DTOs\CreateExpenseDto;
+use App\Domains\Expense\DTOs\ExpenseFundSourceDto;
 use App\Domains\Expense\DTOs\ReverseExpenseDto;
 use App\Domains\Expense\DTOs\UpdateExpenseDto;
 use App\Domains\Expense\Events\ExpenseApproved;
@@ -22,6 +23,7 @@ use App\Models\Disbursement;
 use App\Models\User;
 use App\Services\DocumentNumberService;
 use App\Support\Query\ListQueryDto;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class ExpenseService
@@ -33,7 +35,7 @@ class ExpenseService
         private readonly DocumentNumberService $numbers,
     ) {}
 
-    public function paginate(ListQueryDto $query): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function paginate(ListQueryDto $query): LengthAwarePaginator
     {
         return $this->repository->paginate($query);
     }
@@ -185,7 +187,7 @@ class ExpenseService
     private function normalizeSources(array $sources): array
     {
         return array_map(function ($s) {
-            if ($s instanceof \App\Domains\Expense\DTOs\ExpenseFundSourceDto) {
+            if ($s instanceof ExpenseFundSourceDto) {
                 return $s->toArray();
             }
 

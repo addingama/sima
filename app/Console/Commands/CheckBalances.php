@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Account;
-use App\Models\Fund;
 use App\Domains\Ledger\Services\BalanceService;
 use App\Domains\Ledger\Services\LedgerService;
+use App\Models\Account;
+use App\Models\Fund;
 use Illuminate\Console\Command;
 
 /**

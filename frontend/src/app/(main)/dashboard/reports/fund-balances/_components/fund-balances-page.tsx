@@ -4,18 +4,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CurrencyDisplay } from "@/components/sima/currency-display";
 import { ErrorState } from "@/components/sima/error-state";
 import { PageHeader } from "@/components/sima/page-header";
 import { TableSkeleton } from "@/components/sima/skeletons";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiGet } from "@/lib/api/client";
 
 type BalanceRow = Record<string, unknown>;
@@ -48,10 +44,7 @@ export default function FundBalancesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Saldo Dana"
-        description="Laporan saldo seluruh Dana Amanah dari buku besar."
-      />
+      <PageHeader title="Saldo Dana" description="Laporan saldo seluruh Dana Amanah dari buku besar." />
 
       <Card>
         <CardHeader>

@@ -13,8 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/providers/auth-provider";
 import { getInitials } from "@/lib/utils";
+import { useAuth } from "@/providers/auth-provider";
 
 export function AuthAccountSwitcher() {
   const { user, logout } = useAuth();

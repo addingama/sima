@@ -1,5 +1,6 @@
-import type { ColumnDef } from "@tanstack/react-table";
 import type { ReactNode } from "react";
+
+import type { ColumnDef } from "@tanstack/react-table";
 
 export type FieldType =
   | "text"

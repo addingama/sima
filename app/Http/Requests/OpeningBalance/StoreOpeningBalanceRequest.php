@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests\OpeningBalance;
 
+use App\Models\OpeningBalanceBatch;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreOpeningBalanceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', \App\Models\OpeningBalanceBatch::class) ?? false;
+        return $this->user()?->can('create', OpeningBalanceBatch::class) ?? false;
     }
 
     /** @return array<string, mixed> */

@@ -78,7 +78,7 @@ class ApprovalIntegrationTest extends TestCase
         $this->expectException(DomainException::class);
 
         app(ApprovalService::class)->record(
-            new \App\Models\User,
+            new User,
             ApprovalAction::APPROVED,
             $this->actor,
         );

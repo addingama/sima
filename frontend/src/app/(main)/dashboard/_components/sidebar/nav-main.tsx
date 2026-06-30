@@ -27,8 +27,8 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
 import { useFilteredSidebarItems } from "@/hooks/use-filtered-sidebar";
+import { cn } from "@/lib/utils";
 import type {
   NavBadge,
   NavGroup,

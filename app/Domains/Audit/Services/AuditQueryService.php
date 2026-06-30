@@ -7,6 +7,7 @@ use App\Support\Query\ListQueryApplier;
 use App\Support\Query\ListQueryDto;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Models\Audit;
 
 class AuditQueryService
@@ -15,7 +16,7 @@ class AuditQueryService
 
     public function paginate(ListQueryDto $query): LengthAwarePaginator|CursorPaginator
     {
-        /** @var class-string<Audit&\Illuminate\Database\Eloquent\Model> $auditModel */
+        /** @var class-string<Audit&Model> $auditModel */
         $auditModel = config('audit.implementation', Audit::class);
 
         $builder = ListQueryApplier::apply(
@@ -43,7 +44,7 @@ class AuditQueryService
 
     public function find(int $id): Audit
     {
-        /** @var class-string<Audit&\Illuminate\Database\Eloquent\Model> $auditModel */
+        /** @var class-string<Audit&Model> $auditModel */
         $auditModel = config('audit.implementation', Audit::class);
 
         return $auditModel::query()->with('user:id,name,email')->findOrFail($id);

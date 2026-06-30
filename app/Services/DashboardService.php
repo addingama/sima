@@ -7,7 +7,6 @@ use App\Enums\DisbursementStatus;
 use App\Enums\ReceiptStatus;
 use App\Models\Disbursement;
 use App\Models\Receipt;
-use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {

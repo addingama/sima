@@ -55,7 +55,7 @@ class ListQueryApplier
 
         if ($sortable !== [] && ! in_array($sort, $sortable, true)) {
             throw ValidationException::withMessages([
-                'sort' => ["Kolom sort tidak valid. Pilihan: ".implode(', ', $sortable)],
+                'sort' => ['Kolom sort tidak valid. Pilihan: '.implode(', ', $sortable)],
             ]);
         }
 

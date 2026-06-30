@@ -1,15 +1,15 @@
 "use client";
 
-import { Controller, type Control, useWatch } from "react-hook-form";
+import { type Control, Controller, useWatch } from "react-hook-form";
 
-import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { RelationSelect } from "@/components/sima/crud/relation-select";
 import { CurrencyDisplay } from "@/components/sima/currency-display";
 import { MoneyInput } from "@/components/sima/money-input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Textarea } from "@/components/ui/textarea";
 import type { FormFieldDef } from "@/lib/resources/types";
 import { cn } from "@/lib/utils";
 
@@ -27,9 +27,7 @@ export function CrudFormFields({
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {fields.map((field) => {
-        const isVisible =
-          (!field.showOnEditOnly || isEdit) &&
-          (!field.visibleWhen || field.visibleWhen(values));
+        const isVisible = (!field.showOnEditOnly || isEdit) && (!field.visibleWhen || field.visibleWhen(values));
 
         const spanFull = field.type === "textarea";
         const isReadOnly = field.readOnly || field.autoGenerate;
@@ -41,10 +39,7 @@ export function CrudFormFields({
             name={field.name}
             render={({ field: formField, fieldState }) => (
               <Field
-                className={cn(
-                  spanFull ? "gap-1.5 md:col-span-2" : "gap-1.5",
-                  !isVisible && "hidden",
-                )}
+                className={cn(spanFull ? "gap-1.5 md:col-span-2" : "gap-1.5", !isVisible && "hidden")}
                 data-invalid={fieldState.invalid}
               >
                 {field.type !== "checkbox" ? (
@@ -126,9 +121,7 @@ export function CrudFormFields({
                     aria-invalid={fieldState.invalid}
                   />
                 )}
-                {field.helperText ? (
-                  <FieldDescription>{field.helperText}</FieldDescription>
-                ) : null}
+                {field.helperText ? <FieldDescription>{field.helperText}</FieldDescription> : null}
                 {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
               </Field>
             )}

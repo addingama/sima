@@ -2,4 +2,6 @@
 
 namespace App\Policies;
 
-class DisbursementPolicy extends \App\Domains\Expense\Policies\ExpensePolicy {}
+use App\Domains\Expense\Policies\ExpensePolicy;
+
+class DisbursementPolicy extends ExpensePolicy {}

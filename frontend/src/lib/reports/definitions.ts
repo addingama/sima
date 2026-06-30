@@ -8,7 +8,6 @@ import {
 } from "@/lib/reports/columns";
 import {
   fetchApprovalReport,
-  fetchCombinedTransactions,
   fetchFundBalances,
   fetchLedgerReport,
   fetchReportRows,
@@ -40,9 +39,7 @@ export const fundBalancesReport: ReportDef = {
       ],
     },
   ],
-  groupByOptions: [
-    { value: "type", label: "Tipe Dana" },
-  ],
+  groupByOptions: [{ value: "type", label: "Tipe Dana" }],
   fetchData: async (params) => {
     const result = await fetchFundBalances();
     const type = params.type ? String(params.type) : "";
@@ -141,19 +138,9 @@ function accountBookReport(type: "cash" | "bank", id: string, title: string, pat
   };
 }
 
-export const cashBookReport = accountBookReport(
-  "cash",
-  "cash-book",
-  "Buku Kas",
-  "/dashboard/reports/cash-book",
-);
+export const cashBookReport = accountBookReport("cash", "cash-book", "Buku Kas", "/dashboard/reports/cash-book");
 
-export const bankBookReport = accountBookReport(
-  "bank",
-  "bank-book",
-  "Buku Bank",
-  "/dashboard/reports/bank-book",
-);
+export const bankBookReport = accountBookReport("bank", "bank-book", "Buku Bank", "/dashboard/reports/bank-book");
 
 export const ledgerReport: ReportDef = {
   id: "ledger",

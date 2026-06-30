@@ -6,13 +6,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Paperclip, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
+import { ErrorState } from "@/components/sima/error-state";
+import { TableSkeleton } from "@/components/sima/skeletons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ErrorState } from "@/components/sima/error-state";
-import { TableSkeleton } from "@/components/sima/skeletons";
-import type { AttachmentRecord } from "@/lib/api/entities";
 import { apiDelete, apiFetch, apiGet } from "@/lib/api/client";
+import type { AttachmentRecord } from "@/lib/api/entities";
 import { hasPermission } from "@/lib/auth/permissions";
 import { formatDateTime } from "@/lib/format/datetime";
 import { useAuth } from "@/providers/auth-provider";

@@ -1,5 +1,5 @@
-import type { ResourceDef } from "../types";
 import { currencyColumn, dateColumn, linkColumn, nestedNameColumn, statusColumn } from "../columns";
+import type { ResourceDef } from "../types";
 
 const basePath = "/dashboard/disbursements";
 

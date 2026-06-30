@@ -2,8 +2,8 @@ import { Suspense } from "react";
 
 import { DashboardSkeleton } from "@/components/sima/skeletons";
 
-import { SimaMetricCards } from "./_components/sima-metric-cards";
 import { PerformanceOverview } from "./_components/performance-overview";
+import { SimaMetricCards } from "./_components/sima-metric-cards";
 
 export default function Page() {
   return (

@@ -24,6 +24,7 @@ class RolePermissionSeeder extends Seeder
 
             if ($rolePermissions === ['*']) {
                 $role->syncPermissions(Permission::all());
+
                 continue;
             }
 

@@ -4,10 +4,10 @@ import Link from "next/link";
 
 import { ClipboardCheck, DollarSign, HandCoins, Wallet } from "lucide-react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CurrencyDisplay } from "@/components/sima/currency-display";
 import { ErrorState } from "@/components/sima/error-state";
 import { MetricCardsSkeleton } from "@/components/sima/skeletons";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDashboardQuery } from "@/hooks/use-resource-query";
 
 export function SimaMetricCards() {

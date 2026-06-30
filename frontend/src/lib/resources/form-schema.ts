@@ -20,10 +20,7 @@ function requiredStringSchema(label: string) {
 }
 
 function optionalEmailSchema() {
-  return z.preprocess(
-    toFormString,
-    z.union([z.literal(""), z.string().email("Email tidak valid.")]),
-  );
+  return z.preprocess(toFormString, z.union([z.literal(""), z.string().email("Email tidak valid.")]));
 }
 
 function fieldSchema(field: FormFieldDef) {
@@ -35,25 +32,14 @@ function fieldSchema(field: FormFieldDef) {
     case "email":
       return field.required ? z.string().email("Email tidak valid.") : optionalEmailSchema();
     case "checkbox":
-      return z.preprocess(
-        (value) => (value === null || value === undefined ? false : Boolean(value)),
-        z.boolean(),
-      );
+      return z.preprocess((value) => (value === null || value === undefined ? false : Boolean(value)), z.boolean());
     case "number":
     case "currency":
       return field.required
-        ? requiredStringSchema(field.label).refine(
-            (value) => parseAmount(value) > 0,
-            "Nominal harus lebih dari 0.",
-          )
-        : optionalStringSchema().refine(
-            (value) => value === "" || parseAmount(value) > 0,
-            "Nominal tidak valid.",
-          );
+        ? requiredStringSchema(field.label).refine((value) => parseAmount(value) > 0, "Nominal harus lebih dari 0.")
+        : optionalStringSchema().refine((value) => value === "" || parseAmount(value) > 0, "Nominal tidak valid.");
     case "relation":
-      return field.required
-        ? requiredStringSchema(field.label)
-        : optionalStringSchema();
+      return field.required ? requiredStringSchema(field.label) : optionalStringSchema();
     default:
       return field.required ? requiredStringSchema(field.label) : optionalStringSchema();
   }
@@ -86,10 +72,7 @@ export function buildFormSchema(fields: FormFieldDef[], lineItemsKey?: "allocati
 }
 
 /** Normalisasi nilai API (null) ke bentuk form sebelum reset/submit. */
-export function normalizeFormValues(
-  values: Record<string, unknown>,
-  fields: FormFieldDef[],
-): Record<string, unknown> {
+export function normalizeFormValues(values: Record<string, unknown>, fields: FormFieldDef[]): Record<string, unknown> {
   const normalized = { ...values };
 
   for (const field of fields) {

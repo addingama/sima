@@ -3,12 +3,7 @@
 "use no memo";
 
 import type { ColumnDef, PaginationState, SortingState } from "@tanstack/react-table";
-import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";

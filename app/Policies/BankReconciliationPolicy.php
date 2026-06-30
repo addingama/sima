@@ -2,4 +2,6 @@
 
 namespace App\Policies;
 
-class BankReconciliationPolicy extends \App\Domains\Reconciliation\Policies\ReconciliationPolicy {}
+use App\Domains\Reconciliation\Policies\ReconciliationPolicy;
+
+class BankReconciliationPolicy extends ReconciliationPolicy {}

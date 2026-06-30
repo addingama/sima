@@ -1,18 +1,11 @@
 "use client";
 
-import Link from "next/link";
-
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
 import { CurrencyDisplay } from "@/components/sima/currency-display";
 import { ErrorState } from "@/components/sima/error-state";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFundBalancesQuery } from "@/hooks/use-resource-query";
 import { parseAmount } from "@/lib/format/amount";
