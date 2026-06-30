@@ -282,7 +282,40 @@ flowchart TD
 
 Ini fase **paling kritis**. Tanpa saldo awal, Kas/Bank dan Dana Amanah tetap nol meskipun master sudah lengkap.
 
-### 4.1 Konsep
+### 4.1 Kapan harus memakai opening balance?
+
+**Opening balance** dipakai **sekali** saat go-live: untuk mencatat uang yang **sudah ada secara riil** di kas/bank **sebelum** SIMA menjadi buku resmi, beserta **pemetaannya ke Dana Amanah**.
+
+| Situasi | Pakai opening balance? | Catatan |
+|---------|:----------------------:|---------|
+| Organisasi sudah beroperasi; ada saldo bank/kas per tanggal cutover | **Ya** | Kasus paling umum — migrasi dari buku manual/spreadsheet |
+| SIMA dipasang menggantikan pencatatan lama (Excel, software lain) | **Ya** | Worksheet Fase 0 = sumber kebenaran angka cutover |
+| Lembaga baru; rekening benar-benar kosong saat cutover | **Tidak** | Langsung ke operasional harian (penerimaan/pengeluaran) |
+| Sengaja memulai SIMA “dari nol” tanpa reflect saldo historis | **Tidak** | Opsi B (soft start) — pahami laporan tidak mencerminkan uang lama |
+| Uang masuk **setelah** tanggal cutover (donasi, grant, dll.) | **Tidak** | Pakai **Penerimaan** + alokasi dana |
+| Uang keluar **setelah** cutover | **Tidak** | Pakai **Pengeluaran** / **Biaya Bank** |
+| Ingin “menyesuaikan” saldo tanpa transaksi nyata | **Tidak** | Bukan tujuan opening; koreksi lewat reversal + prosedur terkontrol |
+| Rekening yang sama sudah pernah diposting opening | **Tidak** (ulang) | Sistem menolak double opening; koreksi = reversal dulu |
+
+**Gunakan opening balance jika minimal satu pernyataan ini benar:**
+
+1. **Ada saldo kas/bank riil** pada tanggal cutover yang belum tercatat di SIMA.
+2. Organisasi ingin **laporan SIMA** (saldo rekening, saldo dana, rekonsiliasi global) **cocok** dengan kondisi keuangan saat go-live.
+3. Anda sedang **migrasi** buku lama ke SIMA, bukan memulai operasi keuangan dari nol.
+
+**Jangan gunakan opening balance jika:**
+
+- Ingin mencatat **donasi atau penerimaan** — itu **Penerimaan**, agar ada jejak donatur, approval, dan niat/alokasi yang benar.
+- Ingin menambah saldo **setelah** go-live tanpa bukti penerimaan — itu melanggar prinsip amanah dan audit.
+- Ingin memperbaiki **kesalahan posting opening** — jangan posting ulang ke rekening yang sama; gunakan **reversal** (koordinasi admin).
+
+**Analogi singkat:** opening balance = “buku SIMA dibuka dengan saldo awal dari worksheet cutover”. Semua pergerakan **setelah** hari itu = transaksi operasional normal.
+
+**Siapa yang mengeksekusi:** **Admin** (permission `opening.manage`). Bendahara **verifikasi** angka di Fase 5, bukan mem-posting opening.
+
+---
+
+### 4.2 Konsep
 
 - Saldo awal = uang yang **sudah ada** sebelum SIMA jalan.
 - **Bukan** penerimaan donasi — jangan buat penerimaan fiktif untuk “menyisakan” saldo.
@@ -290,20 +323,21 @@ Ini fase **paling kritis**. Tanpa saldo awal, Kas/Bank dan Dana Amanah tetap nol
 
 Posting teknis memakai transaksi bertipe **`opening`** ke ledger (`TransactionType::OPENING`).
 
-### 4.2 Status fitur saat ini
+### 4.3 Status fitur saat ini
 
 | Fitur | Status |
 |-------|--------|
-| UI “Posting Saldo Awal” | **Belum ada** |
-| Form Kas/Bank → isi saldo | **Tidak bisa** (saldo read-only dari ledger) |
-| API dedicated `/opening-balances` | **Belum ada** |
-| Posting via `LedgerService` | **Ada** (dipakai internal/test) |
+| UI **Posting Saldo Awal** | **Ada** — `/dashboard/opening-balances` (wizard 3 langkah) |
+| API `POST/GET /opening-balances` | **Ada** — permission `opening.manage` / `opening.view` |
+| Form Kas/Bank → isi saldo manual | **Tidak bisa** (saldo read-only dari ledger) |
+| Upload worksheet Excel | **Belum ada** — input manual di wizard atau worksheet lokal |
+| Cetak bukti PDF batch opening | **Belum ada** |
 
-### 4.3 Prosedur go-live yang disarankan
+### 4.4 Prosedur go-live yang disarankan
 
-**Opsi A — Cutover penuh (organisasi sudah punya saldo riil)**
+**Opsi A — Cutover penuh (organisasi sudah punya saldo riil)** ← **disarankan jika tabel §4.1 “Ya”**
 
-1. Admin + tim teknis siapkan **worksheet pemetaan opening**:
+1. Admin + bendahara + ketua sepakati **worksheet pemetaan opening** (Fase 0):
 
    | Akun Kas/Bank | Dana Amanah | Nominal (Rp) | Catatan |
    |---------------|-------------|--------------|---------|
@@ -311,18 +345,16 @@ Posting teknis memakai transaksi bertipe **`opening`** ke ledger (`TransactionTy
    | BCA-UTAMA | SYS-OPERASIONAL | 200.000.000 | Bagian operasional |
    | KAS-01 | UMUM | 5.000.000 | Kas fisik kantor |
 
-2. Tim teknis posting setiap baris via **`LedgerService::postAmanahMovement`** dengan:
-   - `TransactionType::OPENING`
-   - Akun terkait
-   - `fund_id` sesuai kolom Dana Amanah
-   - `LedgerMovement::IN`
-   - Referensi: `"Saldo awal cutover YYYY-MM-DD"`
+2. **Admin** buka **Saldo Awal** → **Posting Saldo Awal** (`/dashboard/opening-balances/new`):
+   - Langkah 1: tanggal cutover + referensi
+   - Langkah 2: satu baris per pasangan akun + dana + nominal
+   - Langkah 3: review total → **Posting ke Ledger**
 
-   > Implementasi saat ini di test helper: `tests/Concerns/SimaTestHelpers::seedOpening()`. Tim IT dapat menyiapkan **artisan command one-off** atau script migrasi data — **koordinasi dengan pengembang**, bukan input bendahara via UI.
+3. Bendahara **verifikasi** (Fase 5) — bandingkan dengan rekening koran / hitung kas fisik.
 
-3. Bendahara **verifikasi** (Fase 5) — bukan input ulang.
+**Alternatif teknis (tanpa UI):** tim IT dapat memanggil `POST /api/opening-balances` atau script one-off — koordinasi dengan pengembang.
 
-**Opsi B — Soft start (organisasi menerima saldo nol di SIMA)**
+**Opsi B — Soft start (organisasi menerima saldo nol di SIMA)** ← **hanya jika §4.1 “Tidak” dan sengaja reset**
 
 - Mulai SIMA dengan master kosong saldo.
 - Hanya catat transaksi **setelah** tanggal cutover.
@@ -335,7 +367,7 @@ Posting teknis memakai transaksi bertipe **`opening`** ke ledger (`TransactionTy
 - **Re-alloc** ke restricted/unrestricted dilakukan belakangan via mekanisme internal (adjustment — butuh kebijakan & fitur teknis).
 - Catat utang teknis: saldo restricted belum akurat.
 
-### 4.4 Aturan setelah opening
+### 4.5 Aturan setelah opening
 
 - Jangan edit/hapus entri opening manual di database.
 - Koreksi hanya lewat **reversal** + posting opening yang benar (prosedur terkontrol admin).
@@ -399,12 +431,12 @@ Workflow approval: menu **Approval** atau laporan Approval.
 | Kas/Bank (CRUD) | ✅ | lihat | lihat | lihat |
 | Donatur | ✅ | ✅ | lihat | lihat |
 | Program/Event | ✅ | ✅ | lihat | lihat |
-| Saldo awal (opening) | ✅* | — | — | — |
+| Saldo awal (opening) | ✅ | lihat* | lihat* | lihat* |
 | Penerimaan | ✅ | ✅ buat/submit | lihat | approve |
 | Pengeluaran | ✅ | ✅ buat/submit | verify | approve |
 | Biaya bank | ✅ | ✅ | lihat | lihat |
 
-\* Posting opening saat ini **teknis/IT**, bukan bendahara via UI.
+\* Posting opening: **admin** via menu Saldo Awal; auditor/ketua/bendahara **lihat** batch jika punya `opening.view`.
 
 ---
 
@@ -430,7 +462,7 @@ Workflow approval: menu **Approval** atau laporan Approval.
 ### Saldo awal
 
 - [ ] Worksheet opening disetujui ketua
-- [ ] Posting opening dieksekusi tim teknis
+- [ ] Posting opening via **Saldo Awal** (admin) atau API
 - [ ] Saldo per rekening cocok
 - [ ] Rekonsiliasi global selisih = 0
 
@@ -467,6 +499,7 @@ Workflow approval: menu **Approval** atau laporan Approval.
 | Penerimaan | `/dashboard/receipts` |
 | Pengeluaran | `/dashboard/disbursements` |
 | Biaya Bank | `/dashboard/bank-fees` |
+| Saldo Awal | `/dashboard/opening-balances` |
 | Laporan | `/dashboard/reports` |
 
 ---
@@ -485,4 +518,5 @@ Workflow approval: menu **Approval** atau laporan Approval.
 
 | Tanggal | Catatan |
 |---------|---------|
-| Jun 2026 | Draft awal — mencerminkan kondisi UI/API saat penulisan (opening balance & user UI belum tersedia di dashboard). Perbarui dokumen ini saat fitur go-live UI dirilis. |
+| Jun 2026 | Draft awal |
+| Jun 2026 | Tambah §4.1 kapan memakai opening balance; update status UI/API Saldo Awal |
