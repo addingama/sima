@@ -8,6 +8,7 @@ use App\Enums\LedgerAccountType;
 use App\Models\Account;
 use App\Models\Fund;
 use App\Models\LedgerEntry;
+use App\Models\OpeningBalanceLine;
 use App\Support\Query\ListQueryApplier;
 use App\Support\Query\ListQueryDto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -100,6 +101,62 @@ class ReportService
             'selisih_debit_credit' => bcsub($totalDebits, $totalCredits, 2),
             'seimbang' => bccomp($totalAccounts, $totalFunds, 2) === 0
                 && bccomp($totalDebits, $totalCredits, 2) === 0,
+        ];
+    }
+
+    /** @return array{paginator: LengthAwarePaginator, total_amount: string, batch_count: int} */
+    public function openingBalances(ListQueryDto $query): array
+    {
+        $builder = OpeningBalanceLine::query()
+            ->select('opening_balance_lines.*')
+            ->join(
+                'opening_balance_batches',
+                'opening_balance_batches.id',
+                '=',
+                'opening_balance_lines.opening_balance_batch_id'
+            )
+            ->with([
+                'account:id,code,name',
+                'fund:id,code,name',
+                'batch' => fn ($q) => $q->with('postedBy:id,name'),
+            ]);
+
+        $builder = ListQueryApplier::apply(
+            $builder,
+            $query,
+            searchColumns: [
+                'opening_balance_batches.batch_number',
+                'opening_balance_batches.reference',
+            ],
+            sortable: [
+                'opening_balance_batches.opening_date',
+                'opening_balance_batches.batch_number',
+                'opening_balance_lines.line_number',
+                'opening_balance_lines.amount',
+            ],
+            defaultSort: 'opening_balance_batches.opening_date',
+            defaultDirection: 'desc',
+            filterCallbacks: [
+                'from' => fn ($q, $v) => $q->whereDate('opening_balance_batches.opening_date', '>=', $v),
+                'to' => fn ($q, $v) => $q->whereDate('opening_balance_batches.opening_date', '<=', $v),
+                'account_id' => fn ($q, $v) => $q->where('opening_balance_lines.account_id', $v),
+                'fund_id' => fn ($q, $v) => $q->where('opening_balance_lines.fund_id', $v),
+            ],
+        );
+
+        $summaryQuery = clone $builder;
+        $totalAmount = bcadd((string) ($summaryQuery->clone()->sum('opening_balance_lines.amount') ?? '0'), '0', 2);
+        $batchCount = (int) $summaryQuery->clone()
+            ->select('opening_balance_batches.id')
+            ->distinct()
+            ->count('opening_balance_batches.id');
+
+        $paginator = $builder->paginate($query->perPage, ['*'], 'page', $query->page);
+
+        return [
+            'paginator' => $paginator,
+            'total_amount' => $totalAmount,
+            'batch_count' => $batchCount,
         ];
     }
 

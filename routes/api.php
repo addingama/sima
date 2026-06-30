@@ -171,6 +171,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('reconciliation-summary', [ReportController::class, 'reconciliationSummary']);
         Route::get('ledger', [ReportController::class, 'ledger']);
         Route::get('fund-statement', [ReportController::class, 'fundStatement']);
+        Route::get('opening-balances', [ReportController::class, 'openingBalances']);
     });
 
     /*

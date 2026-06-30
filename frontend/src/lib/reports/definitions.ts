@@ -10,6 +10,7 @@ import {
   fetchApprovalReport,
   fetchFundBalances,
   fetchLedgerReport,
+  fetchOpeningBalanceReport,
   fetchReportRows,
 } from "@/lib/reports/fetch-helpers";
 import type { ReportDef } from "@/lib/reports/types";
@@ -338,6 +339,49 @@ export const approvalReport: ReportDef = {
   fetchData: fetchApprovalReport,
 };
 
+export const openingBalanceReport: ReportDef = {
+  id: "opening-balances",
+  title: "Saldo Awal",
+  description: "Daftar posting saldo awal kas/bank per tanggal cutover untuk audit go-live.",
+  path: "/dashboard/reports/opening-balances",
+  paginated: true,
+  columns: [
+    textColumn("batch_number", "No. Batch"),
+    dateColumn("opening_date", "Tgl Cutover"),
+    textColumn("line_number", "Baris"),
+    textColumn("account_code", "Kode Akun"),
+    textColumn("account_name", "Akun"),
+    textColumn("fund_code", "Kode Dana"),
+    textColumn("fund_name", "Dana Amanah"),
+    currencyColumn("amount", "Nominal"),
+    textColumn("posted_by_name", "Diposting Oleh"),
+    textColumn("reference", "Keterangan"),
+  ],
+  filters: [
+    { name: "from", label: "Cutover Dari", type: "date" },
+    { name: "to", label: "Cutover Sampai", type: "date" },
+    {
+      name: "account_id",
+      label: "Akun Kas/Bank",
+      type: "relation",
+      relation: { resource: "/accounts", labelKey: "name", params: { per_page: 100 } },
+    },
+    {
+      name: "fund_id",
+      label: "Dana Amanah",
+      type: "relation",
+      relation: { resource: "/funds", labelKey: "name", params: { per_page: 100 } },
+    },
+    { name: "q", label: "Cari Batch/Referensi", type: "text", placeholder: "OPN/..." },
+  ],
+  groupByOptions: [
+    { value: "opening_date", label: "Tanggal Cutover" },
+    { value: "batch_number", label: "No. Batch" },
+    { value: "fund_name", label: "Dana Amanah" },
+  ],
+  fetchData: fetchOpeningBalanceReport,
+};
+
 export const auditReport: ReportDef = {
   id: "audit-report",
   title: "Audit",
@@ -374,6 +418,7 @@ export const allReports = [
   byProgramReport,
   byDonorReport,
   byVendorReport,
+  openingBalanceReport,
   approvalReport,
   auditReport,
 ];
