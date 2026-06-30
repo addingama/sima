@@ -136,6 +136,44 @@ Daftar permission & pemetaan role ada di `config/sima.php`.
 
 ---
 
+## Backlog & GitHub Issue (WAJIB untuk agent)
+
+Saat mengerjakan item dari [docs/BACKLOG.md](docs/BACKLOG.md):
+
+1. **Buat issue GitHub dulu** — sebelum menulis kode, commit, atau PR. Jangan implementasi tanpa issue.
+2. **Satu item backlog = satu issue** — judul issue mengacu ke baris backlog (prioritas + ringkasan).
+3. **Isi issue** — salin deskripsi backlog, acceptance criteria singkat, link ke `docs/BACKLOG.md`.
+4. **Cek duplikat** — cari issue open yang sama; pakai issue existing jika sudah ada.
+5. **Commit message** — **awali dengan nomor issue** agar GitHub otomatis link:
+
+   ```
+   #123 feat(opening): add POST /opening-balances endpoint
+   #123 test(opening): cover insufficient fund guard
+   #123 docs: update PANDUAN-MULAI Fase 4
+   ```
+
+   Format: `#<nomor> <type>(<scope>): <deskripsi>` — `#123` **harus** di awal baris subject.
+
+6. **Pull request** — body wajib berisi `Closes #123` (atau `Fixes #123`).
+7. **Selesai** — centang item di `docs/BACKLOG.md`; tutup issue setelah PR merge.
+
+**Buat issue via CLI (contoh):**
+
+```bash
+gh issue create \
+  --title "P0: API posting saldo awal (opening balance)" \
+  --body "Backlog: docs/BACKLOG.md — Saldo awal → API posting saldo awal
+
+## Acceptance criteria
+- [ ] Endpoint terkelola + permission admin
+- [ ] Posting TransactionType::OPENING
+- [ ] Tests feature"
+```
+
+**Agent:** gunakan `gh` untuk create/list issue. Jika repo belum punya remote GitHub, minta pemilik project setup remote dulu — **jangan** skip pembuatan issue.
+
+---
+
 ## Status Implementasi (per Jun 2026)
 
 > Bagian ini menjaga sinkronisasi antara aturan & kode nyata. Perbarui saat ada perubahan.

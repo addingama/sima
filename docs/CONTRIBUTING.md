@@ -7,6 +7,7 @@ Terima kasih atas minat untuk berkontribusi. SIMA mengelola dana amanah — seti
 1. Baca [ARCHITECTURE.md](./ARCHITECTURE.md) untuk memahami Amanah Ledger.
 2. Baca [CODING_STANDARDS.md](./CODING_STANDARDS.md).
 3. Cek issue existing atau buat issue untuk diskusi fitur besar.
+4. Item dari [BACKLOG.md](./BACKLOG.md): **issue wajib dibuat sebelum implementasi** (lihat [Issue dan commit](#issue-dan-commit)).
 
 ## Setup development
 
@@ -63,15 +64,38 @@ Password default: `password`
    cd frontend && npm run check && npm run build
    ```
 
-5. **Commit** dengan pesan jelas:
-
-   ```
-   feat(receipts): add filter by donor on index API
-   fix(ledger): reject negative fund balance on allocation
-   ```
+5. **Commit** dengan pesan jelas — lihat [Issue dan commit](#issue-dan-commit).
 
 6. **Push** dan buat **Pull Request** ke branch target.
 7. Tunggu **CI** hijau — lihat `.github/workflows/ci.yml`.
+
+## Issue dan commit
+
+### Item dari BACKLOG.md
+
+1. Buat **GitHub Issue** sebelum branch/commit (satu item backlog = satu issue).
+2. Body issue: link ke baris di `docs/BACKLOG.md` + acceptance criteria.
+3. PR wajib menyertakan `Closes #<nomor>` agar issue tertutup otomatis saat merge.
+
+### Format commit message
+
+Untuk pekerjaan yang mengejar issue (terutama backlog), **awali subject dengan nomor issue**:
+
+```
+#123 feat(opening): add POST /opening-balances endpoint
+#123 test(opening): reject unbalanced opening lines
+#123 docs: document opening balance in PANDUAN-MULAI
+```
+
+- `#123` **harus** di awal baris (GitHub linking).
+- Lanjutkan dengan konvensi: `<type>(<scope>): <deskripsi>`.
+- Type umum: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`.
+
+Contoh **tanpa** issue (hotfix kecil di luar backlog):
+
+```
+fix(ledger): guard zero-amount journal line
+```
 
 ## Pull request checklist
 
@@ -80,6 +104,7 @@ Password default: `password`
 - [ ] CI lulus (Pint, PHPUnit, Biome, build)
 - [ ] Tidak commit `.env`, credential, atau file generated
 - [ ] Dokumentasi diupdate bila mengubah API/deployment
+- [ ] Pekerjaan backlog: GitHub Issue ada; commit diawali `#<nomor>`; PR memuat `Closes #<nomor>`
 
 ### PR backend finansial
 

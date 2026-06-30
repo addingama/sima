@@ -38,6 +38,9 @@ return [
         // Lampiran/bukti
         'attachment.view', 'attachment.manage',
 
+        // Saldo awal (go-live)
+        'opening.view', 'opening.manage',
+
         // Audit, laporan, pengguna, portal
         'audit.view',
         'report.view',
@@ -94,6 +97,7 @@ return [
             'receipt.view', 'disbursement.view',
             'bankfee.view', 'reconciliation.view',
             'liability.view', 'attachment.view',
+            'opening.view',
             'audit.view', 'report.view',
         ],
 
