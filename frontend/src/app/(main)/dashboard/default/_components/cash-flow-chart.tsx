@@ -2,6 +2,7 @@
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
+import { ErrorState } from "@/components/sima/error-state";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   type ChartConfig,
@@ -11,7 +12,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { ErrorState } from "@/components/sima/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardQuery } from "@/hooks/use-resource-query";
 import { parseAmount } from "@/lib/format/amount";
@@ -59,9 +59,7 @@ export function CashFlowChart() {
               <XAxis dataKey="category" tickLine={false} axisLine={false} tickMargin={10} />
               <YAxis hide />
               <ChartTooltip
-                content={
-                  <ChartTooltipContent formatter={(value) => formatIdr(value as number)} hideIndicator />
-                }
+                content={<ChartTooltipContent formatter={(value) => formatIdr(value as number)} hideIndicator />}
               />
               <ChartLegend content={<ChartLegendContent />} />
               <Bar dataKey="penerimaan" fill="var(--color-penerimaan)" radius={[6, 6, 0, 0]} />

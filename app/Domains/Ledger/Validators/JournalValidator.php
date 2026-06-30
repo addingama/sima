@@ -2,6 +2,8 @@
 
 namespace App\Domains\Ledger\Validators;
 
+use App\Enums\LedgerAccountType;
+
 class JournalValidator
 {
     /** @param array<int, array<string, mixed>> $lines */
@@ -28,9 +30,9 @@ class JournalValidator
         $normalized = [];
 
         foreach ($lines as $line) {
-            $type = $line['ledger_account_type'] instanceof \App\Enums\LedgerAccountType
+            $type = $line['ledger_account_type'] instanceof LedgerAccountType
                 ? $line['ledger_account_type']
-                : \App\Enums\LedgerAccountType::from((string) $line['ledger_account_type']);
+                : LedgerAccountType::from((string) $line['ledger_account_type']);
 
             $debit = bcadd((string) ($line['debit'] ?? '0'), '0', 2);
             $credit = bcadd((string) ($line['credit'] ?? '0'), '0', 2);

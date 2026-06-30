@@ -4,6 +4,7 @@ namespace App\Domains\Receipt\Services;
 
 use App\Domains\Ledger\Services\LedgerService;
 use App\Domains\Receipt\DTOs\CreateReceiptDto;
+use App\Domains\Receipt\DTOs\ReceiptAllocationDto;
 use App\Domains\Receipt\DTOs\ReverseReceiptDto;
 use App\Domains\Receipt\DTOs\UpdateReceiptDto;
 use App\Domains\Receipt\Events\ReceiptApproved;
@@ -18,9 +19,12 @@ use App\Enums\LedgerMovement;
 use App\Enums\ReceiptStatus;
 use App\Enums\TransactionType;
 use App\Models\Receipt;
+use App\Models\ReceiptAllocation;
 use App\Models\User;
 use App\Services\DocumentNumberService;
 use App\Support\Query\ListQueryDto;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ReceiptService
@@ -32,7 +36,7 @@ class ReceiptService
         private readonly DocumentNumberService $numbers,
     ) {}
 
-    public function paginate(ListQueryDto $query): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function paginate(ListQueryDto $query): LengthAwarePaginator
     {
         return $this->repository->paginate($query);
     }
@@ -49,8 +53,8 @@ class ReceiptService
         ]);
     }
 
-    /** @return \Illuminate\Support\Collection<int, \App\Models\ReceiptAllocation> */
-    public function allocationsFor(Receipt $receipt): \Illuminate\Support\Collection
+    /** @return Collection<int, ReceiptAllocation> */
+    public function allocationsFor(Receipt $receipt): Collection
     {
         return $receipt->allocations()->with(['fund:id,code,name', 'program:id,code,name'])->get();
     }
@@ -176,7 +180,7 @@ class ReceiptService
     private function normalizeAllocations(array $allocations): array
     {
         return array_map(function ($a) {
-            if ($a instanceof \App\Domains\Receipt\DTOs\ReceiptAllocationDto) {
+            if ($a instanceof ReceiptAllocationDto) {
                 return $a->toArray();
             }
 

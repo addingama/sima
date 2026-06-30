@@ -5,12 +5,12 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CurrencyDisplay } from "@/components/sima/currency-display";
 import { ErrorState } from "@/components/sima/error-state";
 import { PageHeader } from "@/components/sima/page-header";
 import { PaginatedDataTable } from "@/components/sima/paginated-data-table";
 import { TableSkeleton } from "@/components/sima/skeletons";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiGet } from "@/lib/api/client";
 
 type LedgerRow = Record<string, unknown>;
@@ -40,7 +40,7 @@ export default function LedgerPage() {
       page: pageIndex + 1,
       per_page: pageSize,
     }),
-    [pageIndex, pageSize],
+    [pageIndex],
   );
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -57,10 +57,7 @@ export default function LedgerPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Buku Besar"
-        description="Laporan buku besar Amanah Ledger."
-      />
+      <PageHeader title="Buku Besar" description="Laporan buku besar Amanah Ledger." />
 
       <Card>
         <CardHeader>

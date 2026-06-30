@@ -2,20 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorState } from "@/components/sima/error-state";
 import { TableSkeleton } from "@/components/sima/skeletons";
-import type { AuditRecord } from "@/lib/api/entities";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiGet } from "@/lib/api/client";
+import type { AuditRecord } from "@/lib/api/entities";
 import { formatDateTime } from "@/lib/format/datetime";
 
-export function AuditPanel({
-  auditableType,
-  auditableId,
-}: {
-  auditableType: string;
-  auditableId: number;
-}) {
+export function AuditPanel({ auditableType, auditableId }: { auditableType: string; auditableId: number }) {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["/audits", auditableType, auditableId],
     queryFn: async () => {
@@ -51,9 +45,7 @@ export function AuditPanel({
                   <span className="font-medium text-sm capitalize">{audit.event}</span>
                   <span className="text-muted-foreground text-xs">{formatDateTime(audit.created_at)}</span>
                 </div>
-                <p className="mt-1 text-muted-foreground text-sm">
-                  {audit.user?.name ?? "Sistem"}
-                </p>
+                <p className="mt-1 text-muted-foreground text-sm">{audit.user?.name ?? "Sistem"}</p>
               </li>
             ))}
           </ul>

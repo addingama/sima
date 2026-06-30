@@ -2,6 +2,8 @@
 
 Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centang `- [x]` saat selesai.
 
+> **Aturan agent (WAJIB):** sebelum mengerjakan item di bawah, **buat GitHub Issue dulu**, lalu setiap commit **awali dengan `#<nomor-issue>`** (mis. `#42 feat(opening): ...`). Detail: [AGENTS.md](../AGENTS.md#backlog--github-issue-wajib-untuk-agent) · [CONTRIBUTING.md](CONTRIBUTING.md#issue-dan-commit).
+
 **Prioritas:**
 
 | Label | Arti |
@@ -19,7 +21,7 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 
 ### Saldo awal (opening balance)
 
-- [ ] **API posting saldo awal** — endpoint terkelola (mis. `POST /opening-balances`) dengan validasi role admin, transaksi `opening`, dukung banyak baris (akun + dana + nominal)
+- [x] **API posting saldo awal** — endpoint terkelola (mis. `POST /opening-balances`) dengan validasi role admin, transaksi `opening`, dukung banyak baris (akun + dana + nominal)
 - [ ] **UI posting saldo awal** — wizard go-live: upload/review worksheet, preview jurnal, eksekusi batch, cetak bukti
 - [ ] **Gunakan dana `opening_equity` sebagai lawan** — selaras desain `SYS-OPENING` (bukan hanya shortcut ke Dana Operasional)
 - [ ] **Laporan saldo awal** — daftar posting opening per tanggal cutover (audit go-live)
@@ -161,9 +163,29 @@ Item yang sudah dikerjakan — pindahkan ke sini saat centang selesai.
 
 ## Cara memakai backlog ini
 
-1. Pilih **satu item P0** → kerjakan PR kecil → centang di file ini.
-2. Jangan campur banyak modul dalam satu PR (kecuali refactor mechanical).
-3. Update [PANDUAN-MULAI.md](PANDUAN-MULAI.md) jika item mengubah prosedur go-live.
-4. Sync issue GitHub (opsional): buat issue per item P0/P1, link ke baris backlog.
+### Workflow wajib (agent & contributor)
+
+```mermaid
+flowchart LR
+    A[Pilih item backlog] --> B[Buat GitHub Issue]
+    B --> C[Implementasi + test]
+    C --> D["Commit: #N type(scope): msg"]
+    D --> E[PR dengan Closes #N]
+    E --> F[Merge → centang backlog]
+```
+
+1. Pilih **satu item** (utamakan P0 → P1).
+2. **Buat issue** di GitHub (`gh issue create`) — judul: `[P0] ringkasan item`.
+3. Salin nomor issue (mis. `#42`) ke notes; **jangan coding sebelum issue ada**.
+4. Kerjakan scope minimal — **satu issue = satu PR**.
+5. **Commit:** prefix `#42` di awal setiap commit yang terkait issue itu.
+6. **PR:** sertakan `Closes #42` di body.
+7. Setelah merge: centang `- [x]` di file ini; issue otomatis tertutup jika PR memakai `Closes`.
+
+### Aturan tambahan
+
+- Jangan campur banyak item backlog dalam satu issue/PR.
+- Update [PANDUAN-MULAI.md](PANDUAN-MULAI.md) jika item mengubah prosedur go-live.
+- Jika issue sudah ada untuk item yang sama, **pakai issue tersebut** — jangan buat duplikat.
 
 **Terakhir diperbarui:** Jun 2026

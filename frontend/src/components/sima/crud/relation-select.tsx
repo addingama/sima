@@ -2,9 +2,9 @@
 
 import { useMemo } from "react";
 
-import { useResourceQuery } from "@/hooks/use-resource-query";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useResourceQuery } from "@/hooks/use-resource-query";
 
 export function RelationSelect({
   resource,

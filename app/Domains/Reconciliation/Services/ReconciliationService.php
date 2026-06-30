@@ -15,6 +15,7 @@ use App\Models\BankReconciliation;
 use App\Models\BankReconciliationLine;
 use App\Models\User;
 use App\Support\Query\ListQueryDto;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class ReconciliationService
@@ -26,7 +27,7 @@ class ReconciliationService
     ) {}
 
     /** @param array<string, mixed> $filters */
-    public function paginate(ListQueryDto $query): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function paginate(ListQueryDto $query): LengthAwarePaginator
     {
         return $this->repository->paginate($query);
     }

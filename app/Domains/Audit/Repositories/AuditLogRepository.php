@@ -3,13 +3,15 @@
 namespace App\Domains\Audit\Repositories;
 
 use App\Domains\Audit\DTOs\AuditLogDto;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Contracts\Audit;
 
 class AuditLogRepository
 {
     public function create(AuditLogDto $dto): Audit
     {
-        /** @var class-string<Audit&\Illuminate\Database\Eloquent\Model> $auditModel */
+        /** @var class-string<Audit&Model> $auditModel */
         $auditModel = config('audit.implementation', \OwenIt\Auditing\Models\Audit::class);
 
         $request = request();
@@ -30,9 +32,9 @@ class AuditLogRepository
         ]);
     }
 
-    public function paginate(array $filters, int $perPage = 25): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function paginate(array $filters, int $perPage = 25): LengthAwarePaginator
     {
-        /** @var class-string<Audit&\Illuminate\Database\Eloquent\Model> $auditModel */
+        /** @var class-string<Audit&Model> $auditModel */
         $auditModel = config('audit.implementation', \OwenIt\Auditing\Models\Audit::class);
 
         return $auditModel::query()

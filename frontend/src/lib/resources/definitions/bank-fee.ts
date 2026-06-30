@@ -1,6 +1,7 @@
-import type { ResourceDef } from "../types";
-import { currencyColumn, dateColumn, linkColumn, nestedNameColumn, statusColumn } from "../columns";
 import { normalizeAmountString } from "@/lib/format/amount";
+
+import { currencyColumn, dateColumn, linkColumn, nestedNameColumn, statusColumn } from "../columns";
+import type { ResourceDef } from "../types";
 
 const basePath = "/dashboard/bank-fees";
 
@@ -122,7 +123,8 @@ export const bankFeeResource: ResourceDef = {
       permission: "bankfee.post",
       statuses: ["draft"],
       confirmTitle: "Post biaya bank?",
-      confirmDescription: "Biaya akan dipotong dari rekening bank dan Dana Amanah terkait. Jika saldo tidak cukup, status menjadi deferred.",
+      confirmDescription:
+        "Biaya akan dipotong dari rekening bank dan Dana Amanah terkait. Jika saldo tidak cukup, status menjadi deferred.",
     },
     {
       action: "reverse",

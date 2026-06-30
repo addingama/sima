@@ -1,41 +1,36 @@
 "use client";
 
+import { useState } from "react";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApprovalTimeline } from "@/components/sima/crud/approval-timeline";
 import { AttachmentPanel } from "@/components/sima/crud/attachment-panel";
 import { AuditPanel } from "@/components/sima/crud/audit-panel";
+import { ConfirmActionDialog } from "@/components/sima/crud/confirm-action-dialog";
 import { buildCrudBreadcrumbs, CrudBreadcrumb } from "@/components/sima/crud/crud-breadcrumb";
 import { DetailFieldGrid } from "@/components/sima/crud/detail-field-grid";
-import { ConfirmActionDialog } from "@/components/sima/crud/confirm-action-dialog";
 import { WorkflowActionsBar } from "@/components/sima/crud/workflow-actions-bar";
 import { CurrencyDisplay } from "@/components/sima/currency-display";
 import { ErrorState } from "@/components/sima/error-state";
 import { PageHeader } from "@/components/sima/page-header";
-import { StatusBadge } from "@/components/sima/status-badge";
 import { PageShellSkeleton } from "@/components/sima/skeletons";
-import type { ApprovalRecord } from "@/lib/api/entities";
-import { useDetailQuery } from "@/hooks/use-resource-query";
+import { StatusBadge } from "@/components/sima/status-badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useResourceDelete } from "@/hooks/use-resource-mutation";
+import { useDetailQuery } from "@/hooks/use-resource-query";
+import type { ApprovalRecord } from "@/lib/api/entities";
 import { hasPermission } from "@/lib/auth/permissions";
 import type { ResourceDef } from "@/lib/resources/types";
 import { useAuth } from "@/providers/auth-provider";
-import { useState } from "react";
 
-function LineItemsTable({
-  label,
-  rows,
-}: {
-  label: string;
-  rows: Array<Record<string, unknown>>;
-}) {
+function LineItemsTable({ label, rows }: { label: string; rows: Array<Record<string, unknown>> }) {
   return (
     <Card>
       <CardHeader>
@@ -75,13 +70,7 @@ function LineItemsTable({
   );
 }
 
-export function CrudDetailPage({
-  config,
-  id,
-}: {
-  config: ResourceDef;
-  id: string;
-}) {
+export function CrudDetailPage({ config, id }: { config: ResourceDef; id: string }) {
   const router = useRouter();
   const { user } = useAuth();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -98,18 +87,14 @@ export function CrudDetailPage({
 
   const title =
     typeof config.titleField === "function" ? config.titleField(data) : String(data[config.titleField] ?? config.label);
-  const hasManagePermission = hasPermission(
-    user,
-    config.permissions.manage ?? config.permissions.create ?? "",
-  );
+  const hasManagePermission = hasPermission(user, config.permissions.manage ?? config.permissions.create ?? "");
   const canEdit = hasManagePermission && (config.canEdit?.(data) ?? true);
-  const canDelete =
-    hasManagePermission && (config.canDelete?.(data) ?? false);
+  const canDelete = hasManagePermission && (config.canDelete?.(data) ?? false);
   const lineItems =
     config.lineItems?.key === "allocations"
-      ? (data.allocations as Array<Record<string, unknown>> | undefined) ?? []
+      ? ((data.allocations as Array<Record<string, unknown>> | undefined) ?? [])
       : config.lineItems?.key === "sources"
-        ? (data.fund_sources as Array<Record<string, unknown>> | undefined) ?? []
+        ? ((data.fund_sources as Array<Record<string, unknown>> | undefined) ?? [])
         : [];
 
   return (

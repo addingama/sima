@@ -5,12 +5,12 @@ import { useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Search } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { ErrorState } from "@/components/sima/error-state";
 import { PageHeader } from "@/components/sima/page-header";
 import { PaginatedDataTable } from "@/components/sima/paginated-data-table";
 import { TableSkeleton } from "@/components/sima/skeletons";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { useResourceQuery } from "@/hooks/use-resource-query";
 
 interface ResourceListPageProps<TData> {
@@ -65,11 +65,7 @@ export function ResourceListPage<TData>({
               <InputGroupAddon>
                 <Search className="size-4" />
               </InputGroupAddon>
-              <InputGroupInput
-                value={q}
-                onChange={(event) => setQ(event.target.value)}
-                placeholder="Cari..."
-              />
+              <InputGroupInput value={q} onChange={(event) => setQ(event.target.value)} placeholder="Cari..." />
             </InputGroup>
           </form>
         </CardHeader>

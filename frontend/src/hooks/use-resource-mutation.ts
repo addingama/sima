@@ -4,7 +4,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { apiDelete, apiPost, apiPut } from "@/lib/api/client";
 
-function invalidateResourceQueries(queryClient: ReturnType<typeof useQueryClient>, resource: string, id?: string | number) {
+function invalidateResourceQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  resource: string,
+  id?: string | number,
+) {
   queryClient.invalidateQueries({ queryKey: [resource] });
 
   if (id !== undefined) {

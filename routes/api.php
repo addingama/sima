@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\DisbursementController;
 use App\Http\Controllers\Api\DonorController;
 use App\Http\Controllers\Api\FundController;
 use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\Api\OpeningBalanceController;
 use App\Http\Controllers\Api\OperationalLiabilityController;
 use App\Http\Controllers\Api\PortalController;
 use App\Http\Controllers\Api\ProgramController;
@@ -108,6 +109,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('bank-fees', [BankFeeController::class, 'store'])->middleware('permission:bankfee.manage');
     Route::post('bank-fees/{bankFee}/post', [BankFeeController::class, 'post'])->middleware('permission:bankfee.post');
     Route::post('bank-fees/{bankFee}/reverse', [BankFeeController::class, 'reverse'])->middleware('permission:bankfee.reverse');
+
+    /*
+    |----------------------------------------------------------------------
+    | Saldo Awal (Opening Balance)
+    |----------------------------------------------------------------------
+    */
+    Route::get('opening-balances', [OpeningBalanceController::class, 'index'])->middleware('permission:opening.view');
+    Route::get('opening-balances/{openingBalanceBatch}', [OpeningBalanceController::class, 'show'])->middleware('permission:opening.view');
+    Route::post('opening-balances', [OpeningBalanceController::class, 'store'])->middleware('permission:opening.manage');
 
     /*
     |----------------------------------------------------------------------

@@ -1,5 +1,6 @@
-import Link from "next/link";
 import { Fragment } from "react";
+
+import Link from "next/link";
 
 import {
   Breadcrumb,
@@ -10,11 +11,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-export function CrudBreadcrumb({
-  items,
-}: {
-  items: Array<{ label: string; href?: string }>;
-}) {
+export function CrudBreadcrumb({ items }: { items: Array<{ label: string; href?: string }> }) {
   return (
     <Breadcrumb>
       <BreadcrumbList>
@@ -46,7 +43,12 @@ function resolveTitle(configTitle: string | ((row: Record<string, unknown>) => s
 }
 
 export function buildCrudBreadcrumbs(
-  config: { labelPlural: string; basePath: string; label: string; titleField: string | ((row: Record<string, unknown>) => string) },
+  config: {
+    labelPlural: string;
+    basePath: string;
+    label: string;
+    titleField: string | ((row: Record<string, unknown>) => string);
+  },
   mode: "list" | "create" | "detail" | "edit",
   row?: Record<string, unknown>,
 ) {

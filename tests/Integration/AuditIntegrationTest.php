@@ -6,6 +6,7 @@ use App\Domains\Audit\Services\AuditLogService;
 use App\Domains\Audit\Services\AuditQueryService;
 use App\Domains\Receipt\Services\ReceiptService;
 use App\Models\User;
+use App\Support\Query\ListQueryDto;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -64,7 +65,7 @@ class AuditIntegrationTest extends TestCase
         ], [['fund_id' => $fund->id, 'amount' => '10000.00']], $this->actor);
 
         $result = app(AuditQueryService::class)->paginate(
-            new \App\Support\Query\ListQueryDto(filters: ['event' => 'created'], perPage: 10),
+            new ListQueryDto(filters: ['event' => 'created'], perPage: 10),
         );
 
         $this->assertGreaterThanOrEqual(1, $result->total());

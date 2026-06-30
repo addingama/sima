@@ -18,7 +18,11 @@ export function useResourceQuery<T>(resource: string, params: ListParams = {}, e
         message: response.message,
       } satisfies {
         rows: T[];
-        pagination: ApiEnvelope["meta"] extends infer M ? M extends { pagination?: infer P } ? P : undefined : undefined;
+        pagination: ApiEnvelope["meta"] extends infer M
+          ? M extends { pagination?: infer P }
+            ? P
+            : undefined
+          : undefined;
         message: string | null;
       };
     },
@@ -63,9 +67,7 @@ export function useReconciliationSummaryQuery() {
   return useQuery({
     queryKey: ["/reports/reconciliation-summary"],
     queryFn: async () => {
-      const response = await apiGet<import("@/lib/api/types").ReconciliationSummary>(
-        "/reports/reconciliation-summary",
-      );
+      const response = await apiGet<import("@/lib/api/types").ReconciliationSummary>("/reports/reconciliation-summary");
 
       return response.data;
     },

@@ -1,14 +1,14 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
-import { Controller, useFieldArray, type Control } from "react-hook-form";
+import { type Control, Controller, useFieldArray } from "react-hook-form";
 
+import { RelationSelect } from "@/components/sima/crud/relation-select";
+import { MoneyInput } from "@/components/sima/money-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { MoneyInput } from "@/components/sima/money-input";
-import { RelationSelect } from "@/components/sima/crud/relation-select";
 
 type LineItemsKey = "allocations" | "sources";
 

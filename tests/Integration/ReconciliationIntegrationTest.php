@@ -3,7 +3,6 @@
 namespace Tests\Integration;
 
 use App\Domains\Expense\Services\BankFeeService;
-use App\Domains\Ledger\Services\BalanceService;
 use App\Domains\Reconciliation\Services\ReconciliationService;
 use App\Models\LedgerEntry;
 use App\Models\User;

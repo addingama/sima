@@ -1,5 +1,5 @@
-import type { ResourceDef } from "../types";
 import { activeColumn, currencyColumn, linkColumn } from "../columns";
+import type { ResourceDef } from "../types";
 
 const basePath = "/dashboard/funds";
 

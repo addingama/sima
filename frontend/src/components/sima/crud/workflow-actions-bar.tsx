@@ -4,8 +4,8 @@ import { useState } from "react";
 
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/sima/crud/confirm-action-dialog";
+import { Button } from "@/components/ui/button";
 import { useWorkflowAction } from "@/hooks/use-resource-mutation";
 import { hasPermission } from "@/lib/auth/permissions";
 import type { WorkflowActionDef } from "@/lib/resources/types";

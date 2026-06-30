@@ -1,7 +1,8 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
+
+import type { ColumnDef } from "@tanstack/react-table";
 
 import { CurrencyDisplay } from "@/components/sima/currency-display";
 import { StatusBadge } from "@/components/sima/status-badge";

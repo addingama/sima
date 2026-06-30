@@ -26,18 +26,11 @@ function renderValue(value: unknown, type?: DetailFieldDef["type"]): ReactNode {
   }
 }
 
-export function DetailFieldGrid({
-  fields,
-  data,
-}: {
-  fields: DetailFieldDef[];
-  data: Record<string, unknown>;
-}) {
+export function DetailFieldGrid({ fields, data }: { fields: DetailFieldDef[]; data: Record<string, unknown> }) {
   return (
     <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {fields.map((field) => {
-        const value =
-          typeof field.accessor === "function" ? field.accessor(data) : data[field.accessor as string];
+        const value = typeof field.accessor === "function" ? field.accessor(data) : data[field.accessor as string];
 
         return (
           <div key={field.label} className="space-y-1">

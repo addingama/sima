@@ -10,9 +10,7 @@ function stringifyCell(value: unknown): string {
   return String(value);
 }
 
-export function columnsToExportColumns(
-  columns: Array<ColumnDef<Record<string, unknown>, unknown>>,
-): ExportColumn[] {
+export function columnsToExportColumns(columns: Array<ColumnDef<Record<string, unknown>, unknown>>): ExportColumn[] {
   return columns
     .filter((column) => "accessorKey" in column && column.accessorKey)
     .map((column) => {

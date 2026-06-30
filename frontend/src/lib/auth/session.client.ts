@@ -1,7 +1,7 @@
 "use client";
 
-import { AUTH_TOKEN_COOKIE, AUTH_USER_COOKIE } from "@/lib/auth/constants";
 import type { SimaUser } from "@/lib/api/types";
+import { AUTH_TOKEN_COOKIE, AUTH_USER_COOKIE } from "@/lib/auth/constants";
 
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") {

@@ -2,6 +2,7 @@
 
 namespace Tests\Integration;
 
+use App\Domains\Ledger\Services\BalanceService;
 use App\Domains\Receipt\Services\ReceiptReversalService;
 use App\Domains\Receipt\Services\ReceiptService;
 use App\Enums\ReceiptStatus;
@@ -9,7 +10,6 @@ use App\Exceptions\DomainException;
 use App\Models\Approval;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use OwenIt\Auditing\Models\Audit;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -105,7 +105,7 @@ class ReceiptIntegrationTest extends TestCase
         $receipt = $reversal->reverse($receipt, $this->makeUser('admin'), 'Salah input');
 
         $this->assertSame(ReceiptStatus::REVERSED, $receipt->status);
-        $this->assertSame('0.00', app(\App\Domains\Ledger\Services\BalanceService::class)->fundBalance($fund->id));
+        $this->assertSame('0.00', app(BalanceService::class)->fundBalance($fund->id));
     }
 
     #[Test]

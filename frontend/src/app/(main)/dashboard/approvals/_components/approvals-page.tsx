@@ -1,17 +1,14 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CrudListPage } from "@/components/sima/crud";
-import { disbursementResource, receiptResource } from "@/lib/resources";
 import { PageHeader } from "@/components/sima/page-header";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { disbursementResource, receiptResource } from "@/lib/resources";
 
 export default function ApprovalsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Approval"
-        description="Antrian persetujuan penerimaan dan pengeluaran."
-      />
+      <PageHeader title="Approval" description="Antrian persetujuan penerimaan dan pengeluaran." />
 
       <Tabs defaultValue="receipts">
         <TabsList>

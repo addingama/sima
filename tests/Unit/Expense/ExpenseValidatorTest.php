@@ -4,6 +4,7 @@ namespace Tests\Unit\Expense;
 
 use App\Domains\Expense\Validators\ExpenseValidator;
 use App\Domains\Ledger\Services\BalanceService;
+use App\Domains\Ledger\Services\LedgerService;
 use App\Enums\DisbursementStatus;
 use App\Enums\LedgerMovement;
 use App\Enums\TransactionType;
@@ -14,7 +15,6 @@ use App\Models\Disbursement;
 use App\Models\ExpenseFundSource;
 use App\Models\Fund;
 use App\Models\User;
-use App\Domains\Ledger\Services\LedgerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;

@@ -1,6 +1,7 @@
-import type { ResourceDef } from "../types";
-import { currencyColumn, dateColumn, linkColumn, nestedNameColumn, statusColumn } from "../columns";
 import { amountToMoneyInput, normalizeAmountString } from "@/lib/format/amount";
+
+import { currencyColumn, dateColumn, linkColumn, nestedNameColumn, statusColumn } from "../columns";
+import type { ResourceDef } from "../types";
 
 const basePath = "/dashboard/receipts";
 
@@ -15,9 +16,7 @@ export const receiptResource: ResourceDef = {
   },
   titleField: (row) => String(row.receipt_number ?? `Penerimaan #${row.id}`),
   listColumns: [
-    linkColumn("receipt_number", "No. Penerimaan", basePath, (row) =>
-      String(row.receipt_number ?? `#${row.id}`),
-    ),
+    linkColumn("receipt_number", "No. Penerimaan", basePath, (row) => String(row.receipt_number ?? `#${row.id}`)),
     dateColumn("receipt_date", "Tanggal"),
     currencyColumn("amount", "Nominal"),
     statusColumn(),

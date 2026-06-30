@@ -2,13 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Domains\Ledger\Services\LedgerService;
 use App\Enums\LedgerMovement;
 use App\Enums\TransactionType;
 use App\Exceptions\InsufficientBalanceException;
 use App\Models\Account;
 use App\Models\Fund;
 use App\Models\User;
-use App\Domains\Ledger\Services\LedgerService;
 use Illuminate\Console\Command;
 
 /**

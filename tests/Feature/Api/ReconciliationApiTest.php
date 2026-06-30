@@ -3,7 +3,6 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Account;
-use App\Models\Fund;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;

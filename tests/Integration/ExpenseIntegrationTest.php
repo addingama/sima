@@ -2,7 +2,6 @@
 
 namespace Tests\Integration;
 
-use App\Domains\Expense\Services\ExpenseReversalService;
 use App\Domains\Expense\Services\ExpenseService;
 use App\Domains\Ledger\Services\BalanceService;
 use App\Enums\DisbursementStatus;

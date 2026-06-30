@@ -23,11 +23,6 @@
             <directory>app/OpenApi</directory>
         </exclude>
     </source>
-    <coverage>
-        <report>
-            <text outputFile="php://stdout" showUncoveredFiles="false"/>
-        </report>
-    </coverage>
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>

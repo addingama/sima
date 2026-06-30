@@ -2,17 +2,18 @@
 
 "use no memo";
 
+import { useCallback, useMemo } from "react";
+
 import {
   flexRender,
+  type GroupingState,
   getCoreRowModel,
   getExpandedRowModel,
   getGroupedRowModel,
   getSortedRowModel,
-  type GroupingState,
   type Updater,
   useReactTable,
 } from "@tanstack/react-table";
-import { useCallback, useMemo } from "react";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { ReportDef } from "@/lib/reports/types";
@@ -70,7 +71,7 @@ export function ReportDataTable({
 
   return (
     <div id={printElementId} className="overflow-hidden rounded-lg border bg-card">
-      <div className="hidden print:block border-b px-4 py-3">
+      <div className="hidden border-b px-4 py-3 print:block">
         <h2 className="font-semibold text-lg">Laporan SIMA</h2>
       </div>
       <Table>
@@ -88,19 +89,12 @@ export function ReportDataTable({
         <TableBody>
           {table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                className={cn(row.getIsGrouped() && "bg-muted/40 font-medium")}
-              >
+              <TableRow key={row.id} className={cn(row.getIsGrouped() && "bg-muted/40 font-medium")}>
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {cell.getIsGrouped() ? (
                       <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          className="print:hidden"
-                          onClick={row.getToggleExpandedHandler()}
-                        >
+                        <button type="button" className="print:hidden" onClick={row.getToggleExpandedHandler()}>
                           {row.getIsExpanded() ? "▼" : "▶"}
                         </button>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}

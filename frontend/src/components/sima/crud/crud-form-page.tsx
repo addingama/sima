@@ -1,33 +1,28 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
+
+import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildCrudBreadcrumbs, CrudBreadcrumb } from "@/components/sima/crud/crud-breadcrumb";
 import { CrudFormFields } from "@/components/sima/crud/crud-form-fields";
 import { LineItemsField } from "@/components/sima/crud/line-items-field";
 import { ErrorState } from "@/components/sima/error-state";
 import { PageHeader } from "@/components/sima/page-header";
 import { PageShellSkeleton } from "@/components/sima/skeletons";
-import { useDetailQuery } from "@/hooks/use-resource-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useResourceCreate, useResourceUpdate } from "@/hooks/use-resource-mutation";
+import { useDetailQuery } from "@/hooks/use-resource-query";
 import { ApiError } from "@/lib/api/client";
 import { buildFormSchema, normalizeFormValues, nullifyEmptyOptionalFields } from "@/lib/resources/form-schema";
 import type { ResourceDef } from "@/lib/resources/types";
 
-export function CrudFormPage({
-  config,
-  id,
-}: {
-  config: ResourceDef;
-  id?: string;
-}) {
+export function CrudFormPage({ config, id }: { config: ResourceDef; id?: string }) {
   const router = useRouter();
   const isEdit = Boolean(id);
   const createMutation = useResourceCreate(config.resource);
@@ -73,9 +68,7 @@ export function CrudFormPage({
     const payload = config.mapToPayload?.(normalized) ?? normalized;
 
     try {
-      const result = isEdit
-        ? await updateMutation.mutateAsync(payload)
-        : await createMutation.mutateAsync(payload);
+      const result = isEdit ? await updateMutation.mutateAsync(payload) : await createMutation.mutateAsync(payload);
 
       toast.success(isEdit ? "Data berhasil diperbarui." : "Data berhasil dibuat.");
       router.push(`${config.basePath}/${(result as Record<string, unknown>).id ?? id}`);
