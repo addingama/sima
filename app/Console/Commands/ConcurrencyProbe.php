@@ -31,12 +31,13 @@ class ConcurrencyProbe extends Command
             ['name' => 'CC Dana', 'type' => 'unrestricted', 'is_active' => true, 'created_by' => $actor?->id]);
 
         if ($action === 'setup') {
-            $ledger->postAmanahMovement(
-                TransactionType::OPENING,
+            $openingEquity = Fund::findBySystemKey(Fund::KEY_OPENING_EQUITY);
+            $ledger->postOpeningBalanceLine(
                 0,
                 $account->id,
-                [['fund_id' => $fund->id, 'amount' => '100000.00']],
-                LedgerMovement::IN,
+                $fund->id,
+                $openingEquity->id,
+                '100000.00',
                 'CC setup',
             );
             $this->info('Setup: saldo dana = '.$ledger->balanceForFund($fund->id));

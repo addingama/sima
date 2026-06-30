@@ -118,6 +118,44 @@ class LedgerService
         ));
     }
 
+    /**
+     * Saldo awal kas/bank: kas masuk lawan opening_equity, lalu alokasi fund-only ke dana tujuan.
+     *
+     * @return Collection<int, LedgerEntry>
+     */
+    public function postOpeningBalanceLine(
+        int $transactionId,
+        int $accountId,
+        int $targetFundId,
+        int $openingEquityFundId,
+        string $amount,
+        ?string $reference = null,
+    ): Collection {
+        $amount = bcadd($amount, '0', 2);
+        $ref = $reference ?? 'Saldo awal';
+
+        $cashIn = $this->postAmanahMovement(
+            TransactionType::OPENING,
+            $transactionId,
+            $accountId,
+            [['fund_id' => $openingEquityFundId, 'amount' => $amount]],
+            LedgerMovement::IN,
+            $ref,
+        );
+
+        $allocation = $this->postJournal(
+            TransactionType::OPENING,
+            $transactionId,
+            [
+                $this->line(LedgerAccountType::FUND, $openingEquityFundId, $amount, '0'),
+                $this->line(LedgerAccountType::FUND, $targetFundId, '0', $amount),
+            ],
+            $ref.' (alokasi)',
+        );
+
+        return $cashIn->concat($allocation);
+    }
+
     /** @return Collection<int, LedgerEntry> */
     public function postAmanahMovementDto(AmanahMovementDto $dto): Collection
     {

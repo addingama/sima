@@ -23,7 +23,7 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 
 - [x] **API posting saldo awal** — endpoint terkelola (mis. `POST /opening-balances`) dengan validasi role admin, transaksi `opening`, dukung banyak baris (akun + dana + nominal)
 - [x] **UI posting saldo awal** — wizard go-live: review worksheet (input manual), preview jurnal, eksekusi batch *(upload Excel & cetak bukti belum)*
-- [ ] **Gunakan dana `opening_equity` sebagai lawan** — selaras desain `SYS-OPENING` (bukan hanya shortcut ke Dana Operasional)
+- [x] **Gunakan dana `opening_equity` sebagai lawan** — selaras desain `SYS-OPENING` (bukan hanya shortcut ke Dana Operasional)
 - [ ] **Laporan saldo awal** — daftar posting opening per tanggal cutover (audit go-live)
 - [ ] **Dokumentasi** — update [PANDUAN-MULAI.md](PANDUAN-MULAI.md) Fase 4 setelah UI/API siap
 

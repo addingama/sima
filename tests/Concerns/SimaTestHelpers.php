@@ -3,8 +3,6 @@
 namespace Tests\Concerns;
 
 use App\Domains\Ledger\Services\LedgerService;
-use App\Enums\LedgerMovement;
-use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Fund;
 use App\Models\User;
@@ -61,13 +59,14 @@ trait SimaTestHelpers
     protected function seedOpening(Account $account, Fund $fund, string $amount, ?LedgerService $ledger = null): void
     {
         $ledger ??= app(LedgerService::class);
+        $openingEquity = Fund::findBySystemKey(Fund::KEY_OPENING_EQUITY);
 
-        $ledger->postAmanahMovement(
-            TransactionType::OPENING,
+        $ledger->postOpeningBalanceLine(
             0,
             $account->id,
-            [['fund_id' => $fund->id, 'amount' => $amount]],
-            LedgerMovement::IN,
+            $fund->id,
+            $openingEquity->id,
+            $amount,
             'Saldo awal uji',
         );
     }

@@ -4,10 +4,7 @@ namespace Tests\Unit\Expense;
 
 use App\Domains\Expense\Validators\ExpenseValidator;
 use App\Domains\Ledger\Services\BalanceService;
-use App\Domains\Ledger\Services\LedgerService;
 use App\Enums\DisbursementStatus;
-use App\Enums\LedgerMovement;
-use App\Enums\TransactionType;
 use App\Exceptions\DomainException;
 use App\Exceptions\InsufficientBalanceException;
 use App\Models\Account;
@@ -15,13 +12,16 @@ use App\Models\Disbursement;
 use App\Models\ExpenseFundSource;
 use App\Models\Fund;
 use App\Models\User;
+use Database\Seeders\SystemFundSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Concerns\SimaTestHelpers;
 use Tests\TestCase;
 
 class ExpenseValidatorTest extends TestCase
 {
     use RefreshDatabase;
+    use SimaTestHelpers;
 
     private ExpenseValidator $validator;
 
@@ -86,14 +86,8 @@ class ExpenseValidatorTest extends TestCase
     #[Test]
     public function it_passes_when_fund_and_account_have_sufficient_balance(): void
     {
-        app(LedgerService::class)->postAmanahMovement(
-            TransactionType::OPENING,
-            0,
-            $this->account->id,
-            [['fund_id' => $this->fund->id, 'amount' => '300000.00']],
-            LedgerMovement::IN,
-            'Saldo awal',
-        );
+        $this->seed(SystemFundSeeder::class);
+        $this->seedOpening($this->account, $this->fund, '300000.00');
 
         $expense = Disbursement::create([
             'disbursement_number' => 'DSB-TEST',
