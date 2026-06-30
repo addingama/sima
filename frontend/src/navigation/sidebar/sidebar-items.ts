@@ -13,6 +13,7 @@ import {
   Landmark,
   LayoutDashboard,
   ReceiptText,
+  Scale,
   Settings,
   Store,
   Users,
@@ -267,6 +268,13 @@ export const sidebarItems: NavGroup[] = [
         url: "/dashboard/portal-donatur",
         icon: Globe,
         permission: "portal.view",
+      },
+      {
+        id: "opening-balances",
+        title: "Saldo Awal",
+        url: "/dashboard/opening-balances",
+        icon: Scale,
+        permission: "opening.view",
       },
       {
         id: "settings",
