@@ -13,6 +13,7 @@ use App\Enums\LedgerMovement;
 use App\Enums\TransactionType;
 use App\Exceptions\InsufficientBalanceException;
 use App\Models\Account;
+use App\Models\AccountTransfer;
 use App\Models\BankFee;
 use App\Models\Disbursement;
 use App\Models\Fund;
@@ -310,6 +311,7 @@ class LedgerService
             Receipt::class => TransactionType::RECEIPT,
             Disbursement::class => TransactionType::EXPENSE,
             BankFee::class => TransactionType::BANK_FEE,
+            AccountTransfer::class => TransactionType::TRANSFER,
             default => TransactionType::ADJUSTMENT,
         };
 

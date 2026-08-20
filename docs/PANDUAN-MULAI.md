@@ -276,8 +276,8 @@ flowchart TD
 
 | Modul | Status | Dampak go-live |
 |-------|--------|----------------|
-| **Vendor** | Belum ada backend/UI penuh | Field penerima pengeluaran: teks bebas (`payee`) |
-| **Transfer antar rekening** | Menu disabled (`soon`) | Transfer manual = kombinasi pengeluaran + penerimaan, atau tunggu modul |
+| **Vendor** | Ada — `/dashboard/vendors` | Relasi opsional di pengeluaran |
+| **Transfer antar rekening** | Ada — `/dashboard/transfers` | 2-leg account-only; Dana Amanah tidak berubah; `TRF/…` |
 | **Pengaturan user (UI)** | **Ada** — `/dashboard/settings` | — (pindah ke Fase 2) |
 
 ---
