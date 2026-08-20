@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\ReceiptController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\VendorController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -84,6 +85,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('programs', [ProgramController::class, 'store'])->middleware('permission:program.manage');
     Route::put('programs/{program}', [ProgramController::class, 'update'])->middleware('permission:program.manage');
     Route::delete('programs/{program}', [ProgramController::class, 'destroy'])->middleware('permission:program.manage');
+
+    Route::get('vendors', [VendorController::class, 'index'])->middleware('permission:vendor.view');
+    Route::get('vendors/{vendor}', [VendorController::class, 'show'])->middleware('permission:vendor.view');
+    Route::post('vendors', [VendorController::class, 'store'])->middleware('permission:vendor.manage');
+    Route::put('vendors/{vendor}', [VendorController::class, 'update'])->middleware('permission:vendor.manage');
+    Route::delete('vendors/{vendor}', [VendorController::class, 'destroy'])->middleware('permission:vendor.manage');
 
     /*
     |----------------------------------------------------------------------

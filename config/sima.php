@@ -13,6 +13,7 @@ return [
     'permissions' => [
         // Master data
         'donor.view', 'donor.manage',
+        'vendor.view', 'vendor.manage',
         'fund.view', 'fund.manage',
         'account.view', 'account.manage',
         'program.view', 'program.manage',
@@ -59,6 +60,7 @@ return [
 
         UserRole::BENDAHARA->value => [
             'donor.view', 'donor.manage',
+            'vendor.view', 'vendor.manage',
             'fund.view',
             'account.view',
             'program.view', 'program.manage',
@@ -72,7 +74,7 @@ return [
         ],
 
         UserRole::VERIFIKATOR->value => [
-            'donor.view', 'fund.view', 'account.view', 'program.view',
+            'donor.view', 'vendor.view', 'fund.view', 'account.view', 'program.view',
             'receipt.view',
             'disbursement.view', 'disbursement.verify', 'disbursement.reject',
             'bankfee.view',
@@ -82,7 +84,7 @@ return [
         ],
 
         UserRole::KETUA->value => [
-            'donor.view', 'fund.view', 'account.view', 'program.view',
+            'donor.view', 'vendor.view', 'fund.view', 'account.view', 'program.view',
             'receipt.view', 'receipt.approve', 'receipt.reject', 'receipt.reverse',
             'disbursement.view', 'disbursement.approve', 'disbursement.reject', 'disbursement.reverse',
             'bankfee.view',
@@ -93,7 +95,7 @@ return [
         ],
 
         UserRole::AUDITOR->value => [
-            'donor.view', 'fund.view', 'account.view', 'program.view',
+            'donor.view', 'vendor.view', 'fund.view', 'account.view', 'program.view',
             'receipt.view', 'disbursement.view',
             'bankfee.view', 'reconciliation.view',
             'liability.view', 'attachment.view',

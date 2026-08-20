@@ -21,6 +21,7 @@ class ListDisbursementRequest extends FormRequest
             'status' => ['nullable', 'string'],
             'fund_id' => ['nullable', 'integer', 'exists:funds,id'],
             'program_id' => ['nullable', 'integer', 'exists:programs,id'],
+            'vendor_id' => ['nullable', 'integer', 'exists:vendors,id'],
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date'],
         ]);

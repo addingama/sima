@@ -1,33 +1,14 @@
 "use client";
 
-import { Store } from "lucide-react";
-
-import { PageHeader } from "@/components/sima/page-header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudListPage } from "@/components/sima/crud";
+import { vendorResource } from "@/lib/resources";
 
 export default function VendorsPage() {
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Vendor" description="Master data vendor untuk pengeluaran dan biaya operasional." />
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Store className="size-5" />
-            Modul Belum Tersedia
-          </CardTitle>
-          <CardDescription>
-            Backend SIMA belum memiliki API vendor. Halaman ini disiapkan agar CRUD vendor dapat diaktifkan setelah
-            modul backend selesai.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground text-sm">
-            Saat ini pengeluaran menggunakan field penerima (`payee`) sebagai teks bebas. Setelah modul vendor tersedia,
-            halaman ini akan memakai komponen CRUD yang sama dengan modul master data lainnya.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+    <CrudListPage
+      config={vendorResource}
+      description="Kelola data vendor dan penerima pembayaran pengeluaran."
+      emptyMessage="Belum ada data vendor."
+    />
   );
 }

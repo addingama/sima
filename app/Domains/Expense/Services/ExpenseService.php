@@ -19,8 +19,10 @@ use App\Domains\Ledger\Services\LedgerService;
 use App\Enums\DisbursementStatus;
 use App\Enums\LedgerMovement;
 use App\Enums\TransactionType;
+use App\Exceptions\DomainException;
 use App\Models\Disbursement;
 use App\Models\User;
+use App\Models\Vendor;
 use App\Services\DocumentNumberService;
 use App\Support\Query\ListQueryDto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -45,6 +47,7 @@ class ExpenseService
         return $disbursement->load([
             'account:id,code,name',
             'program:id,code,name',
+            'vendor:id,code,name',
             'fundSources.fund:id,code,name',
             'fundSources.program:id,code,name',
             'approvals.actor:id,name',
@@ -73,8 +76,11 @@ class ExpenseService
         $this->validator->assertSourcesMatch($amount, $normalized);
 
         return DB::transaction(function () use ($dto, $amount, $normalized): Disbursement {
+            $data = $dto->data;
+            $this->applyVendor($data);
+
             $expense = $this->repository->create([
-                ...$dto->data,
+                ...$data,
                 'amount' => $amount,
                 'disbursement_number' => $dto->data['disbursement_number'] ?? $this->numbers->next('DSB'),
                 'status' => DisbursementStatus::DRAFT->value,
@@ -103,7 +109,9 @@ class ExpenseService
 
         return DB::transaction(function () use ($dto, $expense): Disbursement {
             $before = $expense->toArray();
-            $this->repository->update($expense, $dto->data);
+            $data = $dto->data;
+            $this->applyVendor($data);
+            $this->repository->update($expense, $data);
 
             if ($dto->sources !== null) {
                 $normalized = $this->normalizeSources($dto->sources);
@@ -193,6 +201,27 @@ class ExpenseService
 
             return $s;
         }, $sources);
+    }
+
+    /** @param array<string, mixed> $data */
+    private function applyVendor(array &$data): void
+    {
+        if (empty($data['vendor_id'])) {
+            return;
+        }
+
+        $vendor = Vendor::query()->find($data['vendor_id']);
+        if ($vendor === null) {
+            return;
+        }
+
+        if (! $vendor->is_active) {
+            throw new DomainException('Vendor tidak aktif.');
+        }
+
+        if (empty($data['payee'])) {
+            $data['payee'] = $vendor->name;
+        }
     }
 }
 

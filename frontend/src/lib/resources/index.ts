@@ -6,4 +6,5 @@ export { fundResource } from "./definitions/fund";
 export { programResource } from "./definitions/program";
 export { receiptResource } from "./definitions/receipt";
 export { userResource } from "./definitions/user";
+export { vendorResource } from "./definitions/vendor";
 export type { DetailFieldDef, FilterDef, FormFieldDef, ResourceDef, WorkflowActionDef } from "./types";

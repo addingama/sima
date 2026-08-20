@@ -14,13 +14,14 @@ class ExpenseRepository
     public function paginate(ListQueryDto $query): LengthAwarePaginator
     {
         $builder = ListQueryApplier::apply(
-            Disbursement::query()->with(['account:id,code,name', 'program:id,code,name', 'fundSources.fund:id,code,name']),
+            Disbursement::query()->with(['account:id,code,name', 'program:id,code,name', 'vendor:id,code,name', 'fundSources.fund:id,code,name']),
             $query,
             searchColumns: ['disbursement_number', 'payee', 'description'],
             sortable: ['disbursement_date', 'disbursement_number', 'amount', 'created_at'],
             defaultSort: 'disbursement_date',
             filterCallbacks: [
                 'fund_id' => fn ($q, $v) => $q->whereHas('fundSources', fn ($s) => $s->where('fund_id', $v)),
+                'vendor_id' => fn ($q, $v) => $q->where('vendor_id', $v),
                 'from' => fn ($q, $v) => $q->whereDate('disbursement_date', '>=', $v),
                 'to' => fn ($q, $v) => $q->whereDate('disbursement_date', '<=', $v),
             ],
