@@ -3,6 +3,7 @@ import {
   ArrowLeftRight,
   ArrowUpFromLine,
   Banknote,
+  BookCheck,
   CalendarDays,
   ChartColumn,
   CheckCircle2,
@@ -148,6 +149,13 @@ export const sidebarItems: NavGroup[] = [
             url: "/dashboard/bank-fees",
             icon: Banknote,
             permission: "bankfee.view",
+          },
+          {
+            id: "reconciliations",
+            title: "Rekonsiliasi Bank",
+            url: "/dashboard/reconciliations",
+            icon: BookCheck,
+            permission: "reconciliation.view",
           },
           {
             id: "transfers",
