@@ -125,14 +125,18 @@ Pastikan database & cache terhubung.
 
 | Status UI | Keterangan |
 |-----------|------------|
-| Menu **Pengaturan** (`/dashboard/settings`) | Belum tersedia (placeholder) |
-| API / database | User dibuat manual: seeder, `php artisan tinker`, atau insert via tim IT |
+| Menu **Pengaturan** (`/dashboard/settings`) | **Ada** — CRUD pengguna, role, nonaktifkan, reset password (permission `user.manage`) |
+| API | `GET/POST/PUT/DELETE /api/users`, `PUT /api/users/{id}/roles`, `POST /api/users/{id}/reset-password` |
+| Produksi (admin pertama) | `php artisan sima:create-admin` — tanpa akun `*@sima.test` |
 
-**Langkah praktis saat ini:**
+**Langkah go-live (disarankan):**
 
-1. Duplikasi pola `database/seeders/UserSeeder.php` untuk email organisasi, **atau**
-2. Minta tim teknis membuat user via Tinker / script one-off
-3. Assign role Spatie: `admin`, `bendahara`, `verifikator`, `ketua`, `auditor`
+1. **Produksi:** buat administrator pertama dengan `php artisan sima:create-admin` (lihat [DEPLOYMENT.md](DEPLOYMENT.md)).
+2. Login sebagai admin → **Pengaturan** → tambah bendahara, verifikator, ketua, auditor.
+3. Setiap user: email organisasi, role tunggal, status aktif.
+4. Reset password dari halaman detail/edit pengguna bila diperlukan.
+
+**Alternatif teknis:** seeder development (`UserSeeder`) hanya untuk lokal/staging — **jangan** dipakai di produksi.
 
 ### 2.2 Checklist akun minimum go-live
 
@@ -274,7 +278,7 @@ flowchart TD
 |-------|--------|----------------|
 | **Vendor** | Belum ada backend/UI penuh | Field penerima pengeluaran: teks bebas (`payee`) |
 | **Transfer antar rekening** | Menu disabled (`soon`) | Transfer manual = kombinasi pengeluaran + penerimaan, atau tunggu modul |
-| **Pengaturan user (UI)** | Placeholder | User via seeder/Tinker |
+| **Pengaturan user (UI)** | **Ada** — `/dashboard/settings` | — (pindah ke Fase 2) |
 
 ---
 
@@ -514,6 +518,7 @@ Workflow approval: menu **Approval** atau laporan Approval.
 | Pengeluaran | `/dashboard/disbursements` |
 | Biaya Bank | `/dashboard/bank-fees` |
 | Saldo Awal | `/dashboard/opening-balances` |
+| Pengaturan (Users) | `/dashboard/settings` |
 | Laporan Saldo Awal | `/dashboard/reports/opening-balances` |
 | Laporan | `/dashboard/reports` |
 
@@ -536,3 +541,4 @@ Workflow approval: menu **Approval** atau laporan Approval.
 | Jun 2026 | Draft awal |
 | Jun 2026 | Tambah §4.1 kapan memakai opening balance; update status UI/API Saldo Awal |
 | Jun 2026 | §4.2 mekanisme SYS-OPENING; laporan cutover; checklist & Fase 5 audit opening |
+| Jun 2026 | Fase 2 manajemen pengguna (UI Pengaturan, API users, sima:create-admin) |

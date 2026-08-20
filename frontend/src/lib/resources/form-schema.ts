@@ -40,15 +40,27 @@ function fieldSchema(field: FormFieldDef) {
         : optionalStringSchema().refine((value) => value === "" || parseAmount(value) > 0, "Nominal tidak valid.");
     case "relation":
       return field.required ? requiredStringSchema(field.label) : optionalStringSchema();
+    case "password":
+      return field.required
+        ? requiredStringSchema(field.label).refine((value) => value.length >= 8, "Password minimal 8 karakter.")
+        : optionalStringSchema();
     default:
       return field.required ? requiredStringSchema(field.label) : optionalStringSchema();
   }
 }
 
-export function buildFormSchema(fields: FormFieldDef[], lineItemsKey?: "allocations" | "sources") {
+export function buildFormSchema(fields: FormFieldDef[], lineItemsKey?: "allocations" | "sources", isEdit = false) {
   const shape: Record<string, z.ZodTypeAny> = {};
 
   for (const field of fields) {
+    if (field.showOnCreateOnly && isEdit) {
+      continue;
+    }
+
+    if (field.showOnEditOnly && !isEdit) {
+      continue;
+    }
+
     shape[field.name] = fieldSchema(field);
   }
 

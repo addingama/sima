@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\PortalController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\ReceiptController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -39,6 +40,21 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Dashboard (staff only — bukan portal donatur)
     Route::get('dashboard', [DashboardController::class, 'index'])->middleware('permission:report.view');
+
+    /*
+    |----------------------------------------------------------------------
+    | Manajemen pengguna
+    |----------------------------------------------------------------------
+    */
+    Route::middleware('permission:user.manage')->prefix('users')->group(function () {
+        Route::get('/', [UserController::class, 'index']);
+        Route::post('/', [UserController::class, 'store']);
+        Route::get('{user}', [UserController::class, 'show']);
+        Route::put('{user}', [UserController::class, 'update']);
+        Route::delete('{user}', [UserController::class, 'destroy']);
+        Route::put('{user}/roles', [UserController::class, 'syncRoles']);
+        Route::post('{user}/reset-password', [UserController::class, 'resetPassword']);
+    });
 
     /*
     |----------------------------------------------------------------------
