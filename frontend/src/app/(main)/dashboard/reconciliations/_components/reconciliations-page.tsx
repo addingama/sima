@@ -1,41 +1,44 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
 
-import { CurrencyDisplay } from "@/components/sima/currency-display";
+import { Plus } from "lucide-react";
+
+import { ErrorState } from "@/components/sima/error-state";
 import { ResourceListPage } from "@/components/sima/resource-list-page";
-import { StatusBadge } from "@/components/sima/status-badge";
-
-type ReconciliationRow = Record<string, unknown>;
-
-const columns: ColumnDef<ReconciliationRow>[] = [
-  { accessorKey: "id", header: "ID" },
-  { accessorKey: "period_end", header: "Akhir Periode" },
-  {
-    accessorKey: "statement_balance",
-    header: "Saldo Rekening Koran",
-    cell: ({ row }) => <CurrencyDisplay value={row.original.statement_balance as string | number} />,
-  },
-  {
-    accessorKey: "system_balance",
-    header: "Saldo Sistem",
-    cell: ({ row }) => <CurrencyDisplay value={row.original.system_balance as string | number} />,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => <StatusBadge status={String(row.original.status ?? "")} />,
-  },
-];
+import { Button } from "@/components/ui/button";
+import { hasPermission } from "@/lib/auth/permissions";
+import { reconciliationListColumns } from "@/lib/reconciliation/columns";
+import { useAuth } from "@/providers/auth-provider";
 
 export default function ReconciliationsPage() {
+  const { user } = useAuth();
+  const canView = hasPermission(user, "reconciliation.view");
+  const canManage = hasPermission(user, "reconciliation.manage");
+
+  if (!canView) {
+    return (
+      <ErrorState title="Akses ditolak" description="Anda tidak memiliki permission untuk melihat rekonsiliasi bank." />
+    );
+  }
+
   return (
     <ResourceListPage
       title="Rekonsiliasi Bank"
-      description="Rekonsiliasi saldo bank dengan sistem."
+      description="Cocokkan saldo rekening koran dengan saldo sistem. Rekonsiliasi tidak mengubah ledger."
       resource="/bank-reconciliations"
-      columns={columns}
+      columns={reconciliationListColumns}
       emptyMessage="Belum ada data rekonsiliasi."
+      actions={
+        canManage ? (
+          <Button asChild>
+            <Link href="/dashboard/reconciliations/new">
+              <Plus className="size-4" />
+              Buat Rekonsiliasi
+            </Link>
+          </Button>
+        ) : null
+      }
     />
   );
 }

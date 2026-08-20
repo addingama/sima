@@ -49,11 +49,11 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 
 ### Rekonsiliasi bank
 
-- [ ] **Frontend: buat rekonsiliasi** — form periode, akun bank, saldo rekening koran
-- [ ] **Frontend: tambah baris / item reconciling** — deferred bank fee, selisih
-- [ ] **Frontend: complete rekonsiliasi** — workflow status draft → complete
-- [ ] **Detail halaman rekonsiliasi** — `/dashboard/reconciliations/[id]`
-- [ ] *(Backend API sudah ada; UI saat ini list-only)*
+- [x] **Frontend: buat rekonsiliasi** — form periode, akun bank, saldo rekening koran
+- [x] **Frontend: tambah baris / item reconciling** — deferred bank fee, selisih
+- [x] **Frontend: complete rekonsiliasi** — workflow status draft → complete
+- [x] **Detail halaman rekonsiliasi** — `/dashboard/reconciliations/[id]`
+- [x] *(Backend API sudah ada; UI create/detail/complete aktif)*
 
 ### Liabilitas operasional
 
