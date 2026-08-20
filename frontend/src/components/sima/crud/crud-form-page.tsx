@@ -34,8 +34,8 @@ export function CrudFormPage({ config, id }: { config: ResourceDef; id?: string 
   );
 
   const schema = useMemo(
-    () => buildFormSchema(config.formFields, config.lineItems?.key),
-    [config.formFields, config.lineItems?.key],
+    () => buildFormSchema(config.formFields, config.lineItems?.key, isEdit),
+    [config.formFields, config.lineItems?.key, isEdit],
   );
 
   const defaultValues = useMemo(() => {

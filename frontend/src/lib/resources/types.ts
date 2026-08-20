@@ -11,6 +11,7 @@ export type FieldType =
   | "date"
   | "currency"
   | "checkbox"
+  | "password"
   | "relation";
 
 export interface SelectOption {
@@ -38,6 +39,8 @@ export interface FormFieldDef {
   visibleWhen?: (values: Record<string, unknown>) => boolean;
   /** Tampil hanya pada form edit (mis. saldo computed). */
   showOnEditOnly?: boolean;
+  /** Tampil hanya pada form create (mis. password awal). */
+  showOnCreateOnly?: boolean;
 }
 
 export interface FilterDef {

@@ -148,7 +148,10 @@ SIMA_FRONTEND_IMAGE=ghcr.io/YOUR_ORG/sima/sima-frontend:latest
 docker compose -f docker-compose.prod.yml pull
 docker compose -f docker-compose.prod.yml up -d
 docker compose -f docker-compose.prod.yml exec app php artisan migrate --force
+docker compose -f docker-compose.prod.yml exec app php artisan sima:create-admin
 ```
+
+Perintah `sima:create-admin` membuat administrator produksi pertama (interaktif atau `--name`, `--email`, `--password`). **Jangan** mengandalkan `UserSeeder` / akun `*@sima.test` di produksi.
 
 Trigger deploy manual: **Actions → Deploy → Run workflow**.
 

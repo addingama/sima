@@ -27,7 +27,10 @@ export function CrudFormFields({
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {fields.map((field) => {
-        const isVisible = (!field.showOnEditOnly || isEdit) && (!field.visibleWhen || field.visibleWhen(values));
+        const isVisible =
+          (!field.showOnEditOnly || isEdit) &&
+          (!field.showOnCreateOnly || !isEdit) &&
+          (!field.visibleWhen || field.visibleWhen(values));
 
         const spanFull = field.type === "textarea";
         const isReadOnly = field.readOnly || field.autoGenerate;

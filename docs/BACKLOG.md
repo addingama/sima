@@ -29,11 +29,11 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 
 ### Manajemen pengguna
 
-- [ ] **Backend: CRUD user** — API `users` (create, update, nonaktifkan, reset password) + policy `user.manage`
-- [ ] **Backend: assign role** — endpoint sync role Spatie per user
-- [ ] **Frontend: halaman Pengaturan → Users** — ganti placeholder `/dashboard/settings`
-- [ ] **Frontend: form user** — email, nama, role, status aktif
-- [ ] **Produksi: hapus ketergantungan seeder demo** — prosedur buat admin pertama tanpa `*@sima.test`
+- [x] **Backend: CRUD user** — API `users` (create, update, nonaktifkan, reset password) + policy `user.manage`
+- [x] **Backend: assign role** — endpoint sync role Spatie per user
+- [x] **Frontend: halaman Pengaturan → Users** — ganti placeholder `/dashboard/settings`
+- [x] **Frontend: form user** — email, nama, role, status aktif
+- [x] **Produksi: hapus ketergantungan seeder demo** — prosedur buat admin pertama tanpa `*@sima.test`
 
 ---
 
