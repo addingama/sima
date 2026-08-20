@@ -3,7 +3,7 @@
 import { CrudEditRoute } from "@/components/sima/crud/crud-routes";
 import { userResource } from "@/lib/resources";
 
-import { ResetPasswordPanel } from "../_components/reset-password-panel";
+import { ResetPasswordPanel } from "../../_components/reset-password-panel";
 
 export default function Page() {
   return (
