@@ -1,36 +1,47 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
 
-import { CurrencyDisplay } from "@/components/sima/currency-display";
+import { Plus } from "lucide-react";
+
+import { ErrorState } from "@/components/sima/error-state";
 import { ResourceListPage } from "@/components/sima/resource-list-page";
-import { StatusBadge } from "@/components/sima/status-badge";
-
-type LiabilityRow = Record<string, unknown>;
-
-const columns: ColumnDef<LiabilityRow>[] = [
-  { accessorKey: "liability_number", header: "No. Liabilitas" },
-  { accessorKey: "creditor", header: "Kreditur" },
-  {
-    accessorKey: "amount",
-    header: "Nominal",
-    cell: ({ row }) => <CurrencyDisplay value={row.original.amount as string | number} />,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => <StatusBadge status={String(row.original.status ?? "")} />,
-  },
-];
+import { Button } from "@/components/ui/button";
+import { hasPermission } from "@/lib/auth/permissions";
+import { liabilityListColumns } from "@/lib/liability/columns";
+import { useAuth } from "@/providers/auth-provider";
 
 export default function LiabilitiesPage() {
+  const { user } = useAuth();
+  const canView = hasPermission(user, "liability.view");
+  const canManage = hasPermission(user, "liability.manage");
+
+  if (!canView) {
+    return (
+      <ErrorState
+        title="Akses ditolak"
+        description="Anda tidak memiliki permission untuk melihat liabilitas operasional."
+      />
+    );
+  }
+
   return (
     <ResourceListPage
       title="Liabilitas Operasional"
-      description="Kewajiban operasional yang belum diselesaikan."
+      description="Register kewajiban operasional. Arus kas terjadi saat diselesaikan lewat pengeluaran approved."
       resource="/liabilities"
-      columns={columns}
+      columns={liabilityListColumns}
       emptyMessage="Belum ada data liabilitas."
+      actions={
+        canManage ? (
+          <Button asChild>
+            <Link href="/dashboard/liabilities/new">
+              <Plus className="size-4" />
+              Tambah Liabilitas
+            </Link>
+          </Button>
+        ) : null
+      }
     />
   );
 }
