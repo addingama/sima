@@ -7,6 +7,7 @@ import {
   CalendarDays,
   ChartColumn,
   CheckCircle2,
+  ClipboardList,
   Database,
   FileSearch,
   Globe,
@@ -156,6 +157,13 @@ export const sidebarItems: NavGroup[] = [
             url: "/dashboard/reconciliations",
             icon: BookCheck,
             permission: "reconciliation.view",
+          },
+          {
+            id: "liabilities",
+            title: "Liabilitas Operasional",
+            url: "/dashboard/liabilities",
+            icon: ClipboardList,
+            permission: "liability.view",
           },
           {
             id: "transfers",

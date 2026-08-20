@@ -57,12 +57,12 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 
 ### Liabilitas operasional
 
-- [ ] **Frontend: tambah liabilitas** — form create (`POST /liabilities`)
-- [ ] **Frontend: edit liabilitas** — update draft
-- [ ] **Frontend: settle** — tautkan ke pengeluaran approved
-- [ ] **Frontend: void** — dengan alasan
-- [ ] **Detail halaman** — `/dashboard/liabilities/[id]`
-- [ ] *(Backend API sudah ada; UI saat ini list-only)*
+- [x] **Frontend: tambah liabilitas** — form create (`POST /liabilities`)
+- [x] **Frontend: edit liabilitas** — update outstanding
+- [x] **Frontend: settle** — tautkan ke pengeluaran approved
+- [x] **Frontend: void** — dengan alasan
+- [x] **Detail halaman** — `/dashboard/liabilities/[id]`
+- [x] *(Backend API sudah ada; UI create/edit/settle/void aktif)*
 
 ### Transfer antar rekening
 
