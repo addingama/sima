@@ -1,4 +1,5 @@
 export { accountResource } from "./definitions/account";
+export { accountTransferResource } from "./definitions/account-transfer";
 export { bankFeeResource } from "./definitions/bank-fee";
 export { disbursementResource } from "./definitions/disbursement";
 export { donorResource } from "./definitions/donor";

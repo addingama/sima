@@ -66,10 +66,10 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 
 ### Transfer antar rekening
 
-- [ ] **Desain alur** — transfer = double entry antar `accounts` + dampak dana amanah (jika perlu)
-- [ ] **Backend** — service + API + permission
-- [ ] **Frontend** — aktifkan menu Transfer (sidebar: `disabled`, badge `soon`)
-- [ ] **Laporan / ledger** — tipe transaksi `transfer` konsisten di laporan
+- [x] **Desain alur** — transfer = 2-leg account-only (`from` credit, `to` debit); Dana Amanah tidak berubah
+- [x] **Backend** — service + API + permission (`transfer.view|manage|post|reverse`), nomor `TRF`
+- [x] **Frontend** — aktifkan menu Transfer
+- [x] **Laporan / ledger** — filter tipe transaksi `transfer`
 
 ### Portal donatur
 

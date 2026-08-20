@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AccountTransferController;
 use App\Http\Controllers\Api\AttachmentController;
 use App\Http\Controllers\Api\AuditController;
 use App\Http\Controllers\Api\AuthController;
@@ -132,6 +133,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('bank-fees', [BankFeeController::class, 'store'])->middleware('permission:bankfee.manage');
     Route::post('bank-fees/{bankFee}/post', [BankFeeController::class, 'post'])->middleware('permission:bankfee.post');
     Route::post('bank-fees/{bankFee}/reverse', [BankFeeController::class, 'reverse'])->middleware('permission:bankfee.reverse');
+
+    /*
+    |----------------------------------------------------------------------
+    | Transfer Antar Rekening
+    |----------------------------------------------------------------------
+    */
+    Route::get('account-transfers', [AccountTransferController::class, 'index'])->middleware('permission:transfer.view');
+    Route::get('account-transfers/{accountTransfer}', [AccountTransferController::class, 'show'])->middleware('permission:transfer.view');
+    Route::post('account-transfers', [AccountTransferController::class, 'store'])->middleware('permission:transfer.manage');
+    Route::post('account-transfers/{accountTransfer}/post', [AccountTransferController::class, 'post'])->middleware('permission:transfer.post');
+    Route::post('account-transfers/{accountTransfer}/reverse', [AccountTransferController::class, 'reverse'])->middleware('permission:transfer.reverse');
 
     /*
     |----------------------------------------------------------------------

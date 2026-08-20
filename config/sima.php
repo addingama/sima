@@ -30,6 +30,9 @@ return [
         // Biaya bank
         'bankfee.view', 'bankfee.manage', 'bankfee.post', 'bankfee.reverse',
 
+        // Transfer antar rekening
+        'transfer.view', 'transfer.manage', 'transfer.post', 'transfer.reverse',
+
         // Rekonsiliasi
         'reconciliation.view', 'reconciliation.manage',
 
@@ -67,6 +70,7 @@ return [
             'receipt.view', 'receipt.create', 'receipt.submit',
             'disbursement.view', 'disbursement.create', 'disbursement.submit',
             'bankfee.view', 'bankfee.manage', 'bankfee.post', 'bankfee.reverse',
+            'transfer.view', 'transfer.manage', 'transfer.post', 'transfer.reverse',
             'reconciliation.view', 'reconciliation.manage',
             'liability.view', 'liability.manage',
             'attachment.view', 'attachment.manage',
@@ -78,6 +82,7 @@ return [
             'receipt.view',
             'disbursement.view', 'disbursement.verify', 'disbursement.reject',
             'bankfee.view',
+            'transfer.view',
             'liability.view',
             'attachment.view',
             'report.view',
@@ -88,6 +93,7 @@ return [
             'receipt.view', 'receipt.approve', 'receipt.reject', 'receipt.reverse',
             'disbursement.view', 'disbursement.approve', 'disbursement.reject', 'disbursement.reverse',
             'bankfee.view',
+            'transfer.view',
             'reconciliation.view',
             'liability.view',
             'attachment.view',
@@ -97,7 +103,7 @@ return [
         UserRole::AUDITOR->value => [
             'donor.view', 'vendor.view', 'fund.view', 'account.view', 'program.view',
             'receipt.view', 'disbursement.view',
-            'bankfee.view', 'reconciliation.view',
+            'bankfee.view', 'transfer.view', 'reconciliation.view',
             'liability.view', 'attachment.view',
             'opening.view',
             'audit.view', 'report.view',
