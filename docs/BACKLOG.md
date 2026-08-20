@@ -41,11 +41,11 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 
 ### Vendor
 
-- [ ] **Migration + model `vendors`** — master vendor/penerima
-- [ ] **Backend API** — CRUD vendor + permission (`vendor.view`, `vendor.manage`)
-- [ ] **Relasi opsional** — `disbursements.vendor_id`, `bank_fees` bila relevan
-- [ ] **Frontend CRUD** — aktifkan `/dashboard/vendors` (saat ini placeholder)
-- [ ] **Laporan Per Vendor** — sumber data dari master, bukan hanya field `payee`
+- [x] **Migration + model `vendors`** — master vendor/penerima
+- [x] **Backend API** — CRUD vendor + permission (`vendor.view`, `vendor.manage`)
+- [x] **Relasi opsional** — `disbursements.vendor_id` *(bank_fees belum)*
+- [x] **Frontend CRUD** — aktifkan `/dashboard/vendors`
+- [x] **Laporan Per Vendor** — filter dari master vendor
 
 ### Rekonsiliasi bank
 

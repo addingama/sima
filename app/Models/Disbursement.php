@@ -21,6 +21,7 @@ class Disbursement extends Model
         'disbursement_date',
         'account_id',
         'program_id',
+        'vendor_id',
         'amount',
         'payee',
         'category',
@@ -77,6 +78,11 @@ class Disbursement extends Model
     public function program(): BelongsTo
     {
         return $this->belongsTo(Program::class);
+    }
+
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class);
     }
 
     /** Total nominal dari seluruh sumber dana. */

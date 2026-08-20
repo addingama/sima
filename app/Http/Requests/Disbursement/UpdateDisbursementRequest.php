@@ -25,6 +25,7 @@ class UpdateDisbursementRequest extends FormRequest
             'disbursement_date' => ['sometimes', 'date'],
             'account_id' => ['sometimes', 'exists:accounts,id'],
             'program_id' => ['nullable', 'exists:programs,id'],
+            'vendor_id' => ['nullable', 'exists:vendors,id'],
             'amount' => ['sometimes', 'numeric', 'gt:0'],
             'payee' => ['nullable', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:100'],

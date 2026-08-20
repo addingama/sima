@@ -88,13 +88,13 @@ export const sidebarItems: NavGroup[] = [
             icon: Users,
             permission: "donor.view",
           },
-          // {
-          //   id: "vendors",
-          //   title: "Vendor",
-          //   url: "/dashboard/vendors",
-          //   icon: Store,
-          //   permission: "donor.view",
-          // },
+          {
+            id: "vendors",
+            title: "Vendor",
+            url: "/dashboard/vendors",
+            icon: Store,
+            permission: "vendor.view",
+          },
           {
             id: "funds",
             title: "Dana Amanah",

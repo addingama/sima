@@ -279,27 +279,40 @@ export const byDonorReport: ReportDef = {
 export const byVendorReport: ReportDef = {
   id: "by-vendor",
   title: "Per Vendor",
-  description: "Laporan pengeluaran berdasarkan penerima/vendor (field payee). Modul vendor master belum tersedia.",
+  description: "Laporan pengeluaran berdasarkan vendor master.",
   path: "/dashboard/reports/by-vendor",
   paginated: true,
   columns: [
     textColumn("disbursement_number", "No. Pengeluaran"),
     dateColumn("disbursement_date", "Tanggal"),
-    textColumn("payee", "Penerima/Vendor"),
+    nestedColumn("vendor_name", "Vendor", (row) => (row.vendor as { name?: string } | undefined)?.name ?? "-"),
+    textColumn("payee", "Penerima"),
     textColumn("category", "Kategori"),
     currencyColumn("amount", "Nominal"),
     statusColumn("status"),
   ],
   filters: [
-    { name: "q", label: "Nama Vendor/Penerima", type: "text", placeholder: "Cari payee..." },
+    {
+      name: "vendor_id",
+      label: "Vendor",
+      type: "relation",
+      required: true,
+      relation: { resource: "/vendors", labelKey: "name", params: { per_page: 100 } },
+    },
     { name: "from", label: "Dari Tanggal", type: "date" },
     { name: "to", label: "Sampai Tanggal", type: "date" },
   ],
   groupByOptions: [
-    { value: "payee", label: "Penerima/Vendor" },
     { value: "category", label: "Kategori" },
+    { value: "status", label: "Status" },
   ],
-  fetchData: (params) => fetchReportRows("/disbursements", { ...params, sort: "disbursement_date", direction: "desc" }),
+  fetchData: async (params) => {
+    if (!params.vendor_id) {
+      return { rows: [] };
+    }
+
+    return fetchReportRows("/disbursements", { ...params, sort: "disbursement_date", direction: "desc" });
+  },
 };
 
 export const approvalReport: ReportDef = {

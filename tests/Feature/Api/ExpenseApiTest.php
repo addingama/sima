@@ -5,6 +5,7 @@ namespace Tests\Feature\Api;
 use App\Models\Account;
 use App\Models\Fund;
 use App\Models\User;
+use App\Models\Vendor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -64,6 +65,30 @@ class ExpenseApiTest extends TestCase
             'amount' => '100000.00',
             'sources' => [['fund_id' => $this->fund->id, 'amount' => '50000.00']],
         ])->assertStatus(422)->assertJsonPath('errors.code', 'domain_rule_violation');
+    }
+
+    #[Test]
+    public function it_sets_payee_from_vendor_when_omitted(): void
+    {
+        $this->actingAsRole('bendahara');
+
+        $vendor = Vendor::create([
+            'code' => 'VND/2026/000001',
+            'name' => 'PT Vendor Jaya',
+            'is_active' => true,
+            'created_by' => $this->admin->id,
+        ]);
+
+        $this->postJson('/api/disbursements', [
+            'disbursement_date' => now()->toDateString(),
+            'account_id' => $this->account->id,
+            'vendor_id' => $vendor->id,
+            'amount' => '25000.00',
+            'sources' => [['fund_id' => $this->fund->id, 'amount' => '25000.00']],
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.vendor_id', $vendor->id)
+            ->assertJsonPath('data.payee', 'PT Vendor Jaya');
     }
 
     #[Test]
