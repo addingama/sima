@@ -102,6 +102,7 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 - [ ] **Filter `type=operational` di list funds** — selaraskan dengan DB (operational = dana sistem `system_key`, bukan enum `type`)
 - [ ] **Import bulk master** — CSV/API untuk donatur, dana, akun (opsional tapi mempercepat go-live)
 - [ ] **Command artisan resmi saldo awal** — `sima:post-opening` menggantikan script ad-hoc/Tinker
+- [x] **Seed data demo real-case** — `php artisan sima:seed-demo` (master + transaksi multi-status, lokal only)
 
 ### Audit & compliance
 
