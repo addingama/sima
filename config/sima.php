@@ -149,4 +149,16 @@ return [
             'description' => 'Dana lawan untuk posting saldo awal kas/bank.',
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Portal Donatur
+    |--------------------------------------------------------------------------
+    | Saat bendahara membuat master Donatur (dengan email dan/atau HP),
+    | sistem dapat membuat akun login role donatur secara otomatis.
+    */
+    'portal' => [
+        'auto_create_user' => (bool) env('SIMA_PORTAL_AUTO_CREATE_USER', true),
+        'default_password' => env('SIMA_PORTAL_DEFAULT_PASSWORD', 'password'),
+    ],
 ];

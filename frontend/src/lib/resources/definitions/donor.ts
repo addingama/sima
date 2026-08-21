@@ -59,14 +59,19 @@ export const donorResource: ResourceDef = {
         { value: "lembaga", label: "Lembaga" },
       ],
     },
-    { name: "email", label: "Email", type: "email" },
-    { name: "phone", label: "Telepon", type: "text" },
+    { name: "email", label: "Email", type: "email", helperText: "Wajib salah satu: email atau HP. Dipakai untuk login portal." },
+    {
+      name: "phone",
+      label: "Telepon / HP",
+      type: "text",
+      helperText: "Wajib salah satu: email atau HP. Donatur bisa login dengan nomor ini (angka saja disarankan).",
+    },
     {
       name: "user_id",
-      label: "Akun Login Portal",
+      label: "Akun Login Portal (opsional)",
       type: "relation",
       helperText:
-        "Opsional. Pilih user dengan role donatur agar bisa masuk Portal Donatur. Buat akun dulu di Pengaturan → Users (admin) bila daftar masih kosong.",
+        "Biasanya dikosongkan — akun dibuat otomatis dari email/HP dengan password default. Isi hanya jika ingin menautkan user donatur yang sudah ada.",
       relation: {
         resource: "/donors/portal-login-options",
         labelKey: "label",

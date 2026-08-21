@@ -16,29 +16,30 @@ class AuthService
     private const DECAY_SECONDS = 60;
 
     /** @return array{token: string, user: array<string, mixed>} */
-    public function login(string $email, string $password, ?string $deviceName, string $ip): array
+    public function login(string $login, string $password, ?string $deviceName, string $ip): array
     {
-        $throttleKey = Str::lower($email).'|'.$ip;
+        $login = trim($login);
+        $throttleKey = Str::lower($login).'|'.$ip;
 
         if (RateLimiter::tooManyAttempts($throttleKey, self::MAX_ATTEMPTS)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             throw ValidationException::withMessages([
-                'email' => ["Terlalu banyak percobaan. Coba lagi dalam {$seconds} detik."],
+                'login' => ["Terlalu banyak percobaan. Coba lagi dalam {$seconds} detik."],
             ])->status(429);
         }
 
-        $user = User::where('email', $email)->first();
+        $user = $this->findByLogin($login);
 
         if (! $user || ! Hash::check($password, $user->password)) {
             RateLimiter::hit($throttleKey, self::DECAY_SECONDS);
             throw ValidationException::withMessages([
-                'email' => ['Kredensial tidak valid.'],
+                'login' => ['Kredensial tidak valid.'],
             ]);
         }
 
         if (! $user->is_active) {
             throw ValidationException::withMessages([
-                'email' => ['Akun tidak aktif. Hubungi administrator.'],
+                'login' => ['Akun tidak aktif. Hubungi administrator.'],
             ]);
         }
 
@@ -61,5 +62,27 @@ class AuthService
     public function logout(User $user): void
     {
         $user->currentAccessToken()->delete();
+    }
+
+    private function findByLogin(string $login): ?User
+    {
+        $normalizedPhone = $this->normalizePhone($login);
+
+        return User::query()
+            ->where(function ($query) use ($login, $normalizedPhone): void {
+                $query->where('email', $login);
+
+                if ($normalizedPhone !== '') {
+                    $query->orWhere('phone', $login)->orWhere('phone', $normalizedPhone);
+                }
+            })
+            ->first();
+    }
+
+    private function normalizePhone(string $value): string
+    {
+        $digits = preg_replace('/\D+/', '', $value) ?? '';
+
+        return $digits;
     }
 }

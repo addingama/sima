@@ -10,7 +10,7 @@ import { clearClientSession, getClientUser, setClientSession } from "@/lib/auth/
 interface AuthContextValue {
   user: SimaUser | null;
   isLoading: boolean;
-  login: (email: string, password: string, remember?: boolean) => Promise<void>;
+  login: (login: string, password: string, remember?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => void;
 }
@@ -31,9 +31,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isLoading,
       refreshUser: () => setUser(getClientUser()),
-      login: async (email, password, remember = false) => {
+      login: async (login, password, remember = false) => {
         const response = await apiPost<LoginResult>("/login", {
-          email,
+          login,
           password,
           device_name: "sima-web",
         });

@@ -55,7 +55,11 @@ class DonorController extends Controller
     {
         $donor = $this->service->create($request->validated(), $request->user());
 
-        return $this->created(new DonorResource($donor));
+        $message = $donor->user_id
+            ? 'Donatur dibuat. Akun portal otomatis: login dengan email atau nomor HP, password default sesuai konfigurasi SIMA_PORTAL_DEFAULT_PASSWORD.'
+            : null;
+
+        return $this->created(new DonorResource($donor->load('user:id,name,email,phone')), $message);
     }
 
     #[OA\Get(
