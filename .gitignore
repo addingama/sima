@@ -32,3 +32,5 @@ frontend/.env*.local
 frontend/.vercel
 frontend/*.tsbuildinfo
 .venv-pptx/
+~$*.pptx
+docs/demo/~$*
