@@ -17,7 +17,7 @@ import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/providers/auth-provider";
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Masukkan email yang valid." }),
+  login: z.string().min(3, { message: "Masukkan email atau nomor HP." }),
   password: z.string().min(6, { message: "Password minimal 6 karakter." }),
   remember: z.boolean().optional(),
 });
@@ -39,7 +39,7 @@ function LoginFormInner() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "bendahara@sima.test",
+      login: "bendahara@sima.test",
       password: "password",
       remember: true,
     },
@@ -49,11 +49,13 @@ function LoginFormInner() {
     setIsSubmitting(true);
 
     try {
-      await login(data.email, data.password, data.remember);
+      await login(data.login, data.password, data.remember);
       toast.success("Berhasil masuk.");
       router.push(searchParams.get("redirect") ?? "/dashboard/default");
     } catch (error) {
-      if (error instanceof ApiError && error.fields?.email?.[0]) {
+      if (error instanceof ApiError && error.fields?.login?.[0]) {
+        toast.error(error.fields.login[0]);
+      } else if (error instanceof ApiError && error.fields?.email?.[0]) {
         toast.error(error.fields.email[0]);
       } else if (error instanceof ApiError) {
         toast.error(error.message);
@@ -70,16 +72,16 @@ function LoginFormInner() {
       <FieldGroup className="gap-4">
         <Controller
           control={form.control}
-          name="email"
+          name="login"
           render={({ field, fieldState }) => (
             <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="login-email">Email</FieldLabel>
+              <FieldLabel htmlFor="login-identifier">Email atau nomor HP</FieldLabel>
               <Input
                 {...field}
-                id="login-email"
-                type="email"
-                placeholder="bendahara@sima.test"
-                autoComplete="email"
+                id="login-identifier"
+                type="text"
+                placeholder="nama@email.com atau 0812…"
+                autoComplete="username"
                 aria-invalid={fieldState.invalid}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

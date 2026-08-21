@@ -227,6 +227,8 @@ php artisan serve
 | auditor@sima.test | Auditor |
 | donatur@sima.test | Donatur (setelah `sima:seed-demo`) |
 
+Donatur baru dari master Donatur: isi email/HP → akun portal otomatis (password default `SIMA_PORTAL_DEFAULT_PASSWORD`, biasanya `password`). Login dengan **email atau nomor HP**.
+
 ### Data demo real-case (opsional)
 
 `migrate --seed` hanya mengisi role, dana sistem, dan user. Untuk mencoba **semua fitur UI** dengan data contoh (master, saldo awal, penerimaan/pengeluaran di berbagai status, biaya bank, transfer, rekonsiliasi, liabilitas, portal donatur):

@@ -131,18 +131,15 @@ Tidak. Hanya penerimaan **approved** yang tertaut ke data donaturnya.
 
 ### Bagaimana menautkan akun login ke donatur?
 
-Ada **dua cara** (hasilnya sama: `donors.user_id`):
+**Otomatis (disarankan):** saat bendahara membuat Donatur, isi **email dan/atau nomor HP**. Sistem membuat akun role `donatur` + menautkannya. Password default: nilai `SIMA_PORTAL_DEFAULT_PASSWORD` (lokal biasanya `password`).
 
-**A. Dari master Donatur (bendahara / admin)**  
-1. Pastikan sudah ada user dengan role **donatur** (dibuat admin di Pengaturan → Users).  
-2. Buka **Master Data → Donatur → Edit**.  
-3. Field **Akun Login Portal** — pilih user tersebut → Simpan.
+Donatur login di halaman masuk dengan **email atau nomor HP** + password default.
 
-**B. Dari Pengaturan Users (admin)**  
-1. Buat/edit user, pilih role **Donatur**.  
-2. Muncul field **Tautkan Donatur** — pilih master donatur → Simpan.
+**Manual (opsional):**
+- Form Donatur → field **Akun Login Portal** (user donatur yang sudah ada), atau
+- Pengaturan → Users (admin) → role Donatur → **Tautkan Donatur**.
 
-Setelah tertaut, login dengan akun itu lalu buka `/dashboard/portal-donatur`.
+Setelah login, buka `/dashboard/portal-donatur`.
 
 ---
 
