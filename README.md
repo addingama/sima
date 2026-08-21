@@ -224,8 +224,23 @@ php artisan serve
 | verifikator@sima.test | Verifikator |
 | ketua@sima.test | Ketua |
 | auditor@sima.test | Auditor |
+| donatur@sima.test | Donatur (setelah `sima:seed-demo`) |
 
----
+### Data demo real-case (opsional)
+
+`migrate --seed` hanya mengisi role, dana sistem, dan user. Untuk mencoba **semua fitur UI** dengan data contoh (master, saldo awal, penerimaan/pengeluaran di berbagai status, biaya bank, transfer, rekonsiliasi, liabilitas, portal donatur):
+
+```bash
+# Database kosong / setelah migrate --seed:
+php artisan sima:seed-demo
+
+# Atau reset total lalu seed + demo:
+php artisan migrate:fresh --seed
+php artisan sima:seed-demo
+```
+
+Hanya untuk `APP_ENV=local` atau `testing` (ditolak di production). Jika data demo sudah ada, perintah menolak — gunakan `migrate:fresh --seed` lalu jalankan lagi.
+
 
 ## API
 
