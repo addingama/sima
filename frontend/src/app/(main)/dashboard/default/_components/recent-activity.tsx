@@ -52,7 +52,8 @@ export function RecentActivity() {
               const debit = parseAmount(entry.debit);
               const credit = parseAmount(entry.credit);
               const isInflow = credit > debit;
-              const amount = isInflow ? credit : debit;
+              // Kirim string API asli ke CurrencyDisplay (hindari double-parse).
+              const amount = isInflow ? entry.credit : entry.debit;
 
               return (
                 <li key={entry.id} className="flex items-start justify-between gap-3 rounded-lg border px-3 py-2.5">
