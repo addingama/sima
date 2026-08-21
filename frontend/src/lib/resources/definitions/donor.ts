@@ -59,7 +59,12 @@ export const donorResource: ResourceDef = {
         { value: "lembaga", label: "Lembaga" },
       ],
     },
-    { name: "email", label: "Email", type: "email", helperText: "Wajib salah satu: email atau HP. Dipakai untuk login portal." },
+    {
+      name: "email",
+      label: "Email",
+      type: "email",
+      helperText: "Wajib salah satu: email atau HP. Dipakai untuk login portal.",
+    },
     {
       name: "phone",
       label: "Telepon / HP",
