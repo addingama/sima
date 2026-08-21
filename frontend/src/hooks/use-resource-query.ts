@@ -63,6 +63,17 @@ export function useFundBalancesQuery() {
   });
 }
 
+export function useAccountBalancesQuery() {
+  return useQuery({
+    queryKey: ["/reports/account-balances"],
+    queryFn: async () => {
+      const response = await apiGet<import("@/lib/api/types").AccountBalancesReport>("/reports/account-balances");
+
+      return response.data;
+    },
+  });
+}
+
 export function useReconciliationSummaryQuery() {
   return useQuery({
     queryKey: ["/reports/reconciliation-summary"],

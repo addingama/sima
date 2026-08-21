@@ -31,43 +31,70 @@ const chartConfig = {
 export function CashFlowChart() {
   const { data, isLoading, isError, refetch } = useDashboardQuery();
 
-  const chartData = data
-    ? [
-        {
-          category: "Bulan Ini",
-          penerimaan: parseAmount(data.penerimaan_bulan_ini),
-          pengeluaran: parseAmount(data.pengeluaran_bulan_ini),
-        },
-      ]
-    : [];
+  const chartData = (data?.cash_flow_monthly ?? []).map((row) => ({
+    label: row.label,
+    penerimaan: parseAmount(row.penerimaan),
+    pengeluaran: parseAmount(row.pengeluaran),
+  }));
+
+  const hasActivity = chartData.some((row) => row.penerimaan > 0 || row.pengeluaran > 0);
+
+  let body: React.ReactNode;
+  if (isError) {
+    body = <ErrorState onRetry={() => refetch()} />;
+  } else if (isLoading || !data) {
+    body = <Skeleton className="h-72 w-full" />;
+  } else if (!hasActivity) {
+    body = (
+      <p className="text-muted-foreground text-sm">Belum ada penerimaan/pengeluaran approved dalam 6 bulan terakhir.</p>
+    );
+  } else {
+    body = (
+      <ChartContainer config={chartConfig} className="aspect-auto h-72 w-full">
+        <BarChart data={chartData} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
+          <CartesianGrid vertical={false} strokeDasharray="0" />
+          <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={10} minTickGap={16} />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            width={72}
+            tickFormatter={(value) => formatCompactIdr(Number(value))}
+          />
+          <ChartTooltip content={<ChartTooltipContent formatter={(value) => formatIdr(value as number)} />} />
+          <ChartLegend content={<ChartLegendContent />} />
+          <Bar dataKey="penerimaan" fill="var(--color-penerimaan)" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="pengeluaran" fill="var(--color-pengeluaran)" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ChartContainer>
+    );
+  }
 
   return (
-    <Card className="@container/card">
+    <Card className="@container/card xl:col-span-2">
       <CardHeader>
-        <CardTitle>Cash Flow</CardTitle>
-        <CardDescription>Penerimaan vs pengeluaran approved bulan berjalan</CardDescription>
+        <CardTitle>Arus Kas</CardTitle>
+        <CardDescription>
+          Penerimaan vs pengeluaran yang sudah approved — 6 bulan terakhir
+          {data
+            ? ` · bulan ini: ${formatIdr(parseAmount(data.penerimaan_bulan_ini))} masuk / ${formatIdr(parseAmount(data.pengeluaran_bulan_ini))} keluar`
+            : null}
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        {isError ? (
-          <ErrorState onRetry={() => refetch()} />
-        ) : isLoading || !data ? (
-          <Skeleton className="h-72 w-full" />
-        ) : (
-          <ChartContainer config={chartConfig} className="aspect-auto h-72 w-full">
-            <BarChart data={chartData} margin={{ left: 0, right: 0, top: 0, bottom: 0 }} barSize={48}>
-              <CartesianGrid vertical={false} strokeDasharray="0" />
-              <XAxis dataKey="category" tickLine={false} axisLine={false} tickMargin={10} />
-              <YAxis hide />
-              <ChartTooltip
-                content={<ChartTooltipContent formatter={(value) => formatIdr(value as number)} hideIndicator />}
-              />
-              <ChartLegend content={<ChartLegendContent />} />
-              <Bar dataKey="penerimaan" fill="var(--color-penerimaan)" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="pengeluaran" fill="var(--color-pengeluaran)" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ChartContainer>
-        )}
-      </CardContent>
+      <CardContent>{body}</CardContent>
     </Card>
   );
+}
+
+function formatCompactIdr(value: number): string {
+  if (value >= 1_000_000_000) {
+    return `${(value / 1_000_000_000).toFixed(1)}M`;
+  }
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1)}jt`;
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(0)}rb`;
+  }
+
+  return String(value);
 }

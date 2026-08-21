@@ -30,7 +30,7 @@ export function RecentActivity() {
   const { data, isLoading, isError, refetch } = useRecentLedgerQuery(8);
 
   return (
-    <Card className="xl:col-span-2">
+    <Card>
       <CardHeader>
         <CardTitle>Aktivitas</CardTitle>
         <CardDescription>Entri buku besar terbaru</CardDescription>

@@ -133,10 +133,10 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 
 ## P3 — Laporan & analitik
 
-- [ ] **Laporan rekonsiliasi global di UI** — tampilkan `GET /reports/reconciliation-summary` di dashboard
+- [x] **Laporan rekonsiliasi global di UI** — tampilkan `GET /reports/reconciliation-summary` di dashboard
 - [ ] **Export semua laporan** — parity PDF/Excel seperti modul laporan existing
 - [ ] **Laporan arus kas** — belum ada di sidebar
-- [ ] **Dashboard SIMA** — metric cards real data (bukan template demo)
+- [x] **Dashboard SIMA** — metric cards + chart real data (arus kas, saldo dana, saldo kas/bank, aktivitas ledger)
 
 ---
 
