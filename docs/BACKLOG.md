@@ -82,9 +82,9 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 
 ## P1 — Permission & workflow operasional
 
-- [ ] **Kebijakan: bendahara kelola Dana Amanah?** — saat ini hanya `fund.view`; pertimbangkan `fund.manage` terbatas atau delegasi admin
-- [ ] **Kebijakan: bendahara kelola Kas/Bank?** — saat ini hanya `account.view`; pertimbangan serupa
-- [ ] **Halaman Approval** — pastikan tab/filter cover penerimaan + pengeluaran + edge cases
+- [x] **Kebijakan: bendahara kelola Dana Amanah?** — bendahara mendapat `fund.manage` (dana sistem tetap terkunci)
+- [x] **Kebijakan: bendahara kelola Kas/Bank?** — bendahara mendapat `account.manage`
+- [x] **Halaman Approval** — tab per role (verifikator/ketua), filter status dikunci, menu sidebar gated
 - [ ] **Notifikasi approval** — email/in-app (opsional P2)
 
 ---

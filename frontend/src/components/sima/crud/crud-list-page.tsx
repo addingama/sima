@@ -26,6 +26,12 @@ interface CrudListPageProps {
   emptyMessage?: string;
   initialFilters?: Record<string, string>;
   hideCreate?: boolean;
+  /** Sembunyikan filter bar (mis. antrian Approval yang mengunci status). */
+  hideFilters?: boolean;
+  /** Sembunyikan PageHeader (mis. daftar di dalam tab). */
+  hideHeader?: boolean;
+  /** Override judul header bila hideHeader=false. */
+  title?: string;
 }
 
 function FilterBar({
@@ -72,6 +78,9 @@ export function CrudListPage({
   emptyMessage,
   initialFilters = {},
   hideCreate = false,
+  hideFilters = false,
+  hideHeader = false,
+  title,
 }: CrudListPageProps) {
   const { user } = useAuth();
   const [pageIndex, setPageIndex] = useState(0);
@@ -102,24 +111,27 @@ export function CrudListPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={config.labelPlural}
-        description={description ?? `Kelola data ${config.label.toLowerCase()}.`}
-        actions={
-          canCreate ? (
-            <Button asChild>
-              <Link href={`${config.basePath}/new`}>
-                <Plus className="size-4" />
-                Tambah {config.label}
-              </Link>
-            </Button>
-          ) : null
-        }
-      />
+      {hideHeader ? null : (
+        <PageHeader
+          title={title ?? config.labelPlural}
+          description={description ?? `Kelola data ${config.label.toLowerCase()}.`}
+          actions={
+            canCreate ? (
+              <Button asChild>
+                <Link href={`${config.basePath}/new`}>
+                  <Plus className="size-4" />
+                  Tambah {config.label}
+                </Link>
+              </Button>
+            ) : null
+          }
+        />
+      )}
 
       <Card>
         <CardHeader className="gap-4">
-          <CardTitle>Daftar Data</CardTitle>
+          <CardTitle>{hideHeader ? (title ?? "Antrian") : "Daftar Data"}</CardTitle>
+          {hideHeader && description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <form
               className="max-w-md flex-1"
@@ -160,7 +172,7 @@ export function CrudListPage({
                   </NativeSelect>
                 </div>
               ) : null}
-              {config.filters?.length ? (
+              {!hideFilters && config.filters?.length ? (
                 <FilterBar
                   filters={config.filters}
                   values={filterValues}

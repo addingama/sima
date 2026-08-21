@@ -1,20 +1,34 @@
 "use client";
 
-import { hasPermission } from "@/lib/auth/permissions";
-import type { NavGroup, NavMainItem, NavMainParentItem } from "@/navigation/sidebar/sidebar-items";
+import { hasAnyPermission, hasPermission } from "@/lib/auth/permissions";
+import type { NavGroup, NavMainItem, NavMainParentItem, NavSubItem } from "@/navigation/sidebar/sidebar-items";
 import { useAuth } from "@/providers/auth-provider";
+
+function canAccess(user: ReturnType<typeof useAuth>["user"], permission?: string, permissionsAny?: string[]): boolean {
+  if (permission) {
+    return hasPermission(user, permission);
+  }
+
+  if (permissionsAny?.length) {
+    return hasAnyPermission(user, permissionsAny);
+  }
+
+  return true;
+}
+
+function filterSubItems(subItems: NavSubItem[], user: ReturnType<typeof useAuth>["user"]): NavSubItem[] {
+  return subItems.filter((subItem) => canAccess(user, subItem.permission, subItem.permissionsAny));
+}
 
 function filterItems(items: NavMainItem[], user: ReturnType<typeof useAuth>["user"]): NavMainItem[] {
   return items
     .map((item) => {
       if ("subItems" in item && item.subItems) {
-        if (item.permission && !hasPermission(user, item.permission)) {
+        if (!canAccess(user, item.permission, item.permissionsAny)) {
           return null;
         }
 
-        const subItems = item.subItems.filter(
-          (subItem) => !subItem.permission || hasPermission(user, subItem.permission),
-        );
+        const subItems = filterSubItems(item.subItems, user);
 
         if (subItems.length === 0) {
           return null;
@@ -23,7 +37,7 @@ function filterItems(items: NavMainItem[], user: ReturnType<typeof useAuth>["use
         return { ...item, subItems } satisfies NavMainParentItem;
       }
 
-      if (item.permission && !hasPermission(user, item.permission)) {
+      if (!canAccess(user, item.permission, item.permissionsAny)) {
         return null;
       }
 

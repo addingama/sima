@@ -33,16 +33,20 @@ export interface NavSubItem {
   disabled?: boolean;
   newTab?: boolean;
   permission?: string;
+  permissionsAny?: string[];
 }
 
-interface NavItemBase {
+export interface NavItemBase {
   id: string;
   title: string;
   icon?: typeof LayoutDashboard;
   badge?: NavBadge;
   disabled?: boolean;
   newTab?: boolean;
+  /** Satu permission wajib. */
   permission?: string;
+  /** Tampil jika user punya salah satu permission (diabaikan jika `permission` juga di-set dan lolos). */
+  permissionsAny?: string[];
 }
 
 export interface NavMainLinkItem extends NavItemBase {
@@ -184,6 +188,7 @@ export const sidebarItems: NavGroup[] = [
         title: "Approval",
         url: "/dashboard/approvals",
         icon: CheckCircle2,
+        permissionsAny: ["receipt.approve", "disbursement.verify", "disbursement.approve"],
       },
       {
         id: "reports",

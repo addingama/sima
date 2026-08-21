@@ -64,8 +64,8 @@ return [
         UserRole::BENDAHARA->value => [
             'donor.view', 'donor.manage',
             'vendor.view', 'vendor.manage',
-            'fund.view',
-            'account.view',
+            'fund.view', 'fund.manage',
+            'account.view', 'account.manage',
             'program.view', 'program.manage',
             'receipt.view', 'receipt.create', 'receipt.submit',
             'disbursement.view', 'disbursement.create', 'disbursement.submit',

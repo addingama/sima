@@ -72,7 +72,7 @@ Dana **sistem** (Suspense, Operasional, Biaya Bank, Opening Equity) sudah dibuat
 | Role SIMA | Siapa di organisasi | Peran saat setup |
 |-----------|---------------------|------------------|
 | **admin** | IT / super user | Instalasi, master Dana Amanah & Kas/Bank, saldo awal teknis |
-| **bendahara** | Bendahara | Donatur, program, transaksi harian |
+| **bendahara** | Bendahara | Master Dana/Kas (non-sistem), donatur, program, transaksi harian |
 | **verifikator** | Staff verifikasi | Review pengeluaran |
 | **ketua** | Ketua/pimpinan | Approval penerimaan & pengeluaran |
 | **auditor** | Auditor internal | Cek laporan & audit trail |
@@ -172,13 +172,13 @@ flowchart TD
     C --> E
 ```
 
-### 3.1 Dana Amanah — **Admin**
+### 3.1 Dana Amanah — **Admin atau Bendahara**
 
 | Item | Detail |
 |------|--------|
 | **Menu** | Master Data → **Dana Amanah** (`/dashboard/funds`) |
-| **Permission** | `fund.manage` — **hanya admin** (bendahara: lihat saja) |
-| **Yang sudah ada (sistem)** | SYS-SUSPENSE, SYS-OPERASIONAL, SYS-BANKADMIN, SYS-OPENING — **jangan edit/hapus** |
+| **Permission** | `fund.manage` — admin & bendahara |
+| **Yang sudah ada (sistem)** | SYS-SUSPENSE, SYS-OPERASIONAL, SYS-BANKADMIN, SYS-OPENING — **jangan edit/hapus** (terkunci di policy) |
 
 **Langkah:**
 
@@ -205,12 +205,12 @@ flowchart TD
 
 ---
 
-### 3.2 Kas / Bank — **Admin**
+### 3.2 Kas / Bank — **Admin atau Bendahara**
 
 | Item | Detail |
 |------|--------|
 | **Menu** | Master Data → **Kas / Bank** (`/dashboard/accounts`) |
-| **Permission** | `account.manage` — **hanya admin** |
+| **Permission** | `account.manage` — admin & bendahara |
 | **Saldo di form** | **Read-only** — saldo dihitung dari ledger, tidak bisa diisi manual di form |
 
 **Langkah:**
