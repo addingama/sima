@@ -20,6 +20,7 @@ class StoreDonorRequest extends FormRequest
             'code' => ['nullable', 'string', 'max:50', new UniqueActiveCode('donors')],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:individu,lembaga'],
+            'user_id' => ['nullable', 'exists:users,id', 'unique:donors,user_id'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'identity_number' => ['nullable', 'string', 'max:100'],

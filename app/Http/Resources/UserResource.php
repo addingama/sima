@@ -20,6 +20,18 @@ class UserResource extends JsonResource
             'is_active' => $this->is_active,
             'roles' => $this->getRoleNames(),
             'permissions' => $this->getAllPermissions()->pluck('name'),
+            'donor_id' => $this->when(
+                $this->relationLoaded('donor'),
+                fn () => $this->donor?->id
+            ),
+            'donor' => $this->when(
+                $this->relationLoaded('donor') && $this->donor !== null,
+                fn () => [
+                    'id' => $this->donor->id,
+                    'code' => $this->donor->code,
+                    'name' => $this->donor->name,
+                ]
+            ),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

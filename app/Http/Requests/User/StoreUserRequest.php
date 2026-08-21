@@ -23,6 +23,7 @@ class StoreUserRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:50'],
             'password' => ['required', 'string', 'min:8', 'max:255'],
             'role' => ['required', 'string', Rule::in(UserRole::values())],
+            'donor_id' => ['nullable', 'integer', 'exists:donors,id'],
             'is_active' => ['boolean'],
         ];
     }
