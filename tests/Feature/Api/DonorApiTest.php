@@ -27,6 +27,7 @@ class DonorApiTest extends TestCase
         $response = $this->postJson('/api/donors', [
             'name' => 'Ahmad Zakat',
             'type' => 'individu',
+            'phone' => '081111111111',
             'is_active' => true,
         ]);
 
@@ -51,6 +52,7 @@ class DonorApiTest extends TestCase
             'code' => 'DON-LEGACY-001',
             'name' => 'Yayasan Contoh',
             'type' => 'lembaga',
+            'email' => 'yayasan@example.com',
         ]);
 
         $response->assertCreated()
