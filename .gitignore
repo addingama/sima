@@ -31,3 +31,4 @@ frontend/build
 frontend/.env*.local
 frontend/.vercel
 frontend/*.tsbuildinfo
+.venv-pptx/

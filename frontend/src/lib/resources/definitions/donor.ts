@@ -61,6 +61,19 @@ export const donorResource: ResourceDef = {
     },
     { name: "email", label: "Email", type: "email" },
     { name: "phone", label: "Telepon", type: "text" },
+    {
+      name: "user_id",
+      label: "Akun Login Portal",
+      type: "relation",
+      helperText:
+        "Opsional. Pilih user dengan role donatur agar bisa masuk Portal Donatur. Buat akun dulu di Pengaturan → Users (admin) bila daftar masih kosong.",
+      relation: {
+        resource: "/donors/portal-login-options",
+        labelKey: "label",
+        valueKey: "id",
+        params: {},
+      },
+    },
     { name: "identity_number", label: "No. Identitas", type: "text" },
     { name: "address", label: "Alamat", type: "textarea" },
     { name: "notes", label: "Catatan", type: "textarea" },
@@ -95,13 +108,19 @@ export const donorResource: ResourceDef = {
     auditableType: "App\\Models\\Donor",
     permission: "audit.view",
   },
-  getCreateDefaults: () => ({ type: "individu", is_active: true, code: "" }),
+  getCreateDefaults: () => ({ type: "individu", is_active: true, code: "", user_id: "" }),
+  mapToForm: (row) => ({
+    ...row,
+    user_id: row.user_id ? String(row.user_id) : "",
+  }),
   mapToPayload: (values) => {
     const payload = { ...values };
 
     if (!payload.code) {
       delete payload.code;
     }
+
+    payload.user_id = values.user_id ? Number(values.user_id) : null;
 
     return payload;
   },
