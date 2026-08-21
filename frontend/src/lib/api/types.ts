@@ -50,6 +50,13 @@ export interface LoginResult {
   user: SimaUser;
 }
 
+export interface DashboardCashFlowMonth {
+  month: string;
+  label: string;
+  penerimaan: string;
+  pengeluaran: string;
+}
+
 export interface DashboardSummary {
   total_kas_bank: string;
   total_dana_amanah: string;
@@ -57,6 +64,7 @@ export interface DashboardSummary {
   pengeluaran_bulan_ini: string;
   receipts_pending: number;
   disbursements_pending: number;
+  cash_flow_monthly: DashboardCashFlowMonth[];
   generated_at: string;
 }
 
@@ -71,6 +79,19 @@ export interface FundBalanceRow {
 
 export interface FundBalancesReport {
   rows: FundBalanceRow[];
+  total: string;
+}
+
+export interface AccountBalanceRow {
+  id: number;
+  code: string;
+  name: string;
+  type: string;
+  balance: string;
+}
+
+export interface AccountBalancesReport {
+  rows: AccountBalanceRow[];
   total: string;
 }
 
