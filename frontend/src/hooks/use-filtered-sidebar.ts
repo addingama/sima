@@ -4,11 +4,7 @@ import { hasAnyPermission, hasPermission } from "@/lib/auth/permissions";
 import type { NavGroup, NavMainItem, NavMainParentItem, NavSubItem } from "@/navigation/sidebar/sidebar-items";
 import { useAuth } from "@/providers/auth-provider";
 
-function canAccess(
-  user: ReturnType<typeof useAuth>["user"],
-  permission?: string,
-  permissionsAny?: string[],
-): boolean {
+function canAccess(user: ReturnType<typeof useAuth>["user"], permission?: string, permissionsAny?: string[]): boolean {
   if (permission) {
     return hasPermission(user, permission);
   }

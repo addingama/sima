@@ -74,9 +74,7 @@ export default function ApprovalsPage() {
   }
 
   if (tabs.length === 0) {
-    return (
-      <ErrorState title="Tidak ada antrian" description="Akun Anda tidak memiliki tab approval yang relevan." />
-    );
+    return <ErrorState title="Tidak ada antrian" description="Akun Anda tidak memiliki tab approval yang relevan." />;
   }
 
   return (
