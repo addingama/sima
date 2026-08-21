@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
     |----------------------------------------------------------------------
     */
     Route::get('donors', [DonorController::class, 'index'])->middleware('permission:donor.view');
+    Route::get('donors/portal-login-options', [DonorController::class, 'portalLoginOptions'])->middleware('permission:donor.manage');
     Route::get('donors/{donor}', [DonorController::class, 'show'])->middleware('permission:donor.view');
     Route::post('donors', [DonorController::class, 'store'])->middleware('permission:donor.manage');
     Route::put('donors/{donor}', [DonorController::class, 'update'])->middleware('permission:donor.manage');

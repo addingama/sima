@@ -30,6 +30,20 @@ class DonorController extends Controller
         return $this->collection(DonorResource::collection($this->service->paginate($request->listQuery())));
     }
 
+    #[OA\Get(
+        path: '/donors/portal-login-options',
+        summary: 'Opsi akun login portal (role donatur)',
+        tags: ['Donor'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
+    public function portalLoginOptions(): JsonResponse
+    {
+        $this->authorize('create', Donor::class);
+
+        return $this->ok($this->service->portalLoginOptions());
+    }
+
     #[OA\Post(
         path: '/donors',
         summary: 'Buat donatur',

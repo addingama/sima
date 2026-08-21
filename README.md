@@ -20,6 +20,7 @@ Backend + frontend untuk lembaga sosial yang mencatat dan mengelola **dana titip
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deploy produksi (Docker, TLS, backup) |
 | [docs/CODING_STANDARDS.md](docs/CODING_STANDARDS.md) | Standar kode backend & frontend |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Alur kontribusi & PR checklist |
+| [docs/demo/](docs/demo/) | Materi demo: PPT + FAQ |
 
 ## Quick start
 
