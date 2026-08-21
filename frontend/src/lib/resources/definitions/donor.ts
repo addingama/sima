@@ -72,6 +72,18 @@ export const donorResource: ResourceDef = {
     { label: "Tipe", accessor: "type" },
     { label: "Email", accessor: "email" },
     { label: "Telepon", accessor: "phone" },
+    {
+      label: "Akun Login",
+      accessor: (row) => {
+        const linked = row.user as { name?: string; email?: string } | undefined;
+
+        if (linked?.name) {
+          return `${linked.name}${linked.email ? ` (${linked.email})` : ""}`;
+        }
+
+        return row.user_id ? `#${row.user_id}` : "-";
+      },
+    },
     { label: "No. Identitas", accessor: "identity_number" },
     { label: "Alamat", accessor: "address" },
     { label: "Catatan", accessor: "notes" },

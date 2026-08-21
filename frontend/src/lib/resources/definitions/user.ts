@@ -60,6 +60,18 @@ export const userResource: ResourceDef = {
       options: SIMA_ROLE_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
     },
     {
+      name: "donor_id",
+      label: "Tautkan Donatur",
+      type: "relation",
+      helperText: "Wajib untuk portal: pilih master donatur yang akan login dengan akun ini.",
+      visibleWhen: (values) => values.role === "donatur",
+      relation: {
+        resource: "/donors",
+        labelKey: "name",
+        params: { is_active: 1, per_page: 100 },
+      },
+    },
+    {
       name: "password",
       label: "Password",
       type: "password",
@@ -77,6 +89,18 @@ export const userResource: ResourceDef = {
       label: "Role",
       accessor: (row) => roleLabel(String((row.roles as string[] | undefined)?.[0] ?? "")),
     },
+    {
+      label: "Donatur Tertaut",
+      accessor: (row) => {
+        const donor = row.donor as { code?: string; name?: string } | undefined;
+
+        if (!donor) {
+          return "-";
+        }
+
+        return `${donor.code ?? ""} ${donor.name ?? ""}`.trim() || "-";
+      },
+    },
     { label: "Status", accessor: "is_active", type: "boolean" },
     { label: "Dibuat", accessor: "created_at", type: "datetime" },
     { label: "Diperbarui", accessor: "updated_at", type: "datetime" },
@@ -85,12 +109,19 @@ export const userResource: ResourceDef = {
   mapToForm: (row) => ({
     ...row,
     role: (row.roles as string[] | undefined)?.[0] ?? "",
+    donor_id: row.donor_id ? String(row.donor_id) : "",
   }),
   mapToPayload: (values) => {
-    const payload = { ...values };
+    const payload: Record<string, unknown> = { ...values };
 
     if (!payload.password) {
       delete payload.password;
+    }
+
+    if (payload.role === "donatur") {
+      payload.donor_id = values.donor_id ? Number(values.donor_id) : null;
+    } else {
+      delete payload.donor_id;
     }
 
     return payload;

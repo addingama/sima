@@ -73,10 +73,10 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 
 ### Portal donatur
 
-- [ ] **Frontend portal** — ganti placeholder `/dashboard/portal-donatur`
-- [ ] **Backend portal** — endpoint sudah ada (`/portal/*`); lengkapi UI profil, ringkasan, riwayat donasi
-- [ ] **Link user ↔ donatur** — `donors.user_id` + onboarding donatur login
-- [ ] **Permission & isolasi data** — donatur hanya lihat penerimaan sendiri
+- [x] **Frontend portal** — ganti placeholder `/dashboard/portal-donatur`
+- [x] **Backend portal** — UI profil, ringkasan, riwayat donasi (endpoint `/portal/*`)
+- [x] **Link user ↔ donatur** — `donors.user_id` unik + tautan via master Donatur / create user role donatur
+- [x] **Permission & isolasi data** — donatur hanya lihat penerimaan approved sendiri
 
 ---
 

@@ -16,7 +16,7 @@ class PortalReceiptResource extends JsonResource
         return [
             'id' => $this->id,
             'receipt_number' => $this->receipt_number,
-            'receipt_date' => $this->receipt_date,
+            'receipt_date' => $this->receipt_date?->toDateString(),
             'channel' => $this->channel,
             'reference_number' => $this->reference_number,
             'amount' => bcadd((string) $this->amount, '0', 2),

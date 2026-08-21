@@ -57,7 +57,7 @@ class UserController extends Controller
     {
         $this->authorize('view', $user);
 
-        return $this->resource(new UserResource($user->load('roles')));
+        return $this->resource(new UserResource($user->load(['roles', 'donor:id,code,name,user_id'])));
     }
 
     #[OA\Put(

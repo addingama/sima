@@ -4,6 +4,7 @@ namespace App\Http\Requests\Master;
 
 use App\Models\Donor;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateDonorRequest extends FormRequest
 {
@@ -24,6 +25,7 @@ class UpdateDonorRequest extends FormRequest
         return [
             'name' => ['sometimes', 'string', 'max:255'],
             'type' => ['sometimes', 'in:individu,lembaga'],
+            'user_id' => ['nullable', 'exists:users,id', Rule::unique('donors', 'user_id')->ignore($donor->id)],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'identity_number' => ['nullable', 'string', 'max:100'],

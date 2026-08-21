@@ -25,6 +25,7 @@ class UpdateUserRequest extends FormRequest
             'email' => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'phone' => ['nullable', 'string', 'max:50'],
             'role' => ['sometimes', 'required', 'string', Rule::in(UserRole::values())],
+            'donor_id' => ['nullable', 'integer', 'exists:donors,id'],
             'is_active' => ['boolean'],
         ];
     }

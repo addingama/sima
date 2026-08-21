@@ -55,7 +55,7 @@ class DonorController extends Controller
     {
         $this->authorize('view', $donor);
 
-        return $this->resource(new DonorResource($donor));
+        return $this->resource(new DonorResource($donor->load('user:id,name,email')));
     }
 
     #[OA\Put(
