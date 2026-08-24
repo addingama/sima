@@ -68,6 +68,58 @@ class ExpenseApiTest extends TestCase
     }
 
     #[Test]
+    public function it_rejects_duplicate_fund_sources_before_database_insert(): void
+    {
+        $this->actingAsRole('bendahara');
+
+        $this->postJson('/api/disbursements', [
+            'disbursement_date' => now()->toDateString(),
+            'account_id' => $this->account->id,
+            'amount' => '100000.00',
+            'sources' => [
+                ['fund_id' => $this->fund->id, 'amount' => '50000.00'],
+                ['fund_id' => $this->fund->id, 'amount' => '50000.00'],
+            ],
+        ])->assertStatus(422)
+            ->assertJsonPath('errors.code', 'validation_error')
+            ->assertJsonFragment([
+                'sources.0.fund_id' => [
+                    'Dana Amanah pada sumber dana tidak boleh duplikat. Gabungkan nominal pada satu baris.',
+                ],
+            ]);
+    }
+
+    #[Test]
+    public function it_updates_draft_disbursement_sources_without_duplicate_unique_error(): void
+    {
+        $this->actingAsRole('bendahara');
+
+        $create = $this->postJson('/api/disbursements', [
+            'disbursement_date' => now()->toDateString(),
+            'account_id' => $this->account->id,
+            'amount' => '50000.00',
+            'sources' => [['fund_id' => $this->fund->id, 'amount' => '50000.00']],
+        ])->assertCreated();
+
+        $id = $create->json('data.id');
+
+        $this->putJson("/api/disbursements/{$id}", [
+            'amount' => '90000.00',
+            'sources' => [['fund_id' => $this->fund->id, 'amount' => '90000.00']],
+        ])->assertOk()
+            ->assertJsonPath('data.amount', '90000.00')
+            ->assertJsonPath('data.fund_sources.0.amount', '90000.00');
+
+        $this->assertDatabaseCount('expense_fund_sources', 1);
+        $this->assertDatabaseHas('expense_fund_sources', [
+            'disbursement_id' => $id,
+            'fund_id' => $this->fund->id,
+            'amount' => '90000.00',
+            'deleted_at' => null,
+        ]);
+    }
+
+    #[Test]
     public function it_sets_payee_from_vendor_when_omitted(): void
     {
         $this->actingAsRole('bendahara');

@@ -47,14 +47,38 @@ class ExpenseRepository
     /** @param array<int, array<string, mixed>> $sources */
     public function syncSources(Disbursement $expense, array $sources): void
     {
+        $incomingFundIds = [];
+
         foreach ($sources as $s) {
-            $expense->fundSources()->create([
+            $fundId = (int) $s['fund_id'];
+            $incomingFundIds[] = $fundId;
+            $payload = [
                 'fund_id' => $s['fund_id'],
                 'program_id' => $s['program_id'] ?? null,
                 'amount' => bcadd((string) $s['amount'], '0', 2),
                 'note' => $s['note'] ?? null,
-            ]);
+            ];
+            $source = $expense->fundSources()
+                ->withTrashed()
+                ->where('fund_id', $fundId)
+                ->first();
+
+            if ($source !== null) {
+                if ($source->trashed()) {
+                    $source->restore();
+                }
+
+                $source->update($payload);
+
+                continue;
+            }
+
+            $expense->fundSources()->create($payload);
         }
+
+        $expense->fundSources()
+            ->whereNotIn('fund_id', $incomingFundIds)
+            ->delete();
     }
 
     public function markSubmitted(Disbursement $expense, User $actor): Disbursement

@@ -179,7 +179,7 @@ export const disbursementResource: ResourceDef = {
     description: values.description || null,
     sources: (values.sources as Array<Record<string, unknown>>).map((line) => ({
       fund_id: Number(line.fund_id),
-      program_id: line.program_id ? Number(line.program_id) : null,
+      program_id: values.program_id ? Number(values.program_id) : null,
       amount: line.amount,
       note: line.note || null,
     })),

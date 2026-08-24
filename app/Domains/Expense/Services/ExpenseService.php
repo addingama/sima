@@ -116,7 +116,6 @@ class ExpenseService
             if ($dto->sources !== null) {
                 $normalized = $this->normalizeSources($dto->sources);
                 $this->validator->assertSourcesMatch((string) $expense->amount, $normalized);
-                $this->repository->deleteSources($expense);
                 $this->repository->syncSources($expense, $normalized);
             }
 
