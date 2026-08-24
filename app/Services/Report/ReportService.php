@@ -81,7 +81,48 @@ class ReportService
             ],
         );
 
-        return $builder->paginate($query->perPage, ['*'], 'page', $query->page);
+        $paginator = $builder->paginate($query->perPage, ['*'], 'page', $query->page);
+        $this->hydrateLedgerAccountLabels($paginator->getCollection());
+
+        return $paginator;
+    }
+
+    /** @param  Collection<int, LedgerEntry>  $entries */
+    private function hydrateLedgerAccountLabels(Collection $entries): void
+    {
+        if ($entries->isEmpty()) {
+            return;
+        }
+
+        $accountIds = $entries
+            ->filter(fn (LedgerEntry $entry) => ($entry->ledger_account_type?->value ?? $entry->ledger_account_type) === LedgerAccountType::ACCOUNT->value)
+            ->pluck('ledger_account_id')
+            ->unique()
+            ->values();
+
+        $fundIds = $entries
+            ->filter(fn (LedgerEntry $entry) => ($entry->ledger_account_type?->value ?? $entry->ledger_account_type) === LedgerAccountType::FUND->value)
+            ->pluck('ledger_account_id')
+            ->unique()
+            ->values();
+
+        $accounts = $accountIds->isEmpty()
+            ? collect()
+            : Account::query()->whereIn('id', $accountIds)->get(['id', 'code', 'name'])->keyBy('id');
+
+        $funds = $fundIds->isEmpty()
+            ? collect()
+            : Fund::query()->whereIn('id', $fundIds)->get(['id', 'code', 'name'])->keyBy('id');
+
+        foreach ($entries as $entry) {
+            $type = $entry->ledger_account_type?->value ?? $entry->ledger_account_type;
+
+            if ($type === LedgerAccountType::ACCOUNT->value) {
+                $entry->setAttribute('ledger_account_label', $accounts->get($entry->ledger_account_id));
+            } elseif ($type === LedgerAccountType::FUND->value) {
+                $entry->setAttribute('ledger_account_label', $funds->get($entry->ledger_account_id));
+            }
+        }
     }
 
     /** @return array<string, mixed> */
