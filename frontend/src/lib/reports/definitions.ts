@@ -6,6 +6,7 @@ import {
   statusColumn,
   textColumn,
 } from "@/lib/reports/columns";
+import { apiGet } from "@/lib/api/client";
 import {
   fetchApprovalReport,
   fetchFundBalances,
@@ -195,12 +196,13 @@ const transactionColumns = [
   currencyColumn("amount", "Nominal"),
   statusColumn("status"),
   nestedColumn("account_name", "Akun", (row) => (row.account as { name?: string } | undefined)?.name ?? "-"),
+  nestedColumn("fund_name", "Dana Amanah", (row) => (row.fund as { name?: string } | undefined)?.name ?? "-"),
 ];
 
 export const byProgramReport: ReportDef = {
   id: "by-program",
   title: "Per Event / Program",
-  description: "Laporan pengeluaran per program. Filter penerimaan per program membutuhkan endpoint alokasi terpisah.",
+  description: "Ringkasan anggaran, alokasi pemasukan, dan pengeluaran aktual per event/program.",
   path: "/dashboard/reports/by-program",
   paginated: false,
   columns: transactionColumns,
@@ -224,21 +226,14 @@ export const byProgramReport: ReportDef = {
       return { rows: [] };
     }
 
-    const disbursements = await fetchReportRows("/disbursements", {
-      ...params,
-      per_page: 100,
-      page: 1,
-      sort: "disbursement_date",
-      direction: "desc",
-    });
+    const response = await apiGet<{
+      rows: Array<Record<string, unknown>>;
+      summary: Record<string, unknown>;
+    }>("/reports/by-program", params);
 
     return {
-      rows: disbursements.rows.map((row) => ({
-        ...row,
-        document_type: "Pengeluaran",
-        document_number: row.disbursement_number,
-        document_date: row.disbursement_date,
-      })),
+      rows: response.data.rows,
+      summary: response.data.summary,
     };
   },
 };

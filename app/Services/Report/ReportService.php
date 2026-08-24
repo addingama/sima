@@ -6,9 +6,12 @@ use App\Domains\Ledger\Services\BalanceService;
 use App\Domains\Ledger\Services\LedgerService;
 use App\Enums\LedgerAccountType;
 use App\Models\Account;
+use App\Models\ExpenseFundSource;
 use App\Models\Fund;
 use App\Models\LedgerEntry;
 use App\Models\OpeningBalanceLine;
+use App\Models\Program;
+use App\Models\ReceiptAllocation;
 use App\Support\Query\ListQueryApplier;
 use App\Support\Query\ListQueryDto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -223,6 +226,90 @@ class ReportService
             'inflow' => $credit,
             'outflow' => $debit,
             'net' => bcsub($credit, $debit, 2),
+        ];
+    }
+
+    /** @return array{rows: Collection<int, array<string, mixed>>, summary: array<string, mixed>} */
+    public function programReport(int $programId, ?string $from, ?string $to): array
+    {
+        $program = Program::query()->findOrFail($programId);
+
+        $allocations = ReceiptAllocation::query()
+            ->select('receipt_allocations.*')
+            ->join('receipts', 'receipts.id', '=', 'receipt_allocations.receipt_id')
+            ->with(['receipt.account:id,code,name', 'fund:id,code,name'])
+            ->where('receipt_allocations.program_id', $programId)
+            ->where('receipts.status', 'approved');
+
+        if ($from !== null) {
+            $allocations->whereDate('receipts.receipt_date', '>=', $from);
+        }
+        if ($to !== null) {
+            $allocations->whereDate('receipts.receipt_date', '<=', $to);
+        }
+
+        $expenses = ExpenseFundSource::query()
+            ->select('expense_fund_sources.*')
+            ->join('disbursements', 'disbursements.id', '=', 'expense_fund_sources.disbursement_id')
+            ->with(['disbursement.account:id,code,name', 'fund:id,code,name'])
+            ->where('disbursements.status', 'approved')
+            ->where(function ($query) use ($programId): void {
+                $query->where('expense_fund_sources.program_id', $programId)
+                    ->orWhere(function ($fallback) use ($programId): void {
+                        $fallback->whereNull('expense_fund_sources.program_id')
+                            ->where('disbursements.program_id', $programId);
+                    });
+            });
+
+        if ($from !== null) {
+            $expenses->whereDate('disbursements.disbursement_date', '>=', $from);
+        }
+        if ($to !== null) {
+            $expenses->whereDate('disbursements.disbursement_date', '<=', $to);
+        }
+
+        $allocationRows = $allocations->get()->map(fn (ReceiptAllocation $allocation): array => [
+            'document_type' => 'Penerimaan',
+            'document_number' => $allocation->receipt?->receipt_number,
+            'document_date' => $allocation->receipt?->receipt_date?->toDateString(),
+            'amount' => bcadd((string) $allocation->amount, '0', 2),
+            'status' => $allocation->receipt?->status?->value ?? $allocation->receipt?->status,
+            'account' => $allocation->receipt?->account,
+            'fund' => $allocation->fund,
+        ]);
+
+        $expenseRows = $expenses->get()->map(fn (ExpenseFundSource $source): array => [
+            'document_type' => 'Pengeluaran',
+            'document_number' => $source->disbursement?->disbursement_number,
+            'document_date' => $source->disbursement?->disbursement_date?->toDateString(),
+            'amount' => bcadd((string) $source->amount, '0', 2),
+            'status' => $source->disbursement?->status?->value ?? $source->disbursement?->status,
+            'account' => $source->disbursement?->account,
+            'fund' => $source->fund,
+        ]);
+
+        $totalAllocated = $allocationRows->reduce(
+            fn (string $carry, array $row): string => bcadd($carry, (string) $row['amount'], 2),
+            '0.00'
+        );
+        $totalSpent = $expenseRows->reduce(
+            fn (string $carry, array $row): string => bcadd($carry, (string) $row['amount'], 2),
+            '0.00'
+        );
+        $budget = $program->budget === null ? '0.00' : bcadd((string) $program->budget, '0', 2);
+
+        return [
+            'rows' => $allocationRows
+                ->concat($expenseRows)
+                ->sortByDesc('document_date')
+                ->values(),
+            'summary' => [
+                'anggaran_kegiatan' => $budget,
+                'total_dana_dialokasikan' => $totalAllocated,
+                'total_dana_dikeluarkan' => $totalSpent,
+                'sisa_dari_alokasi' => bcsub($totalAllocated, $totalSpent, 2),
+                'sisa_dari_anggaran' => bcsub($budget, $totalSpent, 2),
+            ],
         ];
     }
 }

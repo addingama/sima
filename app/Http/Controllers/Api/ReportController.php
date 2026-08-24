@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Report\FundStatementRequest;
 use App\Http\Requests\Report\ListLedgerRequest;
 use App\Http\Requests\Report\ListOpeningBalanceReportRequest;
+use App\Http\Requests\Report\ProgramReportRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\LedgerEntryResource;
 use App\Http\Resources\OpeningBalanceReportLineResource;
@@ -90,6 +91,27 @@ class ReportController extends Controller
             'inflow' => $result['inflow'],
             'outflow' => $result['outflow'],
             'net' => $result['net'],
+        ]);
+    }
+
+    #[OA\Get(
+        path: '/reports/by-program',
+        summary: 'Laporan per Event/Program',
+        tags: ['Report'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
+    public function byProgram(ProgramReportRequest $request): JsonResponse
+    {
+        $result = $this->service->programReport(
+            $request->integer('program_id'),
+            $request->filled('from') ? $request->date('from')->toDateString() : null,
+            $request->filled('to') ? $request->date('to')->toDateString() : null,
+        );
+
+        return $this->ok([
+            'rows' => $result['rows'],
+            'summary' => $result['summary'],
         ]);
     }
 
