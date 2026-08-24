@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Support\Facades\Storage;
 
 class Attachment extends Model
 {
@@ -33,8 +32,15 @@ class Attachment extends Model
         return $this->belongsTo(User::class, 'uploaded_by');
     }
 
+    /**
+     * URL unduh lewat API ber-auth (disk local/private tidak boleh di-expose publik).
+     */
     public function getUrlAttribute(): ?string
     {
-        return $this->path ? Storage::disk($this->disk)->url($this->path) : null;
+        if (! $this->id) {
+            return null;
+        }
+
+        return url('/api/attachments/'.$this->id.'/download');
     }
 }

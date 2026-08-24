@@ -62,14 +62,18 @@ class AttachmentController extends Controller
         $this->authorize('create', Attachment::class);
 
         $file = $request->file('file');
-        $path = $file->store('attachments/'.$request->attachableType(), 'local');
+        $directory = 'attachments/'.$request->attachableType();
+        $path = $file->store($directory, 'local');
+
+        abort_unless(is_string($path) && $path !== '', 500, 'Gagal menyimpan berkas ke penyimpanan lokal.');
+        abort_unless(Storage::disk('local')->exists($path), 500, 'Berkas tidak ditemukan setelah diunggah ke penyimpanan lokal.');
 
         $attachment = $model->attachments()->create([
             'disk' => 'local',
             'path' => $path,
             'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType(),
-            'size' => $file->getSize(),
+            'mime_type' => $file->getClientMimeType() ?: $file->getMimeType(),
+            'size' => $file->getSize() ?: 0,
             'title' => $request->validated('title'),
             'uploaded_by' => $request->user()->id,
         ]);

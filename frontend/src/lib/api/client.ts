@@ -73,6 +73,42 @@ export async function apiFetch<T>(
   return payload;
 }
 
+/** Unduh berkas biner (bukan JSON envelope) dengan Bearer token. */
+export async function apiDownload(path: string, filename: string, token?: string | null): Promise<void> {
+  const authToken = token ?? getClientToken();
+  const headers = new Headers({ Accept: "*/*" });
+
+  if (authToken) {
+    headers.set("Authorization", `Bearer ${authToken}`);
+  }
+
+  const response = await fetch(`${API_URL}${path}`, { method: "GET", headers });
+
+  if (!response.ok) {
+    let message = "Gagal mengunduh berkas.";
+
+    try {
+      const payload = (await response.json()) as ApiEnvelope<unknown>;
+      message = payload.message ?? message;
+    } catch {
+      // response non-JSON
+    }
+
+    throw new ApiError(message, response.status);
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
 export async function apiGet<T>(path: string, params?: ListParams, token?: string | null) {
   return apiFetch<T>(`${path}${buildQuery(params)}`, { method: "GET" }, token);
 }
