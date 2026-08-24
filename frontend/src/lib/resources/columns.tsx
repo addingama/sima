@@ -29,11 +29,11 @@ export function linkColumn(
   };
 }
 
-export function statusColumn(): ColumnDef<Record<string, unknown>> {
+export function statusColumn(accessor = "status", header = "Status"): ColumnDef<Record<string, unknown>> {
   return {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => <StatusBadge status={String(row.original.status ?? "")} />,
+    accessorKey: accessor,
+    header,
+    cell: ({ row }) => <StatusBadge status={String(row.original[accessor] ?? "")} />,
   };
 }
 

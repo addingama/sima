@@ -17,9 +17,10 @@ class ListProgramRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        return array_merge($this->listQueryRules(['name', 'code', 'start_date', 'created_at']), [
+        return array_merge($this->listQueryRules(['name', 'code', 'event_type', 'start_date', 'created_at']), [
             'fund_id' => ['nullable', 'integer', 'exists:funds,id'],
             'status' => ['nullable', 'string'],
+            'event_type' => ['nullable', 'in:planned,emergency,campaign,routine'],
         ]);
     }
 }

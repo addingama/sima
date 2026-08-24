@@ -2,6 +2,12 @@ import { activeColumn, currencyColumn, dateColumn, linkColumn, nestedNameColumn,
 import type { ResourceDef } from "../types";
 
 const basePath = "/dashboard/programs";
+const eventTypeOptions = [
+  { value: "planned", label: "Terencana" },
+  { value: "emergency", label: "Darurat / Responsif" },
+  { value: "campaign", label: "Campaign Penggalangan" },
+  { value: "routine", label: "Rutin" },
+];
 
 export const programResource: ResourceDef = {
   resource: "/programs",
@@ -18,6 +24,7 @@ export const programResource: ResourceDef = {
   listColumns: [
     linkColumn("code", "Kode", basePath),
     linkColumn("name", "Nama", basePath, (row) => String(row.name ?? "-")),
+    statusColumn("event_type", "Tipe"),
     nestedNameColumn("fund", "Dana Amanah"),
     statusColumn(),
     currencyColumn("budget", "Anggaran"),
@@ -37,6 +44,13 @@ export const programResource: ResourceDef = {
       ],
     },
     {
+      name: "event_type",
+      label: "Tipe Event",
+      type: "select",
+      allLabel: "Semua tipe",
+      options: eventTypeOptions,
+    },
+    {
       name: "is_active",
       label: "Aktif",
       type: "select",
@@ -50,13 +64,29 @@ export const programResource: ResourceDef = {
   defaultSort: { field: "name", direction: "asc" },
   formFields: [
     {
+      name: "code",
+      label: "Kode",
+      type: "text",
+      autoGenerate: true,
+      placeholder: "Otomatis saat disimpan",
+      helperText: "Kode dibuat otomatis oleh sistem, contoh EVT/2026/000001.",
+    },
+    { name: "name", label: "Nama", type: "text", required: true },
+    {
+      name: "event_type",
+      label: "Tipe Event",
+      type: "select",
+      required: true,
+      options: eventTypeOptions,
+      helperText: "Pilih emergency untuk event responsif seperti donasi bencana alam tanpa anggaran awal.",
+    },
+    {
       name: "fund_id",
-      label: "Dana Amanah",
+      label: "Dana Amanah Utama",
       type: "relation",
       relation: { resource: "/funds", labelKey: "name", params: { is_active: 1, per_page: 100 } },
+      helperText: "Opsional. Event tetap bisa menerima atau menggunakan beberapa Dana Amanah pada transaksi.",
     },
-    { name: "code", label: "Kode", type: "text", required: true },
-    { name: "name", label: "Nama", type: "text", required: true },
     { name: "description", label: "Deskripsi", type: "textarea" },
     { name: "budget", label: "Anggaran", type: "currency" },
     { name: "start_date", label: "Tanggal Mulai", type: "date" },
@@ -76,6 +106,7 @@ export const programResource: ResourceDef = {
   detailFields: [
     { label: "Kode", accessor: "code" },
     { label: "Nama", accessor: "name" },
+    { label: "Tipe Event", accessor: "event_type", type: "status" },
     { label: "Dana Amanah", accessor: (row) => (row.fund as { name?: string } | undefined)?.name ?? "-" },
     { label: "Deskripsi", accessor: "description" },
     { label: "Anggaran", accessor: "budget", type: "currency" },
@@ -89,10 +120,11 @@ export const programResource: ResourceDef = {
     auditableType: "App\\Models\\Program",
     permission: "audit.view",
   },
-  getCreateDefaults: () => ({ status: "planned", is_active: true }),
+  getCreateDefaults: () => ({ event_type: "planned", status: "planned", is_active: true }),
   mapToForm: (row) => ({
     ...row,
     fund_id: row.fund_id ? String(row.fund_id) : "",
+    event_type: row.event_type ?? "planned",
     budget: row.budget ?? "",
   }),
   mapToPayload: (values) => ({

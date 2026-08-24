@@ -4,21 +4,37 @@ namespace App\Services\Master;
 
 use App\Models\Program;
 use App\Models\User;
+use App\Services\DocumentNumberService;
 use App\Support\Query\ListQueryApplier;
 use App\Support\Query\ListQueryDto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ProgramService
 {
+    public function __construct(private readonly DocumentNumberService $documentNumbers) {}
+
     /** @param  array<string, mixed>  $data */
     public function create(array $data, User $actor): Program
     {
-        return Program::create([...$data, 'created_by' => $actor->id]);
+        $code = trim((string) ($data['code'] ?? ''));
+        if ($code === '') {
+            $code = $this->documentNumbers->next('EVT');
+        }
+
+        unset($data['code']);
+
+        return Program::create([
+            ...$data,
+            'code' => $code,
+            'created_by' => $actor->id,
+        ]);
     }
 
     /** @param  array<string, mixed>  $data */
     public function update(Program $program, array $data): Program
     {
+        unset($data['code']);
+
         $program->update($data);
 
         return $program->refresh();
@@ -40,7 +56,7 @@ class ProgramService
             Program::query()->with('fund:id,code,name'),
             $query,
             searchColumns: ['name', 'code'],
-            sortable: ['name', 'code', 'start_date', 'created_at'],
+            sortable: ['name', 'code', 'event_type', 'start_date', 'created_at'],
             defaultSort: 'id',
             defaultDirection: 'desc',
         );

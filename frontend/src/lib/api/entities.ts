@@ -78,6 +78,7 @@ export interface Program {
   fund_id: number | null;
   code: string;
   name: string;
+  event_type: "planned" | "emergency" | "campaign" | "routine";
   description: string | null;
   budget: string | null;
   start_date: string | null;

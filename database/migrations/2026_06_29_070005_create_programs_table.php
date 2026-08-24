@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('fund_id')->nullable()->constrained('funds')->nullOnDelete();
             $table->string('code')->unique();
             $table->string('name');
+            $table->enum('event_type', ['planned', 'emergency', 'campaign', 'routine'])->default('planned');
             $table->text('description')->nullable();
             $table->decimal('budget', 18, 2)->nullable();
             $table->date('start_date')->nullable();

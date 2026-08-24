@@ -18,6 +18,7 @@ class Program extends Model implements Auditable
         'fund_id',
         'code',
         'name',
+        'event_type',
         'description',
         'budget',
         'start_date',

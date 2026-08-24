@@ -265,10 +265,13 @@ flowchart TD
 1. **Tambah Event/Program** untuk kegiatan yang perlu dilacak anggarannya.
 2. Isi:
    - **Dana Amanah** — opsional; kaitkan ke dana utama program
-   - **Kode**, **Nama**, **Deskripsi**
-   - **Anggaran**, **Tanggal mulai/selesai**
+   - **Kode** — otomatis (`EVT/2026/000001`, …)
+   - **Nama**, **Tipe Event**, **Deskripsi**
+   - **Anggaran** — boleh kosong untuk event darurat/responsif seperti donasi bencana alam
+   - **Tanggal mulai/selesai**
    - **Status** — `planned` / `active` / `closed`
-3. Program **tidak wajib** untuk setiap penerimaan/pengeluaran, tapi disarankan untuk laporan **Per Event**.
+3. **Tipe Event** memakai pilihan tetap: `planned`, `emergency`, `campaign`, `routine`. Belum perlu master data terpisah karena tipe ini adalah klasifikasi sistem yang jarang berubah.
+4. Program **tidak wajib** untuk setiap penerimaan/pengeluaran, tapi disarankan untuk laporan **Per Event**.
 
 ---
 

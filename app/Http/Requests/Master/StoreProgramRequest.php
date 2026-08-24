@@ -18,8 +18,9 @@ class StoreProgramRequest extends FormRequest
     {
         return [
             'fund_id' => ['nullable', 'exists:funds,id'],
-            'code' => ['required', 'string', 'max:50', new UniqueActiveCode('programs')],
+            'code' => ['nullable', 'string', 'max:50', new UniqueActiveCode('programs')],
             'name' => ['required', 'string', 'max:255'],
+            'event_type' => ['nullable', 'in:planned,emergency,campaign,routine'],
             'description' => ['nullable', 'string'],
             'budget' => ['nullable', 'numeric', 'min:0'],
             'start_date' => ['nullable', 'date'],
