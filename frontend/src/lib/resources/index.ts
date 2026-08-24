@@ -3,6 +3,7 @@ export { accountTransferResource } from "./definitions/account-transfer";
 export { bankFeeResource } from "./definitions/bank-fee";
 export { disbursementResource } from "./definitions/disbursement";
 export { donorResource } from "./definitions/donor";
+export { fundTransferResource } from "./definitions/fund-transfer";
 export { fundResource } from "./definitions/fund";
 export { programResource } from "./definitions/program";
 export { receiptResource } from "./definitions/receipt";

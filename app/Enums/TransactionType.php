@@ -13,5 +13,6 @@ enum TransactionType: string
     case ADJUSTMENT = 'adjustment';
     case OPERATIONAL_LIABILITY = 'operational_liability';
     case TRANSFER = 'transfer';
+    case FUND_TRANSFER = 'fund_transfer';
     case RECONCILIATION = 'reconciliation';
 }

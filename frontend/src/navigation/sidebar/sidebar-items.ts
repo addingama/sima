@@ -176,6 +176,13 @@ export const sidebarItems: NavGroup[] = [
             icon: ArrowLeftRight,
             permission: "transfer.view",
           },
+          {
+            id: "fund-transfers",
+            title: "Transfer Dana",
+            url: "/dashboard/fund-transfers",
+            icon: Scale,
+            permission: "transfer.view",
+          },
         ],
       },
     ],

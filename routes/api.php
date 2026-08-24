@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DisbursementController;
 use App\Http\Controllers\Api\DonorController;
 use App\Http\Controllers\Api\FundController;
+use App\Http\Controllers\Api\FundTransferController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\OpeningBalanceController;
 use App\Http\Controllers\Api\OperationalLiabilityController;
@@ -145,6 +146,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('account-transfers', [AccountTransferController::class, 'store'])->middleware('permission:transfer.manage');
     Route::post('account-transfers/{accountTransfer}/post', [AccountTransferController::class, 'post'])->middleware('permission:transfer.post');
     Route::post('account-transfers/{accountTransfer}/reverse', [AccountTransferController::class, 'reverse'])->middleware('permission:transfer.reverse');
+
+    Route::get('fund-transfers', [FundTransferController::class, 'index'])->middleware('permission:transfer.view');
+    Route::get('fund-transfers/{fundTransfer}', [FundTransferController::class, 'show'])->middleware('permission:transfer.view');
+    Route::post('fund-transfers', [FundTransferController::class, 'store'])->middleware('permission:transfer.manage');
+    Route::post('fund-transfers/{fundTransfer}/post', [FundTransferController::class, 'post'])->middleware('permission:transfer.post');
+    Route::post('fund-transfers/{fundTransfer}/reverse', [FundTransferController::class, 'reverse'])->middleware('permission:transfer.reverse');
 
     /*
     |----------------------------------------------------------------------

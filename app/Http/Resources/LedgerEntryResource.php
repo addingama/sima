@@ -55,6 +55,7 @@ class LedgerEntryResource extends JsonResource
             TransactionType::ADJUSTMENT => 'Penyesuaian',
             TransactionType::OPERATIONAL_LIABILITY => 'Liabilitas Operasional',
             TransactionType::TRANSFER => 'Transfer',
+            TransactionType::FUND_TRANSFER => 'Transfer Dana Amanah',
             TransactionType::RECONCILIATION => 'Rekonsiliasi',
             default => (string) ($this->transaction_type?->value ?? $this->transaction_type),
         };

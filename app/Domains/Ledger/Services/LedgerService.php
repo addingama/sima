@@ -17,6 +17,7 @@ use App\Models\AccountTransfer;
 use App\Models\BankFee;
 use App\Models\Disbursement;
 use App\Models\Fund;
+use App\Models\FundTransfer;
 use App\Models\LedgerEntry;
 use App\Models\Receipt;
 use Illuminate\Database\Eloquent\Model;
@@ -312,6 +313,7 @@ class LedgerService
             Disbursement::class => TransactionType::EXPENSE,
             BankFee::class => TransactionType::BANK_FEE,
             AccountTransfer::class => TransactionType::TRANSFER,
+            FundTransfer::class => TransactionType::FUND_TRANSFER,
             default => TransactionType::ADJUSTMENT,
         };
 
