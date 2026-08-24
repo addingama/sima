@@ -11,11 +11,13 @@ import { TableSkeleton } from "@/components/sima/skeletons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { apiDelete, apiFetch, apiGet } from "@/lib/api/client";
+import { ApiError, apiDelete, apiDownload, apiFetch, apiGet } from "@/lib/api/client";
 import type { AttachmentRecord } from "@/lib/api/entities";
 import { hasPermission } from "@/lib/auth/permissions";
 import { formatDateTime } from "@/lib/format/datetime";
 import { useAuth } from "@/providers/auth-provider";
+
+const ACCEPTED_TYPES = ".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx";
 
 export function AttachmentPanel({
   attachableType,
@@ -61,6 +63,9 @@ export function AttachmentPanel({
       setTitle("");
       toast.success("Lampiran berhasil diunggah.");
     },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : "Gagal mengunggah lampiran.");
+    },
   });
 
   const deleteMutation = useMutation({
@@ -70,6 +75,18 @@ export function AttachmentPanel({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/attachments", attachableType, attachableId] });
       toast.success("Lampiran dihapus.");
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : "Gagal menghapus lampiran.");
+    },
+  });
+
+  const downloadMutation = useMutation({
+    mutationFn: async (attachment: AttachmentRecord) => {
+      await apiDownload(`/attachments/${attachment.id}/download`, attachment.original_name);
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : "Gagal mengunduh lampiran.");
     },
   });
 
@@ -88,6 +105,7 @@ export function AttachmentPanel({
             <input
               ref={fileInputRef}
               type="file"
+              accept={ACCEPTED_TYPES}
               className="hidden"
               onChange={(event) => {
                 const file = event.target.files?.[0];
@@ -134,11 +152,15 @@ export function AttachmentPanel({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button asChild size="sm" variant="outline">
-                    <a href={attachment.url} target="_blank" rel="noreferrer">
-                      <Download className="size-4" />
-                      Unduh
-                    </a>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={downloadMutation.isPending}
+                    onClick={() => downloadMutation.mutate(attachment)}
+                  >
+                    <Download className="size-4" />
+                    Unduh
                   </Button>
                   {canManage ? (
                     <Button
