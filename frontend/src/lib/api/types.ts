@@ -108,9 +108,16 @@ export interface ReconciliationSummary {
 export interface LedgerEntryRow {
   id: number;
   transaction_type: string;
+  transaction_type_label?: string;
   transaction_id: number;
   ledger_account_type: string;
+  ledger_account_type_label?: string;
   ledger_account_id: number;
+  ledger_account_code?: string | null;
+  ledger_account_name?: string | null;
+  ledger_account_label?: string | null;
+  side?: "debit" | "credit";
+  side_label?: string;
   debit: string;
   credit: string;
   reference: string | null;

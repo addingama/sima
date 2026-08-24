@@ -6,6 +6,7 @@ import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 
 import { CurrencyDisplay } from "@/components/sima/currency-display";
 import { ErrorState } from "@/components/sima/error-state";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRecentLedgerQuery } from "@/hooks/use-resource-query";
@@ -22,10 +23,6 @@ function formatActivityTime(value: string): string {
   });
 }
 
-function formatTransactionType(value: string): string {
-  return value.replaceAll("_", " ");
-}
-
 export function RecentActivity() {
   const { data, isLoading, isError, refetch } = useRecentLedgerQuery(8);
 
@@ -33,7 +30,7 @@ export function RecentActivity() {
     <Card>
       <CardHeader>
         <CardTitle>Aktivitas</CardTitle>
-        <CardDescription>Entri buku besar terbaru</CardDescription>
+        <CardDescription>Entri buku besar terbaru — tiap baris = satu sisi jurnal (kas/bank atau dana)</CardDescription>
       </CardHeader>
       <CardContent>
         {isError ? (
@@ -41,7 +38,7 @@ export function RecentActivity() {
         ) : isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 6 }).map((_, index) => (
-              <Skeleton key={index} className="h-14 w-full" />
+              <Skeleton key={index} className="h-16 w-full" />
             ))}
           </div>
         ) : !data?.length ? (
@@ -51,14 +48,18 @@ export function RecentActivity() {
             {data.map((entry) => {
               const debit = parseAmount(entry.debit);
               const credit = parseAmount(entry.credit);
-              const isInflow = credit > debit;
-              // Kirim string API asli ke CurrencyDisplay (hindari double-parse).
-              const amount = isInflow ? entry.credit : entry.debit;
+              const isDebit = debit > credit;
+              const isInflow = !isDebit;
+              const amount = isDebit ? entry.debit : entry.credit;
+              const typeLabel = entry.transaction_type_label ?? entry.transaction_type.replaceAll("_", " ");
+              const sideLabel = entry.side_label ?? (isDebit ? "Debit" : "Kredit");
+              const accountLabel =
+                entry.ledger_account_label ?? (entry.ledger_account_type === "account" ? "Kas/Bank" : "Dana Amanah");
 
               return (
                 <li key={entry.id} className="flex items-start justify-between gap-3 rounded-lg border px-3 py-2.5">
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-2">
+                  <div className="min-w-0 space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span
                         className={cn(
                           "flex size-6 shrink-0 items-center justify-center rounded-md",
@@ -69,10 +70,12 @@ export function RecentActivity() {
                       >
                         {isInflow ? <ArrowDownLeft className="size-3.5" /> : <ArrowUpRight className="size-3.5" />}
                       </span>
-                      <span className="truncate font-medium text-sm capitalize">
-                        {formatTransactionType(entry.transaction_type)}
-                      </span>
+                      <span className="truncate font-medium text-sm">{typeLabel}</span>
+                      <Badge variant="outline" className="h-5 px-1.5 font-normal text-[10px]">
+                        {sideLabel}
+                      </Badge>
                     </div>
+                    <p className="truncate text-foreground text-xs">{accountLabel}</p>
                     <p className="truncate text-muted-foreground text-xs">
                       {entry.reference ?? `Transaksi #${entry.transaction_id}`}
                     </p>
