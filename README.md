@@ -163,9 +163,10 @@ Semua model master & transaksi meng-implement `OwenIt\Auditing\Contracts\Auditab
 | Role | Ringkasan akses |
 |---|---|
 | **Admin** | Seluruh permission (super admin). |
-| **Bendahara** | Kelola master (donatur/program), buat & post penerimaan, alokasi, buat & submit pengeluaran, biaya bank, rekonsiliasi. |
+| **Asisten Bendahara** | Input master harian, buat & submit penerimaan/pengeluaran, lampiran, dan pencatatan operasional. Tidak approve. |
+| **Bendahara** | Ketua bendahara/approver keuangan: kelola master, review, approve/reject/reverse penerimaan dan pengeluaran. |
 | **Verifikator** | Verifikasi/tolak pengeluaran, lihat data. |
-| **Ketua** | Setujui (approve)/tolak pengeluaran, lihat data & laporan. |
+| **Ketua** | Bisa approve/reject/reverse penerimaan dan pengeluaran sebagai approver pimpinan/eskalasi, lihat data & laporan. |
 | **Auditor** | Read-only seluruh data + audit trail + laporan. |
 | **Donatur** | Portal donatur (hanya data miliknya). |
 
@@ -221,6 +222,7 @@ php artisan serve
 | Email | Role |
 |---|---|
 | admin@sima.test | Admin |
+| asisten.bendahara@sima.test | Asisten Bendahara |
 | bendahara@sima.test | Bendahara |
 | verifikator@sima.test | Verifikator |
 | ketua@sima.test | Ketua |

@@ -14,6 +14,7 @@ class UserSeeder extends Seeder
         // Satu akun contoh per role (password: "password").
         $accounts = [
             ['Administrator SIMA', 'admin@sima.test', UserRole::ADMIN],
+            ['Asisten Bendahara', 'asisten.bendahara@sima.test', UserRole::ASISTEN_BENDAHARA],
             ['Bendahara', 'bendahara@sima.test', UserRole::BENDAHARA],
             ['Verifikator', 'verifikator@sima.test', UserRole::VERIFIKATOR],
             ['Ketua', 'ketua@sima.test', UserRole::KETUA],

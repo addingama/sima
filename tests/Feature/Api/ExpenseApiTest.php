@@ -34,7 +34,7 @@ class ExpenseApiTest extends TestCase
     #[Test]
     public function it_creates_and_approves_disbursement_via_api(): void
     {
-        $this->actingAsRole('bendahara');
+        $this->actingAsRole('asisten_bendahara');
         $create = $this->postJson('/api/disbursements', [
             'disbursement_date' => now()->toDateString(),
             'account_id' => $this->account->id,
@@ -48,7 +48,7 @@ class ExpenseApiTest extends TestCase
         $this->actingAsRole('verifikator');
         $this->postJson("/api/disbursements/{$id}/verify")->assertOk();
 
-        $this->actingAsRole('ketua');
+        $this->actingAsRole('bendahara');
         $this->postJson("/api/disbursements/{$id}/approve")
             ->assertOk()
             ->assertJsonPath('data.status', 'approved');

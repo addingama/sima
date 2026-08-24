@@ -72,9 +72,10 @@ Dana **sistem** (Suspense, Operasional, Biaya Bank, Opening Equity) sudah dibuat
 | Role SIMA | Siapa di organisasi | Peran saat setup |
 |-----------|---------------------|------------------|
 | **admin** | IT / super user | Instalasi, master Dana Amanah & Kas/Bank, saldo awal teknis |
-| **bendahara** | Bendahara | Master Dana/Kas (non-sistem), donatur, program, transaksi harian |
+| **asisten_bendahara** | Asisten bendahara / staff input | Input master harian, penerimaan, pengeluaran, lampiran, dan submit transaksi |
+| **bendahara** | Ketua bendahara / approver keuangan | Master Dana/Kas (non-sistem), review, approve/reject/reverse transaksi keuangan |
 | **verifikator** | Staff verifikasi | Review pengeluaran |
-| **ketua** | Ketua/pimpinan | Approval penerimaan & pengeluaran |
+| **ketua** | Ketua/pimpinan | Approve/reject/reverse transaksi sebagai approver pimpinan/eskalasi |
 | **auditor** | Auditor internal | Cek laporan & audit trail |
 
 Detail permission: [README.md — Role & Permission](../README.md#role--permission).
@@ -143,10 +144,11 @@ Pastikan database & cache terhubung.
 | # | Email (contoh) | Role | Wajib? |
 |---|----------------|------|--------|
 | 1 | admin@lembaga.org | admin | Ya |
-| 2 | bendahara@lembaga.org | bendahara | Ya |
-| 3 | verifikator@lembaga.org | verifikator | Ya (jika ada workflow pengeluaran) |
-| 4 | ketua@lembaga.org | ketua | Ya (approval) |
-| 5 | auditor@lembaga.org | auditor | Disarankan |
+| 2 | asisten.bendahara@lembaga.org | asisten_bendahara | Ya (input transaksi) |
+| 3 | bendahara@lembaga.org | bendahara | Ya (approval keuangan) |
+| 4 | verifikator@lembaga.org | verifikator | Ya (jika ada workflow pengeluaran) |
+| 5 | ketua@lembaga.org | ketua | Opsional/eskalasi |
+| 6 | auditor@lembaga.org | auditor | Disarankan |
 
 ### 2.3 Nonaktifkan akun demo
 

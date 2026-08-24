@@ -56,9 +56,9 @@ class ProgramService
             Program::query()->with('fund:id,code,name'),
             $query,
             searchColumns: ['name', 'code'],
-            sortable: ['name', 'code', 'event_type', 'start_date', 'created_at'],
-            defaultSort: 'id',
-            defaultDirection: 'desc',
+            sortable: ['id', 'name', 'code', 'event_type', 'start_date', 'created_at'],
+            defaultSort: 'name',
+            defaultDirection: 'asc',
         );
 
         return $builder->paginate($query->perPage, ['*'], 'page', $query->page);

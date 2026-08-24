@@ -21,6 +21,7 @@ class ListProgramRequest extends FormRequest
             'fund_id' => ['nullable', 'integer', 'exists:funds,id'],
             'status' => ['nullable', 'string'],
             'event_type' => ['nullable', 'in:planned,emergency,campaign,routine'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
     }
 }

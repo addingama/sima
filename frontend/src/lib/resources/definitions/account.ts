@@ -47,8 +47,23 @@ export const accountResource: ResourceDef = {
   ],
   defaultSort: { field: "name", direction: "asc" },
   formFields: [
-    { name: "code", label: "Kode", type: "text", required: true },
-    { name: "name", label: "Nama", type: "text", required: true },
+    {
+      name: "code",
+      label: "Kode",
+      type: "text",
+      required: true,
+      placeholder: "Contoh: BANK-BSI-001 atau KAS-UTAMA",
+      helperText:
+        "Kode internal yang singkat dan unik. Gunakan pola konsisten, misalnya BANK-BSI-001 untuk rekening bank atau KAS-UTAMA untuk kas tunai.",
+    },
+    {
+      name: "name",
+      label: "Nama",
+      type: "text",
+      required: true,
+      placeholder: "Contoh: Bank BSI Operasional atau Kas Kantor",
+      helperText: "Nama yang mudah dikenali bendahara saat memilih rekening pada transaksi.",
+    },
     {
       name: "type",
       label: "Tipe",
@@ -58,25 +73,31 @@ export const accountResource: ResourceDef = {
         { value: "cash", label: "Kas" },
         { value: "bank", label: "Bank" },
       ],
+      helperText: "Pilih Bank untuk rekening bank. Pilih Kas untuk uang tunai fisik.",
     },
     {
       name: "bank_name",
       label: "Nama Bank",
       type: "text",
       visibleWhen: (values) => values.type === "bank",
-      helperText: "Wajib diisi untuk rekening bank.",
+      placeholder: "Contoh: Bank Syariah Indonesia",
+      helperText: "Wajib diisi untuk rekening bank. Isi nama bank sesuai buku rekening.",
     },
     {
       name: "account_number",
       label: "No. Rekening",
       type: "text",
       visibleWhen: (values) => values.type === "bank",
+      placeholder: "Contoh: 7123456789",
+      helperText: "Isi nomor rekening tanpa spasi jika memungkinkan agar mudah dicari dan dicocokkan.",
     },
     {
       name: "account_holder",
       label: "Pemilik Rekening",
       type: "text",
       visibleWhen: (values) => values.type === "bank",
+      placeholder: "Contoh: Yayasan Amanah Sejahtera",
+      helperText: "Isi nama pemilik rekening persis seperti yang tertera di bank.",
     },
     {
       name: "balance",
@@ -86,7 +107,12 @@ export const accountResource: ResourceDef = {
       showOnEditOnly: true,
       helperText: "Saldo dihitung dari buku besar — tidak dapat diedit di sini.",
     },
-    { name: "is_active", label: "Aktif", type: "checkbox" },
+    {
+      name: "is_active",
+      label: "Aktif",
+      type: "checkbox",
+      helperText: "Nonaktifkan jika kas/rekening tidak dipakai lagi agar tidak muncul sebagai pilihan transaksi baru.",
+    },
   ],
   detailFields: [
     { label: "Kode", accessor: "code" },

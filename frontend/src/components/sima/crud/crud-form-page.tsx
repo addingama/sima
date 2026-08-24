@@ -122,7 +122,12 @@ export function CrudFormPage({ config, id }: { config: ResourceDef; id?: string 
         </Card>
 
         {config.lineItems ? (
-          <LineItemsField control={form.control} name={config.lineItems.key} label={config.lineItems.label} />
+          <LineItemsField
+            control={form.control}
+            name={config.lineItems.key}
+            label={config.lineItems.label}
+            amountField={config.lineItems.amountField}
+          />
         ) : null}
 
         <div className="flex flex-wrap gap-2">

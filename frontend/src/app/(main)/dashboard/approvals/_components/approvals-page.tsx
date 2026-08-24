@@ -34,7 +34,7 @@ export default function ApprovalsPage() {
         {
           value: "receipts",
           label: "Penerimaan",
-          description: "Penerimaan submitted menunggu persetujuan ketua.",
+          description: "Penerimaan submitted menunggu persetujuan bendahara atau ketua.",
           emptyMessage: "Tidak ada penerimaan menunggu persetujuan.",
           config: receiptResource,
           status: "submitted",
@@ -52,7 +52,7 @@ export default function ApprovalsPage() {
         {
           value: "disbursements-verified",
           label: "Pengeluaran (Persetujuan)",
-          description: "Pengeluaran verified menunggu persetujuan ketua.",
+          description: "Pengeluaran verified menunggu persetujuan bendahara atau ketua.",
           emptyMessage: "Tidak ada pengeluaran menunggu persetujuan.",
           config: disbursementResource,
           status: "verified",
@@ -68,7 +68,7 @@ export default function ApprovalsPage() {
     return (
       <ErrorState
         title="Akses ditolak"
-        description="Halaman Approval hanya untuk verifikator atau ketua yang memiliki wewenang aksi."
+        description="Halaman Approval hanya untuk verifikator, bendahara, atau ketua yang memiliki wewenang aksi."
       />
     );
   }

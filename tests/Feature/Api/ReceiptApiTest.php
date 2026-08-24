@@ -79,4 +79,28 @@ class ReceiptApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.status', 'rejected');
     }
+
+    #[Test]
+    public function asisten_bendahara_can_create_but_cannot_approve_receipt(): void
+    {
+        $this->actingAsRole('asisten_bendahara');
+
+        $create = $this->postJson('/api/receipts', [
+            'receipt_date' => now()->toDateString(),
+            'account_id' => $this->account->id,
+            'channel' => 'transfer',
+            'amount' => '100000.00',
+            'allocations' => [['fund_id' => $this->fund->id, 'amount' => '100000.00']],
+        ])->assertCreated();
+
+        $id = $create->json('data.id');
+
+        $this->postJson("/api/receipts/{$id}/submit")->assertOk();
+        $this->postJson("/api/receipts/{$id}/approve")->assertForbidden();
+
+        $this->actingAsRole('bendahara');
+        $this->postJson("/api/receipts/{$id}/approve")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'approved');
+    }
 }

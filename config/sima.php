@@ -61,14 +61,31 @@ return [
     'roles' => [
         UserRole::ADMIN->value => ['*'],
 
+        UserRole::ASISTEN_BENDAHARA->value => [
+            'donor.view', 'donor.manage',
+            'vendor.view', 'vendor.manage',
+            'fund.view',
+            'account.view',
+            'program.view',
+            'receipt.view', 'receipt.create', 'receipt.submit',
+            'disbursement.view', 'disbursement.create', 'disbursement.submit',
+            'bankfee.view', 'bankfee.manage',
+            'transfer.view', 'transfer.manage',
+            'reconciliation.view',
+            'liability.view', 'liability.manage',
+            'attachment.view', 'attachment.manage',
+            'report.view',
+        ],
+
         UserRole::BENDAHARA->value => [
             'donor.view', 'donor.manage',
             'vendor.view', 'vendor.manage',
             'fund.view', 'fund.manage',
             'account.view', 'account.manage',
             'program.view', 'program.manage',
-            'receipt.view', 'receipt.create', 'receipt.submit',
+            'receipt.view', 'receipt.create', 'receipt.submit', 'receipt.approve', 'receipt.reject', 'receipt.reverse',
             'disbursement.view', 'disbursement.create', 'disbursement.submit',
+            'disbursement.verify', 'disbursement.approve', 'disbursement.reject', 'disbursement.reverse',
             'bankfee.view', 'bankfee.manage', 'bankfee.post', 'bankfee.reverse',
             'transfer.view', 'transfer.manage', 'transfer.post', 'transfer.reverse',
             'reconciliation.view', 'reconciliation.manage',

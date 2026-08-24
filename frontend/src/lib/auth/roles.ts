@@ -1,5 +1,6 @@
 export const SIMA_ROLE_OPTIONS = [
   { value: "admin", label: "Administrator" },
+  { value: "asisten_bendahara", label: "Asisten Bendahara" },
   { value: "bendahara", label: "Bendahara" },
   { value: "verifikator", label: "Verifikator" },
   { value: "ketua", label: "Ketua" },

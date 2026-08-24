@@ -87,4 +87,30 @@ class ProgramApiTest extends TestCase
             ->assertJsonPath('data.name', 'Event Baru')
             ->assertJsonPath('data.event_type', 'routine');
     }
+
+    public function test_list_can_filter_active_events_for_dropdowns(): void
+    {
+        $user = $this->actingAsRole('bendahara');
+
+        Program::create([
+            'code' => 'EVT-ACTIVE',
+            'name' => 'Event Aktif',
+            'event_type' => 'planned',
+            'is_active' => true,
+            'created_by' => $user->id,
+        ]);
+        Program::create([
+            'code' => 'EVT-INACTIVE',
+            'name' => 'Event Nonaktif',
+            'event_type' => 'planned',
+            'is_active' => false,
+            'created_by' => $user->id,
+        ]);
+
+        $response = $this->getJson('/api/programs?is_active=1&per_page=100');
+
+        $response->assertOk()
+            ->assertJsonFragment(['code' => 'EVT-ACTIVE'])
+            ->assertJsonMissing(['code' => 'EVT-INACTIVE']);
+    }
 }
