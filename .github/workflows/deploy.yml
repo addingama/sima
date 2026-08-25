@@ -22,14 +22,14 @@ on:
         type: string
 
 concurrency:
-  group: deploy-${{ inputs.environment || 'ahp-staging' }}
+  group: deploy-${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'ahp-staging' }}
   cancel-in-progress: false
 
 jobs:
   deploy:
     name: Build & deploy on VPS
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment || 'ahp-production' }}
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'ahp-staging' }}
     env:
       DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
       DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
@@ -38,8 +38,21 @@ jobs:
       DEPLOY_REPO: ${{ secrets.DEPLOY_REPO || format('{0}/{1}.git', github.server_url, github.repository) }}
 
     steps:
+      - name: Validate deploy secrets
+        run: |
+          missing=""
+
+          [ -n "$DEPLOY_HOST" ] || missing="$missing DEPLOY_HOST"
+          [ -n "$DEPLOY_USER" ] || missing="$missing DEPLOY_USER"
+          [ -n "$DEPLOY_SSH_KEY" ] || missing="$missing DEPLOY_SSH_KEY"
+          [ -n "$DEPLOY_PATH" ] || missing="$missing DEPLOY_PATH"
+
+          if [ -n "$missing" ]; then
+            echo "::error::Missing GitHub Environment secrets for '${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'ahp-staging' }}':$missing"
+            exit 1
+          fi
+
       - name: Deploy via SSH
-        if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_USER != '' && env.DEPLOY_SSH_KEY != '' && env.DEPLOY_PATH != '' }}
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ env.DEPLOY_HOST }}
@@ -60,8 +73,3 @@ jobs:
             git fetch --prune origin "$DEPLOY_BRANCH"
             git reset --hard "origin/$DEPLOY_BRANCH"
             sh scripts/deploy-vps.sh
-
-      - name: Deploy skipped (secrets not configured)
-        if: ${{ env.DEPLOY_HOST == '' || env.DEPLOY_USER == '' || env.DEPLOY_SSH_KEY == '' || env.DEPLOY_PATH == '' }}
-        run: |
-          echo "::warning::Configure DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, and DEPLOY_PATH secrets to enable SSH deploy."

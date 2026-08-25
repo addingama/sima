@@ -126,7 +126,7 @@ gunzip -c storage/backups/sima_YYYYMMDD_HHMMSS.sql.gz | \
 
 ## Auto deploy ke VPS via SSH
 
-Workflow `.github/workflows/deploy.yml` melakukan SSH ke VPS, mengambil kode terbaru dari git, lalu build image Docker langsung di server dengan `docker compose build --pull`. Workflow ini otomatis berjalan saat push ke branch `main` memakai environment GitHub `ahp-production`, dan bisa dijalankan manual dari **Actions → Deploy → Run workflow** untuk memilih `ahp-production` atau `ahp-staging`.
+Workflow `.github/workflows/deploy.yml` melakukan SSH ke VPS, mengambil kode terbaru dari git, lalu build image Docker langsung di server dengan `docker compose build --pull`. Untuk sementara, workflow otomatis saat push ke branch `main` memakai environment GitHub `ahp-staging` karena server production belum tersedia. Deploy manual dari **Actions → Deploy → Run workflow** tetap bisa memilih `ahp-staging` atau `ahp-production`.
 
 ### Secrets GitHub
 

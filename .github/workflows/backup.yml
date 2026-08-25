@@ -14,9 +14,9 @@ on:
 
 jobs:
   backup-remote:
-    name: Database backup (production server)
+    name: Database backup (default server)
     runs-on: ubuntu-latest
-    environment: ahp-production
+    environment: ahp-staging
     env:
       DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
       DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
@@ -24,8 +24,21 @@ jobs:
       DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
 
     steps:
+      - name: Validate backup secrets
+        run: |
+          missing=""
+
+          [ -n "$DEPLOY_HOST" ] || missing="$missing DEPLOY_HOST"
+          [ -n "$DEPLOY_USER" ] || missing="$missing DEPLOY_USER"
+          [ -n "$DEPLOY_SSH_KEY" ] || missing="$missing DEPLOY_SSH_KEY"
+          [ -n "$DEPLOY_PATH" ] || missing="$missing DEPLOY_PATH"
+
+          if [ -n "$missing" ]; then
+            echo "::error::Missing GitHub Environment secrets for 'ahp-staging':$missing"
+            exit 1
+          fi
+
       - name: Run backup on server
-        if: ${{ env.DEPLOY_HOST != '' && env.DEPLOY_USER != '' && env.DEPLOY_SSH_KEY != '' && env.DEPLOY_PATH != '' }}
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ env.DEPLOY_HOST }}
@@ -36,11 +49,6 @@ jobs:
             cd ${{ env.DEPLOY_PATH }}
             docker compose -f docker-compose.prod.yml exec -T app php artisan sima:backup-db
             find storage/backups -name "*.sql.gz" -mtime +${{ inputs.retain_days || '14' }} -delete
-
-      - name: Backup skipped
-        if: ${{ env.DEPLOY_HOST == '' || env.DEPLOY_USER == '' || env.DEPLOY_SSH_KEY == '' || env.DEPLOY_PATH == '' }}
-        run: |
-          echo "::warning::Configure DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, and DEPLOY_PATH secrets or run backup manually: make backup"
 
   backup-artifact:
     name: Backup artifact (CI smoke)
