@@ -91,13 +91,16 @@ SESSION_SECURE_COOKIE=true
 SANCTUM_STATEFUL_DOMAINS=sima.example.com
 ```
 
-## Storage & backup
+## Storage, upload & backup
 
 ### Volume
 
-- `app_storage` — `storage/app` (lampiran, file private)
-- `backup_data` — dump DB terkompresi (`storage/backups`)
-- `mysql_data`, `redis_data` — data persisten
+- `sima-prod_app_storage` — seluruh `/var/www/html/storage`, termasuk `storage/app/private/attachments` untuk lampiran upload.
+- `sima-prod_backup_data` — dump DB terkompresi (`storage/backups`).
+- `sima-prod_mysql_data`, `sima-prod_redis_data` — data database dan Redis.
+
+Lampiran upload memakai disk Laravel `local` dan disimpan di `storage/app/private/attachments/*`.
+Pada production, path itu berada di named volume Docker `sima-prod_app_storage`, sehingga file tetap ada saat container di-rebuild atau image diganti. Jangan menjalankan `docker compose down -v` di production karena opsi `-v` menghapus named volume beserta file upload dan database.
 
 ### Backup otomatis
 
@@ -121,49 +124,73 @@ gunzip -c storage/backups/sima_YYYYMMDD_HHMMSS.sql.gz | \
 
 > **Penting:** uji restore secara berkala di lingkungan staging.
 
-## Deploy dari GHCR (CI/CD)
+## Auto deploy ke VPS via SSH
 
-Workflow `.github/workflows/deploy.yml` mem-build dan push image ke GitHub Container Registry.
+Workflow `.github/workflows/deploy.yml` melakukan SSH ke VPS, mengambil kode terbaru dari git, lalu build image Docker langsung di server dengan `docker compose build --pull`. Workflow ini otomatis berjalan saat push ke branch `main` memakai environment GitHub `ahp-production`, dan bisa dijalankan manual dari **Actions → Deploy → Run workflow** untuk memilih `ahp-production` atau `ahp-staging`.
 
-### Secrets GitHub (environment `production`)
+### Secrets GitHub
+
+Isi secrets berikut pada environment GitHub `ahp-production` dan `ahp-staging` sesuai target server masing-masing.
 
 | Secret | Keterangan |
 |--------|------------|
 | `DEPLOY_HOST` | IP/hostname server |
 | `DEPLOY_USER` | User SSH |
 | `DEPLOY_SSH_KEY` | Private key SSH |
-| `DEPLOY_PATH` | Path repo di server, mis. `/opt/sima` |
+| `DEPLOY_PATH` | Path repo di server, mis. `/opt/sima` untuk production atau `/opt/sima-staging` untuk staging |
+| `DEPLOY_REPO` | Opsional. URL git yang dipakai VPS untuk clone/pull jika berbeda dari URL repo GitHub default |
 
-### Pull image di server
+### Setup pertama di VPS
 
-Tambahkan ke `.env` di server:
-
-```env
-SIMA_API_IMAGE=ghcr.io/YOUR_ORG/sima/sima-api:latest
-SIMA_WORKER_IMAGE=ghcr.io/YOUR_ORG/sima/sima-worker:latest
-SIMA_FRONTEND_IMAGE=ghcr.io/YOUR_ORG/sima/sima-frontend:latest
-```
+Install Docker Engine, Docker Compose v2, dan Git di VPS. Pastikan user deploy bisa menjalankan Docker.
 
 ```bash
-docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d
-docker compose -f docker-compose.prod.yml exec app php artisan migrate --force
+sudo mkdir -p /opt/sima
+sudo chown "$USER":"$USER" /opt/sima
+git clone git@github.com:addingama/sima.git /opt/sima
+cd /opt/sima
+cp .env.production.example .env
+```
+
+Isi `.env` produksi minimal:
+
+| Variabel | Keterangan |
+|----------|------------|
+| `APP_KEY` | Generate dari mesin dev: `php artisan key:generate --show` |
+| `APP_URL` | URL publik aplikasi |
+| `DB_PASSWORD` | Password user MySQL aplikasi |
+| `MYSQL_ROOT_PASSWORD` | Password root MySQL |
+| `REDIS_PASSWORD` | Password Redis, disarankan |
+| `SANCTUM_STATEFUL_DOMAINS` | Domain aplikasi tanpa scheme |
+
+Deploy manual pertama:
+
+```bash
+DEPLOY_PATH=/opt/sima DEPLOY_BRANCH=main sh scripts/deploy-vps.sh
 docker compose -f docker-compose.prod.yml exec app php artisan sima:create-admin
 ```
 
 Perintah `sima:create-admin` membuat administrator produksi pertama (interaktif atau `--name`, `--email`, `--password`). **Jangan** mengandalkan `UserSeeder` / akun `*@sima.test` di produksi.
 
-Trigger deploy manual: **Actions → Deploy → Run workflow**.
-
 ## Rolling update (zero/minimal downtime)
 
 ```bash
-docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d --no-deps app worker frontend
+DEPLOY_PATH=/opt/sima DEPLOY_BRANCH=main sh scripts/deploy-vps.sh
+```
+
+Di balik layar, script menjalankan:
+
+```bash
+git fetch --prune origin main
+git reset --hard origin/main
+docker compose -f docker-compose.prod.yml build --pull app worker frontend
+docker compose -f docker-compose.prod.yml up -d --remove-orphans
 docker compose -f docker-compose.prod.yml exec app php artisan migrate --force
 docker compose -f docker-compose.prod.yml exec app php artisan config:cache
 docker compose -f docker-compose.prod.yml exec app php artisan route:cache
 ```
+
+Perintah ini tidak menghapus named volume, sehingga `sima-prod_app_storage`, `sima-prod_mysql_data`, dan volume persisten lain tetap dipakai ulang.
 
 ## Monitoring
 

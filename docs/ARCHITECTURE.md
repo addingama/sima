@@ -93,9 +93,10 @@ flowchart LR
     CI --> Lint[Pint + Biome]
     CI --> Test[PHPUnit + Next build]
     CI --> Docker[Build images]
-    Tag[Git tag v*.*.*] --> Deploy[Deploy workflow]
-    Deploy --> GHCR[Push GHCR]
-    Deploy --> SSH[SSH docker compose up]
+    Main[Push main] --> Deploy[Deploy workflow]
+    Deploy --> SSH[SSH to VPS]
+    SSH --> Build[Git pull + docker compose build]
+    Build --> Up[docker compose up -d]
     Cron[Schedule] --> Backup[Backup workflow]
 ```
 
