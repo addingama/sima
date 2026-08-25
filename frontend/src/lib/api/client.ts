@@ -59,7 +59,16 @@ export async function apiFetch<T>(
     headers,
   });
 
-  const payload = (await response.json()) as ApiEnvelope<T>;
+  let payload: ApiEnvelope<T>;
+
+  try {
+    payload = (await response.json()) as ApiEnvelope<T>;
+  } catch {
+    throw new ApiError(
+      response.status === 413 ? "Ukuran unggahan terlalu besar." : "Server mengembalikan respons tidak valid.",
+      response.status,
+    );
+  }
 
   if (!response.ok || !payload.success) {
     throw new ApiError(
@@ -75,6 +84,20 @@ export async function apiFetch<T>(
 
 /** Unduh berkas biner (bukan JSON envelope) dengan Bearer token. */
 export async function apiDownload(path: string, filename: string, token?: string | null): Promise<void> {
+  const blob = await apiBlob(path, token);
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
+/** Ambil berkas biner sebagai Blob dengan Bearer token. */
+export async function apiBlob(path: string, token?: string | null): Promise<Blob> {
   const authToken = token ?? getClientToken();
   const headers = new Headers({ Accept: "*/*" });
 
@@ -97,16 +120,7 @@ export async function apiDownload(path: string, filename: string, token?: string
     throw new ApiError(message, response.status);
   }
 
-  const blob = await response.blob();
-  const objectUrl = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-
-  anchor.href = objectUrl;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(objectUrl);
+  return response.blob();
 }
 
 export async function apiGet<T>(path: string, params?: ListParams, token?: string | null) {

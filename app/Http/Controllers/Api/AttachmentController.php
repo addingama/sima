@@ -13,6 +13,7 @@ use App\Models\BankFee;
 use App\Models\Disbursement;
 use App\Models\OperationalLiability;
 use App\Models\Receipt;
+use App\Services\AttachmentFileService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
@@ -29,7 +30,10 @@ class AttachmentController extends Controller
         'liability' => OperationalLiability::class,
     ];
 
-    public function __construct(private readonly AuditLogService $audit) {}
+    public function __construct(
+        private readonly AuditLogService $audit,
+        private readonly AttachmentFileService $files,
+    ) {}
 
     #[OA\Get(
         path: '/attachments',
@@ -63,17 +67,14 @@ class AttachmentController extends Controller
 
         $file = $request->file('file');
         $directory = 'attachments/'.$request->attachableType();
-        $path = $file->store($directory, 'local');
-
-        abort_unless(is_string($path) && $path !== '', 500, 'Gagal menyimpan berkas ke penyimpanan lokal.');
-        abort_unless(Storage::disk('local')->exists($path), 500, 'Berkas tidak ditemukan setelah diunggah ke penyimpanan lokal.');
+        $stored = $this->files->store($file, $directory);
 
         $attachment = $model->attachments()->create([
-            'disk' => 'local',
-            'path' => $path,
+            'disk' => $stored['disk'],
+            'path' => $stored['path'],
             'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType() ?: $file->getMimeType(),
-            'size' => $file->getSize() ?: 0,
+            'mime_type' => $stored['mime_type'],
+            'size' => $stored['size'],
             'title' => $request->validated('title'),
             'uploaded_by' => $request->user()->id,
         ]);

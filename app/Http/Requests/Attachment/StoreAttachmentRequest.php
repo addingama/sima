@@ -7,6 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 class StoreAttachmentRequest extends FormRequest
 {
     private const TYPES = ['receipt', 'disbursement', 'bank_fee', 'liability'];
+    private const MAX_FILE_KB = 20480;
 
     public function authorize(): bool
     {
@@ -19,8 +20,17 @@ class StoreAttachmentRequest extends FormRequest
         return [
             'attachable_type' => ['required', 'in:'.implode(',', self::TYPES)],
             'attachable_id' => ['required', 'integer', 'min:1'],
-            'file' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx'],
+            'file' => ['required', 'file', 'max:'.self::MAX_FILE_KB, 'mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx'],
             'title' => ['nullable', 'string', 'max:255'],
+        ];
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'file.max' => 'Ukuran lampiran maksimal 20 MB.',
+            'file.mimes' => 'Format lampiran harus PDF, JPG, JPEG, PNG, WEBP, DOC, DOCX, XLS, atau XLSX.',
         ];
     }
 

@@ -88,4 +88,64 @@ class AttachmentApiTest extends TestCase
         ], ['Accept' => 'application/json'])
             ->assertStatus(422);
     }
+
+    #[Test]
+    public function upload_rejects_attachment_larger_than_twenty_megabytes(): void
+    {
+        Storage::fake('local');
+        $this->actingAsRole('bendahara');
+        $admin = $this->makeUser('admin');
+        $account = $this->makeAccount($admin);
+        $fund = $this->makeFund($admin);
+
+        $receiptId = $this->postJson('/api/receipts', [
+            'receipt_date' => now()->toDateString(),
+            'account_id' => $account->id,
+            'channel' => 'cash',
+            'amount' => '50000.00',
+            'allocations' => [['fund_id' => $fund->id, 'amount' => '50000.00']],
+        ])->assertCreated()->json('data.id');
+
+        $this->post('/api/attachments', [
+            'attachable_type' => 'receipt',
+            'attachable_id' => $receiptId,
+            'file' => UploadedFile::fake()->create('bukti-besar.pdf', 20481, 'application/pdf'),
+        ], ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.fields.file.0', 'Ukuran lampiran maksimal 20 MB.');
+    }
+
+    #[Test]
+    public function upload_compresses_large_image_attachment(): void
+    {
+        Storage::fake('local');
+
+        $this->actingAsRole('bendahara');
+        $admin = $this->makeUser('admin');
+        $account = $this->makeAccount($admin);
+        $fund = $this->makeFund($admin);
+
+        $receiptId = $this->postJson('/api/receipts', [
+            'receipt_date' => now()->toDateString(),
+            'account_id' => $account->id,
+            'channel' => 'transfer',
+            'amount' => '100000.00',
+            'allocations' => [['fund_id' => $fund->id, 'amount' => '100000.00']],
+        ])->assertCreated()->json('data.id');
+
+        $response = $this->post('/api/attachments', [
+            'attachable_type' => 'receipt',
+            'attachable_id' => $receiptId,
+            'file' => UploadedFile::fake()->image('nota-besar.jpg', 3200, 2400),
+        ], ['Accept' => 'application/json']);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.mime_type', 'image/jpeg');
+
+        $attachment = Attachment::query()->findOrFail($response->json('data.id'));
+        [$width, $height] = getimagesize(Storage::disk('local')->path($attachment->path));
+
+        $this->assertLessThanOrEqual(2000, max($width, $height));
+        $this->assertSame($attachment->size, Storage::disk('local')->size($attachment->path));
+    }
 }

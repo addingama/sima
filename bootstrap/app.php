@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
@@ -36,6 +37,16 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->render(function (PostTooLargeException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return ApiResponse::error(
+                    'Ukuran unggahan terlalu besar. Maksimal lampiran 20 MB.',
+                    'payload_too_large',
+                    status: Response::HTTP_REQUEST_ENTITY_TOO_LARGE,
+                );
+            }
+        });
+
         $exceptions->render(function (InsufficientBalanceException $e, Request $request) {
             if ($request->expectsJson()) {
                 return ApiResponse::error($e->getMessage(), 'insufficient_balance', status: Response::HTTP_UNPROCESSABLE_ENTITY);
