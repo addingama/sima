@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Disbursement extends Model
 {
@@ -83,6 +84,11 @@ class Disbursement extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    public function grantApplication(): HasOne
+    {
+        return $this->hasOne(GrantApplication::class);
     }
 
     /** Total nominal dari seluruh sumber dana. */

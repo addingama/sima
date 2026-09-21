@@ -2,6 +2,7 @@
 
 namespace App\Domains\Grant\Services;
 
+use App\Domains\Expense\Services\ExpenseService;
 use App\Domains\Grant\DTOs\CreateGrantApplicationDto;
 use App\Domains\Grant\DTOs\UpdateGrantApplicationDto;
 use App\Domains\Grant\Repositories\GrantApplicationRepository;
@@ -55,6 +56,7 @@ class GrantApplicationService
         private readonly GrantApplicationRepository $repository,
         private readonly GrantApplicationValidator $validator,
         private readonly DocumentNumberService $numbers,
+        private readonly ExpenseService $expenses,
     ) {}
 
     public function paginate(ListQueryDto $query, User $viewer): LengthAwarePaginator
@@ -69,7 +71,7 @@ class GrantApplicationService
             'program:id,code,name',
             'createdBy:id,name',
             'handedOverBy:id,name',
-            'disbursement:id,disbursement_number,status,amount',
+            'disbursement:id,disbursement_number,status,amount,payee,account_id',
             'attachments',
         ]);
     }
@@ -231,6 +233,37 @@ class GrantApplicationService
                 'submitted_for_approval_at' => null,
                 'submitted_for_approval_by' => null,
             ]);
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<int, array<string, mixed>>  $sources
+     */
+    public function createLinkedDisbursement(GrantApplication $grant, array $data, array $sources, User $actor): GrantApplication
+    {
+        $this->validator->assertStatus($grant, [GrantApplicationStatus::APPROVED]);
+
+        if ($grant->disbursement_id !== null) {
+            throw new DomainException('Pengajuan ini sudah tertaut ke pengeluaran.');
+        }
+
+        $amount = bcadd((string) $grant->approved_amount, '0', 2);
+
+        return DB::transaction(function () use ($grant, $data, $sources, $actor, $amount): GrantApplication {
+            $expense = $this->expenses->create([
+                'disbursement_date' => $data['disbursement_date'],
+                'account_id' => $data['account_id'],
+                'program_id' => $data['program_id'] ?? $grant->program_id,
+                'vendor_id' => $data['vendor_id'] ?? null,
+                'amount' => $amount,
+                'payee' => $grant->recipient_name,
+                'category' => $data['category'] ?? 'bantuan',
+                'reference_number' => $data['reference_number'] ?? $grant->application_number,
+                'description' => $data['description'] ?? ('Pengajuan bantuan '.$grant->application_number),
+            ], $sources, $actor);
+
+            return $this->linkDisbursement($grant->refresh(), $expense);
         });
     }
 

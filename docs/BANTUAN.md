@@ -2,7 +2,7 @@
 
 Dokumen ini mengunci keputusan produk untuk **modul kasus bantuan**. Bukan bagian Amanah Ledger.
 
-**Status:** backend domain (issue #41) — API `/grant-applications` + policy record-level. Tautan otomatis ke pengeluaran dan UI Kanban belum.
+**Status:** backend domain (#41) + tautan pengeluaran 1:1 (#42). UI Kanban belum.
 
 **Bukan** portal pemohon, **bukan** Trello bebas kolom, **bukan** pengeluaran. Kartu = satu penerima. Uang keluar hanya lewat Pengeluaran SIMA yang tertaut.
 

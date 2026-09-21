@@ -2,8 +2,6 @@
 
 namespace Tests\Feature\Api;
 
-use App\Domains\Grant\Services\GrantApplicationService;
-use App\Models\Disbursement;
 use App\Models\GrantApplication;
 use App\Models\LedgerEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -118,6 +116,74 @@ class GrantApplicationApiTest extends TestCase
     }
 
     #[Test]
+    public function bendahara_creates_linked_disbursement_from_approved_grant(): void
+    {
+        $id = $this->createApprovedGrant('250000.00');
+        $admin = $this->makeUser('admin');
+        $account = $this->makeAccount($admin);
+        $fund = $this->makeFund($admin);
+        $this->seedOpening($account, $fund, '500000.00');
+        $ledgerBefore = LedgerEntry::query()->count();
+
+        $this->actingAsRole('bendahara');
+        $response = $this->postJson("/api/grant-applications/{$id}/disbursements", [
+            'disbursement_date' => now()->toDateString(),
+            'account_id' => $account->id,
+            'sources' => [['fund_id' => $fund->id, 'amount' => '250000.00']],
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.disbursement.payee', 'Siti Aminah')
+            ->assertJsonPath('data.disbursement.amount', '250000.00')
+            ->assertJsonPath('data.disbursement.status', 'draft');
+
+        $this->assertNotNull($response->json('data.disbursement_id'));
+        $this->assertSame($ledgerBefore, LedgerEntry::query()->count());
+
+        $this->postJson("/api/grant-applications/{$id}/disbursements", [
+            'disbursement_date' => now()->toDateString(),
+            'account_id' => $account->id,
+            'sources' => [['fund_id' => $fund->id, 'amount' => '250000.00']],
+        ])->assertStatus(422);
+    }
+
+    #[Test]
+    public function linked_disbursement_rejects_fund_sources_that_do_not_match_approved_amount(): void
+    {
+        $id = $this->createApprovedGrant('250000.00');
+        $admin = $this->makeUser('admin');
+        $account = $this->makeAccount($admin);
+        $fund = $this->makeFund($admin);
+        $this->seedOpening($account, $fund, '500000.00');
+
+        $this->actingAsRole('bendahara');
+        $this->postJson("/api/grant-applications/{$id}/disbursements", [
+            'disbursement_date' => now()->toDateString(),
+            'account_id' => $account->id,
+            'sources' => [['fund_id' => $fund->id, 'amount' => '1.00']],
+        ])->assertStatus(422);
+    }
+
+    #[Test]
+    public function cannot_create_linked_disbursement_from_draft(): void
+    {
+        $this->actingAsRole('asisten_bendahara');
+        $id = $this->postJson('/api/grant-applications', $this->draftPayload())
+            ->assertCreated()
+            ->json('data.id');
+
+        $admin = $this->makeUser('admin');
+        $account = $this->makeAccount($admin);
+        $fund = $this->makeFund($admin);
+
+        $this->postJson("/api/grant-applications/{$id}/disbursements", [
+            'disbursement_date' => now()->toDateString(),
+            'account_id' => $account->id,
+            'sources' => [['fund_id' => $fund->id, 'amount' => '250000.00']],
+        ])->assertForbidden();
+    }
+
+    #[Test]
     public function complete_requires_handover_photo_and_approved_disbursement(): void
     {
         Storage::fake('local');
@@ -134,12 +200,19 @@ class GrantApplicationApiTest extends TestCase
         $fund = $this->makeFund($admin);
         $this->seedOpening($account, $fund, '500000.00');
 
-        $disbursementId = $this->createApprovedDisbursement($account->id, $fund->id, '250000.00');
+        $this->actingAsRole('bendahara');
+        $disbursementId = $this->postJson("/api/grant-applications/{$id}/disbursements", [
+            'disbursement_date' => now()->toDateString(),
+            'account_id' => $account->id,
+            'sources' => [['fund_id' => $fund->id, 'amount' => '250000.00']],
+        ])->assertCreated()->json('data.disbursement.id');
 
-        app(GrantApplicationService::class)->linkDisbursement(
-            GrantApplication::query()->findOrFail($id),
-            Disbursement::query()->findOrFail($disbursementId),
-        );
+        $this->actingAsRole('bendahara');
+        $this->postJson("/api/disbursements/{$disbursementId}/submit")->assertOk();
+        $this->actingAsRole('verifikator');
+        $this->postJson("/api/disbursements/{$disbursementId}/verify")->assertOk();
+        $this->actingAsRole('bendahara');
+        $this->postJson("/api/disbursements/{$disbursementId}/approve")->assertOk();
 
         $ledgerCount = LedgerEntry::query()->count();
 
@@ -251,28 +324,6 @@ class GrantApplicationApiTest extends TestCase
         $this->postJson("/api/grant-applications/{$id}/approve", [
             'approved_amount' => $amount,
         ])->assertOk();
-
-        return $id;
-    }
-
-    private function createApprovedDisbursement(int $accountId, int $fundId, string $amount): int
-    {
-        $this->actingAsRole('asisten_bendahara');
-        $id = $this->postJson('/api/disbursements', [
-            'disbursement_date' => now()->toDateString(),
-            'account_id' => $accountId,
-            'amount' => $amount,
-            'payee' => 'Siti Aminah',
-            'sources' => [['fund_id' => $fundId, 'amount' => $amount]],
-        ])->assertCreated()->json('data.id');
-
-        $this->postJson("/api/disbursements/{$id}/submit")->assertOk();
-
-        $this->actingAsRole('verifikator');
-        $this->postJson("/api/disbursements/{$id}/verify")->assertOk();
-
-        $this->actingAsRole('bendahara');
-        $this->postJson("/api/disbursements/{$id}/approve")->assertOk();
 
         return $id;
     }

@@ -141,6 +141,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('grant-applications/{grant_application}/approve', [GrantApplicationController::class, 'approve'])->middleware('permission:grant.approve');
     Route::post('grant-applications/{grant_application}/reject', [GrantApplicationController::class, 'reject'])->middleware('permission:grant.approve');
     Route::post('grant-applications/{grant_application}/return', [GrantApplicationController::class, 'returnToVerification'])->middleware('permission:grant.view');
+    Route::post('grant-applications/{grant_application}/disbursements', [GrantApplicationController::class, 'createDisbursement'])->middleware('permission:disbursement.create');
     Route::post('grant-applications/{grant_application}/complete', [GrantApplicationController::class, 'complete'])->middleware('permission:grant.handover');
 
     /*

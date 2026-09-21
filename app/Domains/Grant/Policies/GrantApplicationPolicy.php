@@ -116,6 +116,13 @@ class GrantApplicationPolicy
             && $grant->status === GrantApplicationStatus::APPROVED;
     }
 
+    public function createDisbursement(User $user, GrantApplication $grant): bool
+    {
+        return $this->allows($user, 'disbursement.create')
+            && $grant->status === GrantApplicationStatus::APPROVED
+            && $this->view($user, $grant);
+    }
+
     private function seesAll(User $user): bool
     {
         return $user->hasAnyRole(['admin', 'ketua', 'bendahara', 'auditor']);

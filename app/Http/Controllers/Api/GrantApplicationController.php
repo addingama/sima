@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\GrantApplication\ApproveGrantApplicationRequest;
 use App\Http\Requests\GrantApplication\AssignGrantApplicationRequest;
 use App\Http\Requests\GrantApplication\CompleteGrantApplicationRequest;
+use App\Http\Requests\GrantApplication\CreateGrantDisbursementRequest;
 use App\Http\Requests\GrantApplication\ListGrantApplicationRequest;
 use App\Http\Requests\GrantApplication\RejectGrantApplicationRequest;
 use App\Http\Requests\GrantApplication\ReturnGrantApplicationRequest;
@@ -176,6 +177,25 @@ class GrantApplicationController extends Controller
         );
 
         return $this->resource(new GrantApplicationResource($this->service->findForShow($grant)));
+    }
+
+    #[OA\Post(
+        path: '/grant-applications/{grant_application}/disbursements',
+        summary: 'Buat pengeluaran tertaut 1:1 dari pengajuan approved',
+        tags: ['GrantApplication'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
+    public function createDisbursement(CreateGrantDisbursementRequest $request, GrantApplication $grantApplication): JsonResponse
+    {
+        $grant = $this->service->createLinkedDisbursement(
+            $grantApplication,
+            $request->expenseData(),
+            $request->sources(),
+            $request->user(),
+        );
+
+        return $this->created(new GrantApplicationResource($this->service->findForShow($grant)));
     }
 
     #[OA\Post(
