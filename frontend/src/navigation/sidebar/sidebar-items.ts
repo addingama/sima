@@ -333,9 +333,24 @@ export const sidebarItems: NavGroup[] = [
       {
         id: "settings",
         title: "Pengaturan",
-        url: "/dashboard/settings",
         icon: Settings,
         permission: "user.manage",
+        subItems: [
+          {
+            id: "users",
+            title: "Pengguna",
+            url: "/dashboard/settings",
+            icon: Users,
+            permission: "user.manage",
+          },
+          {
+            id: "roles",
+            title: "Role & Permission",
+            url: "/dashboard/roles",
+            icon: Settings,
+            permission: "user.manage",
+          },
+        ],
       },
     ],
   },

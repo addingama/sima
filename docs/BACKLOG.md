@@ -128,7 +128,7 @@ Spesifikasi terkunci: [BANTUAN.md](BANTUAN.md). **Jangan implementasi sebelum is
 - [ ] **Indikator loading saat filter laporan** — hindari persepsi hang (mis. laporan Approval)
 - [ ] **Halaman error/empty state konsisten** — semua modul CRUD punya retry
 - [ ] **Bahasa UI** — label `Restricted`/`Submitted` → Indonesia bila diinginkan organisasi
-- [ ] **Role & menu Pengaturan** — sub-menu Users, Role (read-only), preferensi org
+- [x] **Role & menu Pengaturan** — sub-menu Users serta pengelolaan permission role oleh admin ([#46](https://github.com/addingama/sima/issues/46))
 - [ ] **Hapus/arsip template legacy dashboard** — `(legacy)/analytics-v1`, `crm-v1`, dll. jika tidak dipakai SIMA
 - [ ] **Build CI** — pastikan middleware Next.js (`proxy` vs deprecated `middleware`) di-upgrade saat stabil
 

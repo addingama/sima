@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\PortalController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\ReceiptController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\RolePermissionController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\VendorController;
 use Illuminate\Support\Facades\Route;
@@ -58,6 +59,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('{user}', [UserController::class, 'destroy']);
         Route::put('{user}/roles', [UserController::class, 'syncRoles']);
         Route::post('{user}/reset-password', [UserController::class, 'resetPassword']);
+    });
+
+    Route::middleware('role:admin')->prefix('roles')->group(function () {
+        Route::get('/', [RolePermissionController::class, 'index']);
+        Route::put('{role}/permissions', [RolePermissionController::class, 'syncPermissions']);
     });
 
     /*

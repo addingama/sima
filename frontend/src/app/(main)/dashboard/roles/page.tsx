@@ -1,6 +1,5 @@
-import { Roles } from "./_components/roles";
-import { roles } from "./_components/roles-table/data";
+import RolePermissionsPage from "./_components/role-permissions-page";
 
 export default function Page() {
-  return <Roles roles={roles} />;
+  return <RolePermissionsPage />;
 }

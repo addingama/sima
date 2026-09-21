@@ -127,7 +127,9 @@ Pastikan database & cache terhubung.
 | Status UI | Keterangan |
 |-----------|------------|
 | Menu **Pengaturan** (`/dashboard/settings`) | **Ada** — CRUD pengguna, role, nonaktifkan, reset password (permission `user.manage`) |
+| Menu **Role & Permission** (`/dashboard/roles`) | **Ada** — admin dapat mengubah permission role non-admin; role Administrator dikunci dan semua perubahan dicatat di audit trail |
 | API | `GET/POST/PUT/DELETE /api/users`, `PUT /api/users/{id}/roles`, `POST /api/users/{id}/reset-password` |
+| API role & permission | `GET /api/roles`, `PUT /api/roles/{role}/permissions` — khusus role `admin` |
 | Produksi (admin pertama) | `php artisan sima:create-admin` — tanpa akun `*@sima.test` |
 
 **Langkah go-live (disarankan):**
@@ -524,6 +526,7 @@ Workflow approval: menu **Approval** atau laporan Approval.
 | Biaya Bank | `/dashboard/bank-fees` |
 | Saldo Awal | `/dashboard/opening-balances` |
 | Pengaturan (Users) | `/dashboard/settings` |
+| Pengaturan (Role & Permission) | `/dashboard/roles` |
 | Laporan Saldo Awal | `/dashboard/reports/opening-balances` |
 | Laporan | `/dashboard/reports` |
 
