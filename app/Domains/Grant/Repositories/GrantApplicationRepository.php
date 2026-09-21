@@ -32,6 +32,17 @@ class GrantApplicationRepository
                         });
                     }
                 },
+                'status' => function (Builder $q, mixed $v): void {
+                    $items = is_array($v) ? $v : explode(',', (string) $v);
+                    $statuses = array_values(array_filter(array_map(
+                        static fn (mixed $item): string => trim((string) $item),
+                        $items,
+                    )));
+
+                    if ($statuses !== []) {
+                        $q->whereIn('status', $statuses);
+                    }
+                },
             ],
         );
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Enums\GrantApplicationStatus;
 use App\Models\GrantApplication;
 use App\Models\LedgerEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,6 +20,40 @@ class GrantApplicationApiTest extends TestCase
     {
         parent::setUp();
         $this->seedSimaBasics();
+    }
+
+    #[Test]
+    public function list_filters_board_statuses_and_mine(): void
+    {
+        $admin = $this->actingAsRole('admin');
+        GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::DRAFT,
+            'recipient_name' => 'Kartu Admin',
+            'created_by' => $admin->id,
+        ]);
+        GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::COMPLETED,
+            'recipient_name' => 'Kartu Selesai',
+            'created_by' => $admin->id,
+        ]);
+        GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::DRAFT,
+            'recipient_name' => 'Kartu Orang Lain',
+            'created_by' => $this->makeUser('asisten_bendahara')->id,
+        ]);
+
+        $this->getJson('/api/grant-applications?status=draft,verification,pending_approval,approved')
+            ->assertOk()
+            ->assertJsonCount(2, 'data');
+
+        $this->getJson('/api/grant-applications?mine=1&status=draft,verification,pending_approval,approved')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
+
+        $this->getJson('/api/grant-applications?mine=true&status=draft,verification,pending_approval,approved')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.recipient_name', 'Kartu Admin');
     }
 
     #[Test]

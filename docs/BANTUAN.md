@@ -218,9 +218,11 @@ Invariant:
 ## UI Kanban
 
 - Kolom = status di atas, tidak bisa dibuat user.
+- Board default = **Antrian** (Rekomendasi → Siap diserahkan). **Selesai** dan **Ditolak** di tab Arsip.
+- Cari nama/nomor; toggle **Yang saya verifikasi** (`assigned_verifier_id` = user login).
+- Kartu ringkas (nama, nomor, nominal; verifikator hanya jika ada). Kolom discroll vertikal.
 - Drag hanya untuk transisi yang diizinkan; gagal jika syarat field belum lengkap (pesan jelas).
 - Detail kartu = formulir + lampiran + riwayat assignment/keputusan.
-- Filter verifikator: “kartu saya” vs semua (sesuai permission).
 
 Demo template `/dashboard/kanban` **bukan** fondasi modul ini (data dummy).
 
