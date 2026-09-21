@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNestedTernary: Status laporan bersifat eksklusif dan lebih mudah dibaca dekat markup.
 "use client";
 
 "use no memo";
@@ -167,7 +168,11 @@ export function ReportPage({ config }: { config: ReportDef }) {
                 <div key={key}>
                   <p className="text-muted-foreground text-xs capitalize">{key.replaceAll("_", " ")}</p>
                   <p className="font-medium text-sm">
-                    {typeof value === "string" && /^-?\d/.test(value) ? <CurrencyDisplay value={value} /> : String(value)}
+                    {typeof value === "string" && /^-?\d/.test(value) ? (
+                      <CurrencyDisplay value={value} />
+                    ) : (
+                      String(value)
+                    )}
                   </p>
                 </div>
               ))}

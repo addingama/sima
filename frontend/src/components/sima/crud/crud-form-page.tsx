@@ -19,11 +19,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useResourceCreate, useResourceUpdate } from "@/hooks/use-resource-mutation";
 import { useDetailQuery } from "@/hooks/use-resource-query";
 import { ApiError } from "@/lib/api/client";
+import { hasPermission } from "@/lib/auth/permissions";
 import { buildFormSchema, normalizeFormValues, nullifyEmptyOptionalFields } from "@/lib/resources/form-schema";
 import type { ResourceDef } from "@/lib/resources/types";
+import { useAuth } from "@/providers/auth-provider";
 
 export function CrudFormPage({ config, id }: { config: ResourceDef; id?: string }) {
   const router = useRouter();
+  const { user } = useAuth();
   const isEdit = Boolean(id);
   const createMutation = useResourceCreate(config.resource);
   const updateMutation = useResourceUpdate(config.resource, id ?? "0");
@@ -91,11 +94,24 @@ export function CrudFormPage({ config, id }: { config: ResourceDef; id?: string 
     return <ErrorState onRetry={() => refetch()} />;
   }
 
-  if (isEdit && data && config.canEdit && !config.canEdit(data)) {
+  if (isEdit && data && config.canEdit && !config.canEdit(data, user)) {
     return (
       <ErrorState
         title="Tidak dapat diedit"
-        description="Data ini tidak lagi berstatus draft."
+        description="Data ini tidak dapat diubah pada status saat ini."
+        onRetry={() => router.push(`${config.basePath}/${id}`)}
+      />
+    );
+  }
+
+  if (
+    isEdit &&
+    !hasPermission(user, config.permissions.update ?? config.permissions.manage ?? config.permissions.create ?? "")
+  ) {
+    return (
+      <ErrorState
+        title="Tidak dapat diedit"
+        description="Anda tidak memiliki izin untuk mengubah data ini."
         onRetry={() => router.push(`${config.basePath}/${id}`)}
       />
     );
@@ -108,7 +124,7 @@ export function CrudFormPage({ config, id }: { config: ResourceDef; id?: string 
       <CrudBreadcrumb items={breadcrumbs} />
       <PageHeader
         title={isEdit ? `Edit ${config.label}` : `Tambah ${config.label}`}
-        description={isEdit ? "Perbarui data draft." : `Buat data ${config.label.toLowerCase()} baru.`}
+        description={isEdit ? "Lengkapi atau perbarui data." : `Buat data ${config.label.toLowerCase()} baru.`}
       />
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">

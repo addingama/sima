@@ -12,6 +12,7 @@ import {
   FileSearch,
   Globe,
   HandCoins,
+  HeartHandshake,
   Landmark,
   LayoutDashboard,
   ReceiptText,
@@ -188,6 +189,18 @@ export const sidebarItems: NavGroup[] = [
     ],
   },
   {
+    id: 35,
+    items: [
+      {
+        id: "bantuan",
+        title: "Pengajuan Bantuan",
+        url: "/dashboard/bantuan",
+        icon: HeartHandshake,
+        permission: "grant.view",
+      },
+    ],
+  },
+  {
     id: 4,
     items: [
       {
@@ -264,6 +277,13 @@ export const sidebarItems: NavGroup[] = [
             title: "Per Vendor",
             url: "/dashboard/reports/by-vendor",
             icon: Store,
+            permission: "report.view",
+          },
+          {
+            id: "report-grant-applications",
+            title: "Pengajuan Bantuan",
+            url: "/dashboard/reports/bantuan",
+            icon: HeartHandshake,
             permission: "report.view",
           },
           {

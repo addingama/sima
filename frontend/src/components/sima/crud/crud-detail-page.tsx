@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -70,7 +70,15 @@ function LineItemsTable({ label, rows }: { label: string; rows: Array<Record<str
   );
 }
 
-export function CrudDetailPage({ config, id }: { config: ResourceDef; id: string }) {
+export function CrudDetailPage({
+  config,
+  id,
+  extras,
+}: {
+  config: ResourceDef;
+  id: string;
+  extras?: (ctx: { row: Record<string, unknown>; refetch: () => void }) => ReactNode;
+}) {
   const router = useRouter();
   const { user } = useAuth();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -87,15 +95,20 @@ export function CrudDetailPage({ config, id }: { config: ResourceDef; id: string
 
   const title =
     typeof config.titleField === "function" ? config.titleField(data) : String(data[config.titleField] ?? config.label);
-  const hasManagePermission = hasPermission(user, config.permissions.manage ?? config.permissions.create ?? "");
-  const canEdit = hasManagePermission && (config.canEdit?.(data) ?? true);
-  const canDelete = hasManagePermission && (config.canDelete?.(data) ?? false);
-  const lineItems =
-    config.lineItems?.key === "allocations"
-      ? ((data.allocations as Array<Record<string, unknown>> | undefined) ?? [])
-      : config.lineItems?.key === "sources"
-        ? ((data.fund_sources as Array<Record<string, unknown>> | undefined) ?? [])
-        : [];
+  const hasEditPermission = hasPermission(
+    user,
+    config.permissions.update ?? config.permissions.manage ?? config.permissions.create ?? "",
+  );
+  const canEdit = hasEditPermission && (config.canEdit?.(data, user) ?? true);
+  const canDelete =
+    hasPermission(user, config.permissions.delete ?? config.permissions.manage ?? config.permissions.create ?? "") &&
+    (config.canDelete?.(data) ?? false);
+  let lineItems: Array<Record<string, unknown>> = [];
+  if (config.lineItems?.key === "allocations") {
+    lineItems = (data.allocations as Array<Record<string, unknown>> | undefined) ?? [];
+  } else if (config.lineItems?.key === "sources") {
+    lineItems = (data.fund_sources as Array<Record<string, unknown>> | undefined) ?? [];
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -138,7 +151,9 @@ export function CrudDetailPage({ config, id }: { config: ResourceDef; id: string
       <Tabs defaultValue="detail">
         <TabsList>
           <TabsTrigger value="detail">Detail</TabsTrigger>
-          {config.workflow ? <TabsTrigger value="timeline">Timeline</TabsTrigger> : null}
+          {config.workflow && Array.isArray(data.approvals) ? (
+            <TabsTrigger value="timeline">Timeline</TabsTrigger>
+          ) : null}
           {config.attachments ? <TabsTrigger value="attachments">Lampiran</TabsTrigger> : null}
           {config.audit && hasPermission(user, config.audit.permission) ? (
             <TabsTrigger value="audit">Audit</TabsTrigger>
@@ -155,9 +170,10 @@ export function CrudDetailPage({ config, id }: { config: ResourceDef; id: string
             </CardContent>
           </Card>
           {config.lineItems ? <LineItemsTable label={config.lineItems.label} rows={lineItems} /> : null}
+          {extras?.({ row: data, refetch })}
         </TabsContent>
 
-        {config.workflow ? (
+        {config.workflow && Array.isArray(data.approvals) ? (
           <TabsContent value="timeline">
             <ApprovalTimeline approvals={(data.approvals as ApprovalRecord[] | undefined) ?? []} />
           </TabsContent>
@@ -169,6 +185,8 @@ export function CrudDetailPage({ config, id }: { config: ResourceDef; id: string
               attachableType={config.attachments.attachableType}
               attachableId={Number(id)}
               managePermission={config.attachments.managePermission}
+              helperText={config.attachments.helperText}
+              defaultTitle={config.attachments.defaultTitle}
             />
           </TabsContent>
         ) : null}

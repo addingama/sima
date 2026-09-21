@@ -52,6 +52,7 @@ class ExpenseService
             'fundSources.program:id,code,name',
             'approvals.actor:id,name',
             'attachments',
+            'grantApplication:id,disbursement_id,application_number,status',
         ]);
     }
 

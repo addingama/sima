@@ -2,6 +2,8 @@
 
 Terima kasih atas minat untuk berkontribusi. SIMA mengelola dana amanah — setiap perubahan finansial harus aman, auditable, dan dapat diverifikasi.
 
+Agent AI (Codex, Copilot, Cursor): mulai dari [AGENTS.md](../AGENTS.md) di root. Chat lama tidak tersimpan di repo.
+
 ## Sebelum mulai
 
 1. Baca [ARCHITECTURE.md](./ARCHITECTURE.md) untuk memahami Amanah Ledger.
@@ -31,10 +33,14 @@ composer install
 cp .env.example .env
 php artisan key:generate
 php artisan migrate --seed
-php artisan serve
-
-cd frontend && npm install && npm run dev
+(cd frontend && npm install)
+./dev.sh
 ```
+
+API: http://127.0.0.1:8000/api  
+Frontend: http://127.0.0.1:3000  
+
+Pastikan `frontend/.env` memakai `NEXT_PUBLIC_API_URL=http://localhost:8000/api`.
 
 ### Akun uji (setelah seed)
 
@@ -61,8 +67,10 @@ Password default: `password`
    ```bash
    ./vendor/bin/pint --test
    php artisan test
-   cd frontend && npm run check && npm run build
+   cd frontend && npm run check && npm test && npx tsc --noEmit && npm run build
    ```
+
+   Frontend memiliki unit/component test berbasis Vitest dan React Testing Library. Panduan lengkap ada di [FRONTEND-TESTING.md](FRONTEND-TESTING.md). E2E browser belum dikonfigurasi.
 
 5. **Commit** dengan pesan jelas — lihat [Issue dan commit](#issue-dan-commit).
 

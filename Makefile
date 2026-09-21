@@ -1,8 +1,9 @@
-.PHONY: help dev-up dev-down prod-up prod-down prod-build test lint backup health
+.PHONY: help dev dev-up dev-down prod-up prod-down prod-build test lint backup health
 
 help:
 	@echo "SIMA Makefile"
 	@echo ""
+	@echo "  make dev          Start Laravel API + Next.js (local, no Docker)"
 	@echo "  make dev-up       Start development stack (docker compose)"
 	@echo "  make dev-down     Stop development stack"
 	@echo "  make prod-up      Start production stack"
@@ -15,6 +16,9 @@ help:
 
 dev-up:
 	docker compose up -d --build
+
+dev:
+	./dev.sh
 
 dev-down:
 	docker compose down

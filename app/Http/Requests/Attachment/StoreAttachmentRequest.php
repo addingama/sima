@@ -6,7 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAttachmentRequest extends FormRequest
 {
-    private const TYPES = ['receipt', 'disbursement', 'bank_fee', 'liability'];
+    private const TYPES = ['receipt', 'disbursement', 'bank_fee', 'liability', 'grant_application'];
+
     private const MAX_FILE_KB = 20480;
 
     public function authorize(): bool

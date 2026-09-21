@@ -9,7 +9,7 @@ import { allReports } from "@/lib/reports";
 export default function ReportsIndexPage() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Laporan" description="Kumpulan laporan keuangan SIMA dengan filter, grouping, dan ekspor." />
+      <PageHeader title="Laporan" description="Kumpulan laporan SIMA dengan filter, grouping, dan ekspor." />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {allReports.map((report) => (

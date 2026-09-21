@@ -6,8 +6,8 @@ export function TableSkeleton({ rows = 8 }: { rows?: number }) {
   return (
     <div className="space-y-3">
       <Skeleton className="h-10 w-full" />
-      {Array.from({ length: rows }).map((_, index) => (
-        <Skeleton key={index} className="h-12 w-full" />
+      {Array.from({ length: rows }, (_, index) => `table-row-${index + 1}`).map((key) => (
+        <Skeleton key={key} className="h-12 w-full" />
       ))}
     </div>
   );
@@ -25,8 +25,8 @@ export function PageHeaderSkeleton() {
 export function MetricCardsSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, index) => (
-        <Skeleton key={index} className="h-32 w-full" />
+      {["metric-one", "metric-two", "metric-three", "metric-four"].map((key) => (
+        <Skeleton key={key} className="h-32 w-full" />
       ))}
     </div>
   );

@@ -245,7 +245,10 @@ export function LineItemsField({
                   {isExpenseSource && String(formField.value ?? "") !== "" ? (
                     <FieldDescription>
                       Saldo tersedia:{" "}
-                      <CurrencyDisplay value={fundBalance(String(formField.value ?? "")) ?? 0} className="font-medium" />
+                      <CurrencyDisplay
+                        value={fundBalance(String(formField.value ?? "")) ?? 0}
+                        className="font-medium"
+                      />
                     </FieldDescription>
                   ) : null}
                 </Field>

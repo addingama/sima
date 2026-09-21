@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\BankFee;
 use App\Models\Disbursement;
+use App\Models\GrantApplication;
 use App\Models\OperationalLiability;
 use App\Models\Receipt;
 use App\Models\ReceiptAllocation;
@@ -17,6 +18,7 @@ final class SimaMorphMap
         Relation::morphMap([
             'receipt' => Receipt::class,
             'disbursement' => Disbursement::class,
+            'grant_application' => GrantApplication::class,
             'bank_fee' => BankFee::class,
             'operational_liability' => OperationalLiability::class,
             'receipt_allocation' => ReceiptAllocation::class,

@@ -39,6 +39,11 @@ class DisbursementResource extends JsonResource
             'fund_sources' => ExpenseFundSourceResource::collection($this->whenLoaded('fundSources')),
             'approvals' => ApprovalResource::collection($this->whenLoaded('approvals')),
             'attachments' => AttachmentResource::collection($this->whenLoaded('attachments')),
+            'grant_application' => $this->whenLoaded('grantApplication', fn () => $this->grantApplication === null ? null : [
+                'id' => $this->grantApplication->id,
+                'application_number' => $this->grantApplication->application_number,
+                'status' => $this->grantApplication->status?->value ?? $this->grantApplication->status,
+            ]),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

@@ -228,7 +228,7 @@ export default function OpeningBalanceWizard() {
                   </thead>
                   <tbody>
                     {values.lines.map((line, index) => (
-                      <tr key={`${line.account_id}-${line.fund_id}-${index}`} className="border-t">
+                      <tr key={`${line.account_id}-${line.fund_id}`} className="border-t">
                         <td className="px-3 py-2">{index + 1}</td>
                         <td className="px-3 py-2">
                           {resolveName(accountsData?.rows, line.account_id, ["name", "code"])}

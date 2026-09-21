@@ -13,8 +13,10 @@ Backend + frontend untuk lembaga sosial yang mencatat dan mengelola **dana titip
 
 | Dokumen | Isi |
 |---------|-----|
+| [AGENTS.md](AGENTS.md) | Aturan permanen untuk agent AI (Codex/Copilot/Cursor); identik dengan `CLAUDE.md` |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Diagram arsitektur & aliran data |
 | [docs/DANA-AMANAH.md](docs/DANA-AMANAH.md) | Tipe Dana Amanah: restricted vs unrestricted |
+| [docs/BANTUAN.md](docs/BANTUAN.md) | Modul pengajuan bantuan (kontrak + peta kode; Kanban & laporan) |
 | [docs/PANDUAN-MULAI.md](docs/PANDUAN-MULAI.md) | Panduan go-live: master data & saldo awal |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | Daftar pekerjaan belum selesai (todo) |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deploy produksi (Docker, TLS, backup) |
@@ -37,6 +39,17 @@ docker compose exec app php artisan migrate --seed
 - API: http://localhost:8080/api  
 - Frontend: `cd frontend && npm install && npm run dev` → http://localhost:3000
 
+Lokal tanpa Docker (API + Next.js sekaligus):
+
+```bash
+./dev.sh
+```
+
+- API: http://127.0.0.1:8000/api  
+- Frontend: http://127.0.0.1:3000  
+
+Pastikan `frontend/.env` memakai `NEXT_PUBLIC_API_URL=http://localhost:8000/api`.
+
 ### Production
 
 ```bash
@@ -51,6 +64,7 @@ Detail lengkap: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 ### Makefile
 
 ```bash
+make dev         # Laravel API + Next.js (lokal, tanpa Docker)
 make dev-up      # stack development
 make prod-up     # stack production
 make test        # PHPUnit
@@ -214,7 +228,7 @@ Migrasi & seed:
 
 ```bash
 php artisan migrate --seed
-php artisan serve
+./dev.sh
 ```
 
 ### Akun contoh (password: `password`)

@@ -4,6 +4,8 @@ const variants: Record<string, "default" | "secondary" | "destructive" | "outlin
   draft: "secondary",
   submitted: "outline",
   verified: "outline",
+  verification: "outline",
+  pending_approval: "outline",
   approved: "default",
   posted: "default",
   rejected: "destructive",

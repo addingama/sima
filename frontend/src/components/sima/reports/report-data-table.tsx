@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNestedTernary: State sel TanStack bersifat eksklusif dan mengikuti pola render library.
 "use client";
 
 "use no memo";

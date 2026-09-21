@@ -89,6 +89,18 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 
 ---
 
+## P2 — Modul pengajuan bantuan
+
+Spesifikasi terkunci: [BANTUAN.md](BANTUAN.md). **Jangan implementasi sebelum issue GitHub** (satu slice = satu issue).
+
+- [x] **Keputusan produk** — bounded context, alur tunai, assignment verifikator boleh kosong, 1 pengeluaran per penerima
+- [ ] **Backend domain** — model pengajuan, status, `assigned_verifier_id`, permission `grant.*`, policy record-level ([#41](https://github.com/addingama/sima/issues/41), branch `feature/grant-applications`)
+- [ ] **Tautan pengeluaran** — 1:1 ke `disbursements`, tanpa posting ledger dari modul bantuan ([#42](https://github.com/addingama/sima/issues/42))
+- [ ] **Frontend Kanban** — kolom = status tetap; drag hanya transisi legal; bukan template `/dashboard/kanban` dummy ([#43](https://github.com/addingama/sima/issues/43))
+- [ ] **Laporan bantuan** — ringkasan usulan/disetujui/serah terima + filter periode/status/cara bayar/program ([#45](https://github.com/addingama/sima/issues/45))
+
+---
+
 ## P2 — Kualitas backend & API
 
 ### Standarisasi (sesuai CLAUDE.md / AGENTS.md)
@@ -142,8 +154,8 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 
 ## P3 — Dokumentasi & sinkronisasi
 
-- [ ] **Update CLAUDE.md / AGENTS.md** — status frontend sudah ada; hapus “belum dibuat seluruh frontend”
-- [ ] **Update README** — daftar modul UI yang sudah/s belum lengkap
+- [x] **Update CLAUDE.md / AGENTS.md** — status frontend sudah ada; hapus “belum dibuat seluruh frontend”
+- [x] **Update README** — daftar modul UI yang sudah/s belum lengkap *(indeks BANTUAN + peta baca agent)*
 - [ ] **Video/walkthrough bendahara** — opsional, non-kode
 - [ ] **Template worksheet opening balance** — file `.xlsx` contoh di `docs/templates/`
 
@@ -189,4 +201,4 @@ flowchart LR
 - Update [PANDUAN-MULAI.md](PANDUAN-MULAI.md) jika item mengubah prosedur go-live.
 - Jika issue sudah ada untuk item yang sama, **pakai issue tersebut** — jangan buat duplikat.
 
-**Terakhir diperbarui:** Jun 2026
+**Terakhir diperbarui:** Sep 2026

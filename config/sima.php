@@ -45,6 +45,10 @@ return [
         // Saldo awal (go-live)
         'opening.view', 'opening.manage',
 
+        // Pengajuan bantuan (kasus; bukan ledger)
+        'grant.view', 'grant.create', 'grant.update',
+        'grant.assign', 'grant.verify', 'grant.approve', 'grant.handover',
+
         // Audit, laporan, pengguna, portal
         'audit.view',
         'report.view',
@@ -75,6 +79,7 @@ return [
             'liability.view', 'liability.manage',
             'attachment.view', 'attachment.manage',
             'report.view',
+            'grant.view', 'grant.create', 'grant.update', 'grant.assign', 'grant.handover',
         ],
 
         UserRole::BENDAHARA->value => [
@@ -92,6 +97,7 @@ return [
             'liability.view', 'liability.manage',
             'attachment.view', 'attachment.manage',
             'report.view',
+            'grant.view', 'grant.handover',
         ],
 
         UserRole::VERIFIKATOR->value => [
@@ -101,8 +107,9 @@ return [
             'bankfee.view',
             'transfer.view',
             'liability.view',
-            'attachment.view',
+            'attachment.view', 'attachment.manage',
             'report.view',
+            'grant.view', 'grant.verify', 'grant.update',
         ],
 
         UserRole::KETUA->value => [
@@ -115,6 +122,7 @@ return [
             'liability.view',
             'attachment.view',
             'report.view',
+            'grant.view', 'grant.assign', 'grant.approve',
         ],
 
         UserRole::AUDITOR->value => [
@@ -124,6 +132,7 @@ return [
             'liability.view', 'attachment.view',
             'opening.view',
             'audit.view', 'report.view',
+            'grant.view',
         ],
 
         UserRole::DONATUR->value => [

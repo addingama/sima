@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNestedTernary: State tabel bersifat eksklusif dan lebih mudah dibaca dekat markup.
 "use client";
 
 "use no memo";

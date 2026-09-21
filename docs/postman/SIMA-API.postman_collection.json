@@ -194,6 +194,10 @@
         {
           "name": "Ledger",
           "request": {"method": "GET", "url": "{{baseUrl}}/reports/ledger?per_page=50&sort=created_at&direction=desc"}
+        },
+        {
+          "name": "Grant Applications",
+          "request": {"method": "GET", "url": "{{baseUrl}}/reports/grant-applications?per_page=50&sort=created_at&direction=desc"}
         }
       ]
     },

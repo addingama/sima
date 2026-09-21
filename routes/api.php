@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\DisbursementController;
 use App\Http\Controllers\Api\DonorController;
 use App\Http\Controllers\Api\FundController;
 use App\Http\Controllers\Api\FundTransferController;
+use App\Http\Controllers\Api\GrantApplicationController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\OpeningBalanceController;
 use App\Http\Controllers\Api\OperationalLiabilityController;
@@ -127,6 +128,25 @@ Route::middleware('auth:sanctum')->group(function () {
 
     /*
     |----------------------------------------------------------------------
+    | Pengajuan Bantuan (kasus; bukan ledger)
+    |----------------------------------------------------------------------
+    */
+    Route::get('grant-applications', [GrantApplicationController::class, 'index'])->middleware('permission:grant.view');
+    Route::get('grant-applications/verifiers', [GrantApplicationController::class, 'verifiers'])->middleware('permission:grant.view');
+    Route::get('grant-applications/{grant_application}', [GrantApplicationController::class, 'show'])->middleware('permission:grant.view');
+    Route::post('grant-applications', [GrantApplicationController::class, 'store'])->middleware('permission:grant.create');
+    Route::put('grant-applications/{grant_application}', [GrantApplicationController::class, 'update'])->middleware('permission:grant.update');
+    Route::post('grant-applications/{grant_application}/assign', [GrantApplicationController::class, 'assign'])->middleware('permission:grant.assign');
+    Route::post('grant-applications/{grant_application}/send-to-verification', [GrantApplicationController::class, 'sendToVerification'])->middleware('permission:grant.view');
+    Route::post('grant-applications/{grant_application}/submit-for-approval', [GrantApplicationController::class, 'submitForApproval'])->middleware('permission:grant.verify');
+    Route::post('grant-applications/{grant_application}/approve', [GrantApplicationController::class, 'approve'])->middleware('permission:grant.approve');
+    Route::post('grant-applications/{grant_application}/reject', [GrantApplicationController::class, 'reject'])->middleware('permission:grant.approve');
+    Route::post('grant-applications/{grant_application}/return', [GrantApplicationController::class, 'returnToVerification'])->middleware('permission:grant.view');
+    Route::post('grant-applications/{grant_application}/disbursements', [GrantApplicationController::class, 'createDisbursement'])->middleware('permission:disbursement.create');
+    Route::post('grant-applications/{grant_application}/complete', [GrantApplicationController::class, 'complete'])->middleware('permission:grant.handover');
+
+    /*
+    |----------------------------------------------------------------------
     | Biaya Administrasi Bank
     |----------------------------------------------------------------------
     */
@@ -216,6 +236,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('fund-statement', [ReportController::class, 'fundStatement']);
         Route::get('by-program', [ReportController::class, 'byProgram']);
         Route::get('opening-balances', [ReportController::class, 'openingBalances']);
+        Route::get('grant-applications', [ReportController::class, 'grantApplications']);
     });
 
     /*

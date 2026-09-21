@@ -107,6 +107,23 @@ flowchart LR
 | Development | `docker-compose.yml` | Volume mount kode, debug on, port 8080 |
 | Production | `docker-compose.prod.yml` | Image baked, Redis wajib, Supervisor worker |
 
+## Modul pengajuan bantuan
+
+Kasus bantuan (rekomendasi → verifikasi assigned → approval → serah terima tunai) adalah bounded context terpisah. Tidak mem-posting `ledger_entries`. Setelah disetujui, bendahara membuat **satu Pengeluaran per penerima**; foto serah terima wajib untuk status selesai.
+
+Kontrak: [BANTUAN.md](BANTUAN.md). Identitas pengguna tetap Sanctum + `users`.
+
+| Lapisan | Lokasi |
+|---------|--------|
+| Domain | `app/Domains/Grant/` |
+| API kasus | `/api/grant-applications` |
+| API laporan | `GET /api/reports/grant-applications` (`report.view`) |
+| UI Kanban | `/dashboard/bantuan` |
+| UI laporan | `/dashboard/reports/bantuan` |
+| Tes API | `tests/Feature/Api/GrantApplicationApiTest.php`, `GrantApplicationReportTest.php` |
+
+Sampai PR [#44](https://github.com/addingama/sima/pull/44) merge, kode ini ada di branch `feature/grant-applications`.
+
 ## Referensi kode
 
 - Service layer: `app/Services/`

@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNestedTernary: Status query bersifat eksklusif dan lebih mudah dibaca dekat markup.
 "use client";
 
 import { useMemo, useState } from "react";

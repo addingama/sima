@@ -35,11 +35,15 @@ export function setClientSession(token: string, user: SimaUser, remember = false
   const maxAge = remember ? 60 * 60 * 24 * 30 : 60 * 60 * 8;
   const secure = window.location.protocol === "https:" ? "; Secure" : "";
 
+  // biome-ignore lint/suspicious/noDocumentCookie: API sesi ini sinkron; Cookie Store API belum didukung merata.
   document.cookie = `${AUTH_TOKEN_COOKIE}=${encodeURIComponent(token)}; Path=/; Max-Age=${maxAge}; SameSite=Lax${secure}`;
+  // biome-ignore lint/suspicious/noDocumentCookie: API sesi ini sinkron; Cookie Store API belum didukung merata.
   document.cookie = `${AUTH_USER_COOKIE}=${encodeURIComponent(JSON.stringify(user))}; Path=/; Max-Age=${maxAge}; SameSite=Lax${secure}`;
 }
 
 export function clearClientSession(): void {
+  // biome-ignore lint/suspicious/noDocumentCookie: API sesi ini sinkron; Cookie Store API belum didukung merata.
   document.cookie = `${AUTH_TOKEN_COOKIE}=; Path=/; Max-Age=0`;
+  // biome-ignore lint/suspicious/noDocumentCookie: API sesi ini sinkron; Cookie Store API belum didukung merata.
   document.cookie = `${AUTH_USER_COOKIE}=; Path=/; Max-Age=0`;
 }
