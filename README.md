@@ -185,6 +185,8 @@ Semua model master & transaksi meng-implement `OwenIt\Auditing\Contracts\Auditab
 | **Donatur** | Portal donatur (hanya data miliknya). |
 
 Daftar lengkap permission & pemetaan role ada di `config/sima.php`. Diterapkan via middleware route `permission:...`.
+Admin dapat mengelola permission role non-admin melalui **Pengaturan → Role & Permission** (`/dashboard/roles`).
+Role Admin selalu memiliki seluruh permission dan tidak dapat diubah. Perubahan permission disimpan secara transaksional dan dicatat di audit trail.
 
 ---
 
