@@ -3,6 +3,22 @@
 > **File ini berisi aturan permanen project SIMA.**
 > Sebelum menulis kode baru, **cek aturan di file ini terlebih dahulu**.
 > Jika ada konflik antara prompt dan file ini, **ikuti file ini** kecuali diinstruksikan eksplisit oleh pemilik project.
+>
+> **Codex / Copilot / agent lain:** riwayat chat Cursor tidak tersedia. Baca file ini dulu, lalu dokumen di tabel bawah. `CLAUDE.md` harus identik dengan file ini.
+
+### Peta baca
+
+| Kerja | Baca |
+|-------|------|
+| Aturan permanen + status kode | File ini |
+| Dana / jurnal / rekonsiliasi | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DANA-AMANAH.md](docs/DANA-AMANAH.md) |
+| Pengajuan bantuan | [docs/BANTUAN.md](docs/BANTUAN.md) |
+| Item terbuka | [docs/BACKLOG.md](docs/BACKLOG.md) |
+| Permission & role | `config/sima.php` |
+| Frontend path | [frontend/AGENTS.md](frontend/AGENTS.md) |
+| Go-live | [docs/PANDUAN-MULAI.md](docs/PANDUAN-MULAI.md) |
+
+**Kerja berjalan (belum merge `main`):** branch `feature/grant-applications` — [PR #44](https://github.com/addingama/sima/pull/44), issue #41 domain, #42 tautan pengeluaran, #43 Kanban, #45 laporan.
 
 ---
 
@@ -55,14 +71,11 @@ Dana `SYS-SUSPENSE` tetap ada untuk kebutuhan sistem/legacy; alur aktif tidak me
 - Spatie Permission (RBAC)
 - Spatie Activity Log (audit) — lihat **Status Implementasi** di bawah
 
-**Frontend** (belum dibuat — tunggu instruksi)
-- Next.js + TypeScript
+**Frontend** (`frontend/` — sudah ada)
+- Next.js App Router + TypeScript
 - Tailwind CSS
-- Shadcn Admin Dashboard (template utama)
-- shadcn/ui
-- TanStack Table
-- React Hook Form
-- Zod
+- Shadcn Admin Dashboard (template; jangan buat layout dari nol)
+- shadcn/ui, TanStack Table, React Hook Form, Zod, TanStack Query
 
 ---
 
@@ -100,6 +113,7 @@ Dana `SYS-SUSPENSE` tetap ada untuk kebutuhan sistem/legacy; alur aktif tidak me
 - Audit Trail
 - Laporan
 - Portal Donatur
+- Pengajuan bantuan (bounded context terpisah; kontrak [docs/BANTUAN.md](docs/BANTUAN.md))
 
 ### Status transaksi
 
@@ -110,20 +124,25 @@ Dana `SYS-SUSPENSE` tetap ada untuk kebutuhan sistem/legacy; alur aktif tidak me
 
 ### Role
 
-`admin`, `bendahara`, `verifikator`, `ketua`, `auditor`, `donatur`.
-Daftar permission & pemetaan role ada di `config/sima.php`.
+`admin`, `asisten_bendahara`, `bendahara`, `verifikator`, `ketua`, `auditor`, `donatur`.
+
+- **asisten_bendahara** — input & submit; tidak approve/reverse penerimaan/pengeluaran.
+- **bendahara** — approver keuangan (`receipt.approve` / `receipt.reverse`, pengeluaran, dsb.).
+- **ketua** — approver pimpinan/eskalasi (bukan pengganti asisten).
+- Role `donatur` tidak mendapat `grant.*`.
+
+Daftar permission & pemetaan role ada di `config/sima.php`. Tes RBAC jangan mengasumsikan bendahara = clerk.
 
 ---
 
-## UI Rules (JANGAN dikerjakan dulu)
+## UI Rules
 
-- **Jangan buat UI sampai backend core selesai** dan pemilik project meminta.
-- UI **wajib** memakai **Shadcn Admin Dashboard** sebagai template utama.
+- Frontend **sudah ada**; lanjutkan di `frontend/` dengan template **Shadcn Admin Dashboard**.
 - **Jangan** membuat layout dashboard dari nol.
-- Ikuti struktur folder template.
 - Gunakan komponen **shadcn/ui**.
-- Gunakan **table-first layout** untuk data keuangan (TanStack Table).
+- Table-first untuk data keuangan (TanStack Table).
 - UX harus mudah untuk **bendahara non-teknis**.
+- Pengajuan bantuan: Kanban `/dashboard/bantuan` (bukan template dummy `/dashboard/kanban`). Laporan organisasi: `/dashboard/reports/bantuan`.
 
 ---
 
@@ -132,7 +151,8 @@ Daftar permission & pemetaan role ada di `config/sima.php`.
 1. Sebelum menulis kode baru, **baca file ini**.
 2. Jika prompt bertentangan dengan file ini, **ikuti file ini** kecuali ada instruksi eksplisit.
 3. Setiap perubahan finansial: bungkus dengan transaction, posting via ledger, jaga invariant non-negatif, catat ke audit & approval bila relevan.
-4. Setiap transaksi punya **nomor unik** (lihat `DocumentNumberService`: `RCP/DSB/FEE/LIB`).
+4. Setiap transaksi punya **nomor unik** (`DocumentNumberService`: `RCP/DSB/FEE/LIB/TRF/OPN`; pengajuan bantuan `BNT`).
+5. Tes: backend **PHPUnit wajib** untuk API/domain. Frontend **belum** punya Vitest/Playwright — CI hanya Biome + `next build`. Jangan klaim UI sudah ditest otomatis.
 
 ---
 
@@ -174,33 +194,44 @@ gh issue create \
 
 ---
 
-## Status Implementasi (per Jun 2026)
+## Status Implementasi (per Sep 2026)
 
 > Bagian ini menjaga sinkronisasi antara aturan & kode nyata. Perbarui saat ada perubahan.
 
 **Sudah ada (backend):**
 - Migration: master data, transaksi finansial, `ledger_entries` (double-entry Amanah Ledger),
-  `idempotency_keys`, `audit_logs`, dll.
-- **Domain layer** (`app/Domains/`): Receipt, Expense, Ledger, Approval, Reconciliation, Audit —
-  masing-masing punya DTO, Repository, Service, Policy, Validator, Event, Listener.
+  `idempotency_keys`, `audit_logs`, `grant_applications`, dll.
+- **Domain layer** (`app/Domains/`): Receipt, Expense, Ledger, Approval, Reconciliation, Audit, **Grant** —
+  masing-masing punya DTO/Repository/Service/Policy/Validator (Grant tidak mem-posting ledger).
   Controller hanya HTTP adapter (validasi Form Request + delegasi ke domain service).
-- **Ledger domain** = mesin akuntansi (posting jurnal, saldo dari ledger). **Business domain**
-  (Receipt/Expense) memanggil Ledger saat approve/post; audit & approval via event/listener.
-- Infrastruktur (`app/Services/`): `DocumentNumberService`, `IdempotencyService`, `OperationalLiabilityService`.
-- API + RBAC + Policy record-level + Form Request/Resource (modul finansial & master data).
+- **Ledger domain** = mesin akuntansi. **Business domain** (Receipt/Expense) memanggil Ledger saat approve/post.
+- Infrastruktur (`app/Services/`): `DocumentNumberService`, `IdempotencyService`, `OperationalLiabilityService`, `Report/ReportService`.
+- API + RBAC + Policy record-level + Form Request/Resource.
+- CRUD user (`user.manage`), vendor, transfer, portal donatur, saldo awal.
 - Idempotency claim (race-safe), CI/tests, Docker.
+
+**Sudah ada (frontend):** `frontend/` Next.js — master data, keuangan, approval, laporan, portal, Kanban bantuan, laporan bantuan. Template Shadcn Admin Dashboard.
 
 **REST API (standar respons):**
 - Envelope JSON: `success`, `message`, `data`, `meta`, `errors`.
 - Controller tipis → Service → Repository; Form Request + Policy + API Resource wajib.
 - List endpoint: pagination offset (`page`, `per_page`), filter, sort (`sort`, `direction`), search (`q`).
 - Audit list: cursor pagination (`cursor`) via `AuditQueryService`.
-- OpenAPI: anotasi di controller (`app/Http/Controllers/Api/`), generate via `php artisan l5-swagger:generate`.
+- OpenAPI: anotasi di controller; generate via `php artisan l5-swagger:generate`.
 - Swagger UI: `/api/documentation` | Postman: `docs/postman/SIMA-API.postman_collection.json`.
+
+**Pengajuan bantuan (branch `feature/grant-applications` sampai PR #44 merge):**
+- API `/api/grant-applications` — permission `grant.*`, scope `visibleTo`.
+- Selesai = status `approved` + pengeluaran tertaut `approved` + (tunai) lampiran judul `handover`.
+- Satu `disbursement_id` per pengajuan. Nomor `BNT/...`.
+- Laporan: `GET /api/reports/grant-applications` (`report.view`) + UI `/dashboard/reports/bantuan`.
+- Tes: `tests/Feature/Api/GrantApplicationApiTest.php`, `GrantApplicationReportTest.php`. Tidak ada tes frontend.
+
+**Tes & CI:**
+- Backend: `php artisan test` (SQLite in-memory) + Pint.
+- Frontend CI: `npm run check` (Biome) + `npm run build`. **Tidak ada** unit/e2e UI.
+- Filter `mine` pada list grant: query string `"true"` harus di-boolean-kan di Form Request (`prepareForValidation`); Laravel `boolean` menolak string `"true"`.
 
 **Catatan:**
 - **Audit**: master data memakai owen-it; aksi workflow finansial memakai Audit domain (event-driven).
-- **Modul Vendor**: belum ada — tambahkan saat dibutuhkan.
-- **User management API**: permission `user.manage` ada, endpoint belum dibuat.
-
-**Belum dibuat:** seluruh frontend (sesuai UI Rules).
+- Lampiran terautentikasi: preview gambar jangan cache blob URL yang sudah di-revoke; PDF buka tab baru (`window.open` sinkron lalu `location.replace` object URL).

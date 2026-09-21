@@ -2,6 +2,8 @@
 
 Terima kasih atas minat untuk berkontribusi. SIMA mengelola dana amanah — setiap perubahan finansial harus aman, auditable, dan dapat diverifikasi.
 
+Agent AI (Codex, Copilot, Cursor): mulai dari [AGENTS.md](../AGENTS.md) di root. Chat lama tidak tersimpan di repo.
+
 ## Sebelum mulai
 
 1. Baca [ARCHITECTURE.md](./ARCHITECTURE.md) untuk memahami Amanah Ledger.
@@ -67,6 +69,8 @@ Password default: `password`
    php artisan test
    cd frontend && npm run check && npm run build
    ```
+
+   Frontend belum punya tes unit/e2e. Jangan anggap `npm run check` sebagai tes perilaku UI.
 
 5. **Commit** dengan pesan jelas — lihat [Issue dan commit](#issue-dan-commit).
 

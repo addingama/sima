@@ -13,9 +13,10 @@ Backend + frontend untuk lembaga sosial yang mencatat dan mengelola **dana titip
 
 | Dokumen | Isi |
 |---------|-----|
+| [AGENTS.md](AGENTS.md) | Aturan permanen untuk agent AI (Codex/Copilot/Cursor); identik dengan `CLAUDE.md` |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Diagram arsitektur & aliran data |
 | [docs/DANA-AMANAH.md](docs/DANA-AMANAH.md) | Tipe Dana Amanah: restricted vs unrestricted |
-| [docs/BANTUAN.md](docs/BANTUAN.md) | Modul pengajuan bantuan (kontrak; belum diimplementasi) |
+| [docs/BANTUAN.md](docs/BANTUAN.md) | Modul pengajuan bantuan (kontrak + peta kode; Kanban & laporan) |
 | [docs/PANDUAN-MULAI.md](docs/PANDUAN-MULAI.md) | Panduan go-live: master data & saldo awal |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | Daftar pekerjaan belum selesai (todo) |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deploy produksi (Docker, TLS, backup) |

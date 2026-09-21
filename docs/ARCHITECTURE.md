@@ -111,7 +111,18 @@ flowchart LR
 
 Kasus bantuan (rekomendasi → verifikasi assigned → approval → serah terima tunai) adalah bounded context terpisah. Tidak mem-posting `ledger_entries`. Setelah disetujui, bendahara membuat **satu Pengeluaran per penerima**; foto serah terima wajib untuk status selesai.
 
-Kontrak: [BANTUAN.md](BANTUAN.md). Identitas pengguna tetap Sanctum + `users`. API: `/api/grant-applications`. UI: `/dashboard/bantuan`.
+Kontrak: [BANTUAN.md](BANTUAN.md). Identitas pengguna tetap Sanctum + `users`.
+
+| Lapisan | Lokasi |
+|---------|--------|
+| Domain | `app/Domains/Grant/` |
+| API kasus | `/api/grant-applications` |
+| API laporan | `GET /api/reports/grant-applications` (`report.view`) |
+| UI Kanban | `/dashboard/bantuan` |
+| UI laporan | `/dashboard/reports/bantuan` |
+| Tes API | `tests/Feature/Api/GrantApplicationApiTest.php`, `GrantApplicationReportTest.php` |
+
+Sampai PR [#44](https://github.com/addingama/sima/pull/44) merge, kode ini ada di branch `feature/grant-applications`.
 
 ## Referensi kode
 

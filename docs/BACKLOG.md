@@ -154,8 +154,8 @@ Spesifikasi terkunci: [BANTUAN.md](BANTUAN.md). **Jangan implementasi sebelum is
 
 ## P3 — Dokumentasi & sinkronisasi
 
-- [ ] **Update CLAUDE.md / AGENTS.md** — status frontend sudah ada; hapus “belum dibuat seluruh frontend”
-- [ ] **Update README** — daftar modul UI yang sudah/s belum lengkap
+- [x] **Update CLAUDE.md / AGENTS.md** — status frontend sudah ada; hapus “belum dibuat seluruh frontend”
+- [x] **Update README** — daftar modul UI yang sudah/s belum lengkap *(indeks BANTUAN + peta baca agent)*
 - [ ] **Video/walkthrough bendahara** — opsional, non-kode
 - [ ] **Template worksheet opening balance** — file `.xlsx` contoh di `docs/templates/`
 

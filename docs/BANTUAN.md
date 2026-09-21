@@ -264,3 +264,27 @@ Filter: periode (tanggal pengajuan), status, cara bayar, program, cari nama/nomo
 - Ledger & pengeluaran: [ARCHITECTURE.md](ARCHITECTURE.md), [DANA-AMANAH.md](DANA-AMANAH.md)
 - Role & permission keuangan: `config/sima.php`
 - Backlog implementasi: [BACKLOG.md](BACKLOG.md)
+- Aturan agent (Codex/Copilot): [AGENTS.md](../AGENTS.md), [frontend/AGENTS.md](../frontend/AGENTS.md)
+
+## Peta kode (untuk agent)
+
+Sampai merge: branch `feature/grant-applications`, PR #44.
+
+| Apa | Di mana |
+|-----|---------|
+| Domain PHP | `app/Domains/Grant/` (Service, Repository, Policy, Validator) |
+| Model | `app/Models/GrantApplication.php` |
+| List + filter `from`/`to`/`mine`/`status` | `ListGrantApplicationRequest`, `GrantApplicationRepository` |
+| Laporan | `ReportService::grantApplications`, `GET /api/reports/grant-applications` |
+| Kanban UI | `frontend/src/app/(main)/dashboard/bantuan/` |
+| Laporan UI | `frontend/src/app/(main)/dashboard/reports/bantuan/` + `frontend/src/lib/reports/definitions.ts` |
+| Tes | `tests/Feature/Api/GrantApplicationApiTest.php`, `GrantApplicationReportTest.php` |
+| Tes UI | **tidak ada** |
+
+Keputusan implementasi yang mudah terlewat:
+
+- Filter `mine`: boolean query `"true"` di-normalisasi di `prepareForValidation`.
+- Preview lampiran gambar: blob URL tidak boleh di-cache React Query setelah revoke.
+- PDF: `window.open('about:blank')` sinkron, lalu ganti ke object URL `application/pdf`.
+- `complete` tunai butuh attachment `title = handover` + pengeluaran tertaut `approved`.
+
