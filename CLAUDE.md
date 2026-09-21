@@ -15,7 +15,7 @@
 | Pengajuan bantuan | [docs/BANTUAN.md](docs/BANTUAN.md) |
 | Item terbuka | [docs/BACKLOG.md](docs/BACKLOG.md) |
 | Permission & role | `config/sima.php` |
-| Frontend path | [frontend/AGENTS.md](frontend/AGENTS.md) |
+| Frontend path | [frontend/AGENTS.md](frontend/AGENTS.md), [docs/FRONTEND-TESTING.md](docs/FRONTEND-TESTING.md) |
 | Go-live | [docs/PANDUAN-MULAI.md](docs/PANDUAN-MULAI.md) |
 
 **Kerja berjalan (belum merge `main`):** branch `feature/grant-applications` — [PR #44](https://github.com/addingama/sima/pull/44), issue #41 domain, #42 tautan pengeluaran, #43 Kanban, #45 laporan.
@@ -152,7 +152,11 @@ Daftar permission & pemetaan role ada di `config/sima.php`. Tes RBAC jangan meng
 2. Jika prompt bertentangan dengan file ini, **ikuti file ini** kecuali ada instruksi eksplisit.
 3. Setiap perubahan finansial: bungkus dengan transaction, posting via ledger, jaga invariant non-negatif, catat ke audit & approval bila relevan.
 4. Setiap transaksi punya **nomor unik** (`DocumentNumberService`: `RCP/DSB/FEE/LIB/TRF/OPN`; pengajuan bantuan `BNT`).
-5. Tes: backend **PHPUnit wajib** untuk API/domain. Frontend **belum** punya Vitest/Playwright — CI hanya Biome + `next build`. Jangan klaim UI sudah ditest otomatis.
+5. **Setiap perubahan kode wajib disertai test yang relevan.** Agent/model yang menambah, mengubah, atau memperbaiki perilaku harus menambah atau memperbarui test pada perubahan yang sama.
+6. Bug fix wajib memiliki **regression test** yang gagal tanpa perbaikan dan lulus setelah perbaikan, jika dapat direproduksi secara deterministik.
+7. Backend: gunakan PHPUnit untuk API/domain. Frontend: gunakan Vitest + React Testing Library untuk unit/component test; gunakan E2E jika alur hanya dapat dibuktikan lewat browser.
+8. Sebelum menyatakan pekerjaan selesai, jalankan test yang relevan beserta lint/type-check/build sesuai scope. Jangan mengklaim test lulus tanpa benar-benar menjalankannya.
+9. Perubahan dokumentasi, komentar, formatting, atau konfigurasi tanpa perubahan perilaku boleh tanpa test baru, tetapi agent wajib menyatakan alasan test tidak ditambahkan dan tetap menjalankan pemeriksaan yang relevan.
 
 ---
 
@@ -210,7 +214,7 @@ gh issue create \
 - CRUD user (`user.manage`), vendor, transfer, portal donatur, saldo awal.
 - Idempotency claim (race-safe), CI/tests, Docker.
 
-**Sudah ada (frontend):** `frontend/` Next.js — master data, keuangan, approval, laporan, portal, Kanban bantuan, laporan bantuan. Template Shadcn Admin Dashboard.
+**Sudah ada (frontend):** `frontend/` Next.js — master data, keuangan, approval, laporan, portal, Kanban bantuan, laporan bantuan. Template Shadcn Admin Dashboard. Unit/component test memakai Vitest + React Testing Library; panduan di `docs/FRONTEND-TESTING.md`.
 
 **REST API (standar respons):**
 - Envelope JSON: `success`, `message`, `data`, `meta`, `errors`.
@@ -225,11 +229,13 @@ gh issue create \
 - Selesai = status `approved` + pengeluaran tertaut `approved` + (tunai) lampiran judul `handover`.
 - Satu `disbursement_id` per pengajuan. Nomor `BNT/...`.
 - Laporan: `GET /api/reports/grant-applications` (`report.view`) + UI `/dashboard/reports/bantuan`.
-- Tes: `tests/Feature/Api/GrantApplicationApiTest.php`, `GrantApplicationReportTest.php`. Tidak ada tes frontend.
+- Tes backend: `tests/Feature/Api/GrantApplicationApiTest.php`, `GrantApplicationReportTest.php`. Tes frontend berada berdampingan dengan source sebagai `*.test.ts` / `*.test.tsx`.
 
 **Tes & CI:**
 - Backend: `php artisan test` (SQLite in-memory) + Pint.
-- Frontend CI: `npm run check` (Biome) + `npm run build`. **Tidak ada** unit/e2e UI.
+- Frontend lokal: `npm run check`, `npm test`, `npx tsc --noEmit`, dan `npm run build`.
+- Frontend unit/component: Vitest + React Testing Library. E2E browser belum dikonfigurasi.
+- Setiap agent/model wajib menjaga atau meningkatkan test sesuai perubahan kode yang dibuat.
 - Filter `mine` pada list grant: query string `"true"` harus di-boolean-kan di Form Request (`prepareForValidation`); Laravel `boolean` menolak string `"true"`.
 
 **Catatan:**

@@ -10,9 +10,16 @@ Next.js App Router, TypeScript, Tailwind, shadcn/ui (template Shadcn Admin Dashb
 
 ## Tes
 
-Belum ada Vitest / Playwright / Testing Library. CI frontend: `npm run check` (Biome) + `npm run build`.
+Frontend memakai Vitest + React Testing Library. Panduan lengkap: [`../docs/FRONTEND-TESTING.md`](../docs/FRONTEND-TESTING.md).
 
-Perilaku bisnis (status, filter, ringkasan laporan, permission) diuji di PHPUnit:
+- **Setiap perubahan kode frontend wajib menambah atau memperbarui test yang relevan.**
+- Bug fix wajib memiliki regression test jika dapat direproduksi secara deterministik.
+- Letakkan test berdampingan dengan source sebagai `*.test.ts` atau `*.test.tsx`.
+- Sebelum selesai, jalankan `npm run check`, `npm test`, `npx tsc --noEmit`, dan `npm run build` sesuai scope.
+- Jangan mengklaim test lulus tanpa menjalankannya.
+- Perubahan non-perilaku boleh tanpa test baru hanya jika alasannya dinyatakan eksplisit.
+
+Perilaku backend tetap diuji di PHPUnit:
 
 - `tests/Feature/Api/GrantApplicationApiTest.php`
 - `tests/Feature/Api/GrantApplicationReportTest.php`
