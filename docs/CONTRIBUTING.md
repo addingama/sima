@@ -67,10 +67,10 @@ Password default: `password`
    ```bash
    ./vendor/bin/pint --test
    php artisan test
-   cd frontend && npm run check && npm run build
+   cd frontend && npm run check && npm test && npx tsc --noEmit && npm run build
    ```
 
-   Frontend belum punya tes unit/e2e. Jangan anggap `npm run check` sebagai tes perilaku UI.
+   Frontend memiliki unit/component test berbasis Vitest dan React Testing Library. Panduan lengkap ada di [FRONTEND-TESTING.md](FRONTEND-TESTING.md). E2E browser belum dikonfigurasi.
 
 5. **Commit** dengan pesan jelas — lihat [Issue dan commit](#issue-dan-commit).
 

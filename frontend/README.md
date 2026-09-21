@@ -128,6 +128,8 @@ npx @biomejs/biome check --write
 
 ### Testing
 
+Konvensi dan prioritas coverage dijelaskan di [docs/FRONTEND-TESTING.md](../docs/FRONTEND-TESTING.md).
+
 Jalankan seluruh unit dan component test satu kali:
 
 ```bash
