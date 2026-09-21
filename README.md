@@ -38,6 +38,17 @@ docker compose exec app php artisan migrate --seed
 - API: http://localhost:8080/api  
 - Frontend: `cd frontend && npm install && npm run dev` → http://localhost:3000
 
+Lokal tanpa Docker (API + Next.js sekaligus):
+
+```bash
+./dev.sh
+```
+
+- API: http://127.0.0.1:8000/api  
+- Frontend: http://127.0.0.1:3000  
+
+Pastikan `frontend/.env` memakai `NEXT_PUBLIC_API_URL=http://localhost:8000/api`.
+
 ### Production
 
 ```bash
@@ -52,6 +63,7 @@ Detail lengkap: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 ### Makefile
 
 ```bash
+make dev         # Laravel API + Next.js (lokal, tanpa Docker)
 make dev-up      # stack development
 make prod-up     # stack production
 make test        # PHPUnit
@@ -215,7 +227,7 @@ Migrasi & seed:
 
 ```bash
 php artisan migrate --seed
-php artisan serve
+./dev.sh
 ```
 
 ### Akun contoh (password: `password`)

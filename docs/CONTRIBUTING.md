@@ -31,10 +31,14 @@ composer install
 cp .env.example .env
 php artisan key:generate
 php artisan migrate --seed
-php artisan serve
-
-cd frontend && npm install && npm run dev
+(cd frontend && npm install)
+./dev.sh
 ```
+
+API: http://127.0.0.1:8000/api  
+Frontend: http://127.0.0.1:3000  
+
+Pastikan `frontend/.env` memakai `NEXT_PUBLIC_API_URL=http://localhost:8000/api`.
 
 ### Akun uji (setelah seed)
 
