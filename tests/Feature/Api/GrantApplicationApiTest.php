@@ -236,6 +236,17 @@ class GrantApplicationApiTest extends TestCase
     }
 
     #[Test]
+    public function asisten_can_list_eligible_verifiers(): void
+    {
+        $verifier = $this->makeUser('verifikator');
+        $this->actingAsRole('asisten_bendahara');
+
+        $this->getJson('/api/grant-applications/verifiers')
+            ->assertOk()
+            ->assertJsonFragment(['id' => $verifier->id, 'name' => $verifier->name]);
+    }
+
+    #[Test]
     public function donatur_cannot_access_grant_applications(): void
     {
         $this->actingAsRole('donatur');

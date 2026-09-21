@@ -32,14 +32,18 @@ export function AttachmentPanel({
   attachableType,
   attachableId,
   managePermission,
+  helperText,
+  defaultTitle = "",
 }: {
-  attachableType: "receipt" | "disbursement" | "bank_fee";
+  attachableType: "receipt" | "disbursement" | "bank_fee" | "grant_application";
   attachableId: number;
   managePermission: string;
+  helperText?: string;
+  defaultTitle?: string;
 }) {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(defaultTitle);
   const [previewAttachment, setPreviewAttachment] = useState<AttachmentRecord | null>(null);
   const queryClient = useQueryClient();
   const canManage = hasPermission(user, managePermission);
@@ -70,7 +74,7 @@ export function AttachmentPanel({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/attachments", attachableType, attachableId] });
-      setTitle("");
+      setTitle(defaultTitle);
       toast.success("Lampiran berhasil diunggah.");
     },
     onError: (error) => {
@@ -217,7 +221,10 @@ export function AttachmentPanel({
     <>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-4">
-          <CardTitle>Lampiran</CardTitle>
+          <div className="space-y-1">
+            <CardTitle>Lampiran</CardTitle>
+            {helperText ? <p className="text-muted-foreground text-sm">{helperText}</p> : null}
+          </div>
           {canManage ? (
             <div className="flex flex-wrap items-center gap-2">
               <Input

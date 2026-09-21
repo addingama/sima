@@ -12,6 +12,7 @@ import {
   FileSearch,
   Globe,
   HandCoins,
+  HeartHandshake,
   Landmark,
   LayoutDashboard,
   ReceiptText,
@@ -184,6 +185,18 @@ export const sidebarItems: NavGroup[] = [
             permission: "transfer.view",
           },
         ],
+      },
+    ],
+  },
+  {
+    id: 35,
+    items: [
+      {
+        id: "bantuan",
+        title: "Pengajuan Bantuan",
+        url: "/dashboard/bantuan",
+        icon: HeartHandshake,
+        permission: "grant.view",
       },
     ],
   },

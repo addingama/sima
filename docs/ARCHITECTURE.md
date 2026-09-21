@@ -111,7 +111,7 @@ flowchart LR
 
 Kasus bantuan (rekomendasi → verifikasi assigned → approval → serah terima tunai) adalah bounded context terpisah. Tidak mem-posting `ledger_entries`. Setelah disetujui, bendahara membuat **satu Pengeluaran per penerima**; foto serah terima wajib untuk status selesai.
 
-Kontrak: [BANTUAN.md](BANTUAN.md). Identitas pengguna tetap Sanctum + `users`. API backend: `/api/grant-applications` (issue #41).
+Kontrak: [BANTUAN.md](BANTUAN.md). Identitas pengguna tetap Sanctum + `users`. API: `/api/grant-applications`. UI: `/dashboard/bantuan`.
 
 ## Referensi kode
 

@@ -17,6 +17,7 @@ use App\Http\Requests\GrantApplication\SubmitForApprovalRequest;
 use App\Http\Requests\GrantApplication\UpdateGrantApplicationRequest;
 use App\Http\Resources\GrantApplicationResource;
 use App\Models\GrantApplication;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 
@@ -38,6 +39,26 @@ class GrantApplicationController extends Controller
         return $this->collection(GrantApplicationResource::collection(
             $this->service->paginate($request->listQuery(), $request->user())
         ));
+    }
+
+    #[OA\Get(
+        path: '/grant-applications/verifiers',
+        summary: 'Daftar user yang boleh di-assign sebagai verifikator',
+        tags: ['GrantApplication'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
+    public function verifiers(): JsonResponse
+    {
+        $this->authorize('viewAny', GrantApplication::class);
+
+        $users = User::query()
+            ->permission('grant.verify')
+            ->where('users.is_active', true)
+            ->orderBy('users.name')
+            ->get(['users.id', 'users.name']);
+
+        return $this->ok($users);
     }
 
     #[OA\Post(

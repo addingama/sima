@@ -98,8 +98,10 @@ export interface ResourceDef {
   };
   workflow?: WorkflowActionDef[];
   attachments?: {
-    attachableType: "receipt" | "disbursement" | "bank_fee";
+    attachableType: "receipt" | "disbursement" | "bank_fee" | "grant_application";
     managePermission: string;
+    defaultTitle?: string;
+    helperText?: string;
   };
   audit?: {
     auditableType: string;

@@ -132,6 +132,7 @@ Route::middleware('auth:sanctum')->group(function () {
     |----------------------------------------------------------------------
     */
     Route::get('grant-applications', [GrantApplicationController::class, 'index'])->middleware('permission:grant.view');
+    Route::get('grant-applications/verifiers', [GrantApplicationController::class, 'verifiers'])->middleware('permission:grant.view');
     Route::get('grant-applications/{grant_application}', [GrantApplicationController::class, 'show'])->middleware('permission:grant.view');
     Route::post('grant-applications', [GrantApplicationController::class, 'store'])->middleware('permission:grant.create');
     Route::put('grant-applications/{grant_application}', [GrantApplicationController::class, 'update'])->middleware('permission:grant.update');
