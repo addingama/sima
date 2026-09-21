@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class IndexAttachmentRequest extends FormRequest
 {
-    private const TYPES = ['receipt', 'disbursement', 'bank_fee', 'liability'];
+    private const TYPES = ['receipt', 'disbursement', 'bank_fee', 'liability', 'grant_application'];
 
     public function authorize(): bool
     {

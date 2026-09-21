@@ -4,6 +4,7 @@ namespace App\Policies\Concerns;
 
 use App\Models\BankFee;
 use App\Models\Disbursement;
+use App\Models\GrantApplication;
 use App\Models\OperationalLiability;
 use App\Models\Receipt;
 use App\Models\User;
@@ -16,6 +17,7 @@ trait AuthorizesAttachable
         return match (true) {
             $attachable instanceof Receipt => $user->can('view', $attachable),
             $attachable instanceof Disbursement => $user->can('view', $attachable),
+            $attachable instanceof GrantApplication => $user->can('view', $attachable),
             $attachable instanceof BankFee => $user->can('view', $attachable),
             $attachable instanceof OperationalLiability => $user->can('view', $attachable),
             default => false,

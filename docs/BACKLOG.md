@@ -89,6 +89,17 @@ Daftar pekerjaan terstruktur agar tim bisa mengerjakan **satu per satu**. Centan
 
 ---
 
+## P2 — Modul pengajuan bantuan
+
+Spesifikasi terkunci: [BANTUAN.md](BANTUAN.md). **Jangan implementasi sebelum issue GitHub** (satu slice = satu issue).
+
+- [x] **Keputusan produk** — bounded context, alur tunai, assignment verifikator boleh kosong, 1 pengeluaran per penerima
+- [ ] **Backend domain** — model pengajuan, status, `assigned_verifier_id`, permission `grant.*`, policy record-level
+- [ ] **Tautan pengeluaran** — 1:1 ke `disbursements`, tanpa posting ledger dari modul bantuan
+- [ ] **Frontend Kanban** — kolom = status tetap; drag hanya transisi legal; bukan template `/dashboard/kanban` dummy
+
+---
+
 ## P2 — Kualitas backend & API
 
 ### Standarisasi (sesuai CLAUDE.md / AGENTS.md)
@@ -189,4 +200,4 @@ flowchart LR
 - Update [PANDUAN-MULAI.md](PANDUAN-MULAI.md) jika item mengubah prosedur go-live.
 - Jika issue sudah ada untuk item yang sama, **pakai issue tersebut** — jangan buat duplikat.
 
-**Terakhir diperbarui:** Jun 2026
+**Terakhir diperbarui:** Sep 2026

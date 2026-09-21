@@ -107,6 +107,12 @@ flowchart LR
 | Development | `docker-compose.yml` | Volume mount kode, debug on, port 8080 |
 | Production | `docker-compose.prod.yml` | Image baked, Redis wajib, Supervisor worker |
 
+## Modul pengajuan bantuan
+
+Kasus bantuan (rekomendasi → verifikasi assigned → approval → serah terima tunai) adalah bounded context terpisah. Tidak mem-posting `ledger_entries`. Setelah disetujui, bendahara membuat **satu Pengeluaran per penerima**; foto serah terima wajib untuk status selesai.
+
+Kontrak: [BANTUAN.md](BANTUAN.md). Identitas pengguna tetap Sanctum + `users`. API backend: `/api/grant-applications` (issue #41).
+
 ## Referensi kode
 
 - Service layer: `app/Services/`
