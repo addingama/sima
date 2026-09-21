@@ -84,7 +84,7 @@ class ApiWorkflowTest extends TestCase
 
     public function test_receipt_approval_flow_over_http(): void
     {
-        Sanctum::actingAs($bendahara = $this->userWithRole('bendahara'));
+        Sanctum::actingAs($this->userWithRole('bendahara'));
         $create = $this->postJson('/api/receipts', [
             'receipt_date' => now()->toDateString(),
             'account_id' => $this->account->id,
@@ -96,11 +96,7 @@ class ApiWorkflowTest extends TestCase
 
         $this->postJson("/api/receipts/{$id}/submit")->assertStatus(200)->assertJsonPath('data.status', 'submitted');
 
-        // Bendahara tidak boleh approve.
-        $this->postJson("/api/receipts/{$id}/approve")->assertStatus(403);
-
-        // Ketua approve.
-        Sanctum::actingAs($this->userWithRole('ketua'));
+        // Bendahara adalah approver keuangan.
         $this->postJson("/api/receipts/{$id}/approve")->assertStatus(200)->assertJsonPath('data.status', 'approved');
 
         // Saldo dana bertambah.

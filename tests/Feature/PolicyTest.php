@@ -59,7 +59,7 @@ class PolicyTest extends TestCase
         $this->postJson("/api/receipts/{$receipt->id}/approve")->assertStatus(403);
     }
 
-    public function test_bendahara_cannot_reverse_approved_receipt_without_permission(): void
+    public function test_asisten_bendahara_cannot_reverse_approved_receipt_without_permission(): void
     {
         $admin = $this->userWithRole('admin');
         $receipt = Receipt::create([
@@ -72,7 +72,7 @@ class PolicyTest extends TestCase
             'created_by' => $admin->id,
         ]);
 
-        Sanctum::actingAs($this->userWithRole('bendahara'));
+        Sanctum::actingAs($this->userWithRole('asisten_bendahara'));
         $this->postJson("/api/receipts/{$receipt->id}/reverse", ['reason' => 'test'])
             ->assertStatus(403);
     }
