@@ -126,6 +126,21 @@ npx @biomejs/biome check --write
 ```
 > For more information on available rules, fixes, and CLI options, refer to the [Biome documentation](https://biomejs.dev/).
 
+### Testing
+
+Jalankan seluruh unit dan component test satu kali:
+
+```bash
+npm test
+```
+
+Gunakan mode watch selama pengembangan atau buat laporan coverage HTML di folder `coverage`:
+
+```bash
+npm run test:watch
+npm run test:coverage
+```
+
 ---
 
 > [!IMPORTANT]  

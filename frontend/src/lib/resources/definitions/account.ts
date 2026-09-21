@@ -122,7 +122,7 @@ export const accountResource: ResourceDef = {
       accessor: (row) => {
         const type = String(row.type ?? "");
 
-        return type === "bank" ? "Bank" : type === "cash" ? "Kas" : type;
+        return { bank: "Bank", cash: "Kas" }[type] ?? type;
       },
     },
     { label: "Nama Bank", accessor: "bank_name" },

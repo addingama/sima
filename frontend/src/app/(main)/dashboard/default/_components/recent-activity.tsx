@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNestedTernary: Status query bersifat eksklusif dan lebih mudah dibaca dekat markup.
 "use client";
 
 import Link from "next/link";
@@ -37,8 +38,8 @@ export function RecentActivity() {
           <ErrorState onRetry={() => refetch()} />
         ) : isLoading ? (
           <div className="space-y-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <Skeleton key={index} className="h-16 w-full" />
+            {["a", "b", "c", "d", "e", "f"].map((key) => (
+              <Skeleton key={key} className="h-16 w-full" />
             ))}
           </div>
         ) : !data?.length ? (

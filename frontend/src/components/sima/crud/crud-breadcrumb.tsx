@@ -16,7 +16,7 @@ export function CrudBreadcrumb({ items }: { items: Array<{ label: string; href?:
     <Breadcrumb>
       <BreadcrumbList>
         {items.map((item, index) => (
-          <Fragment key={`${item.label}-${index}`}>
+          <Fragment key={`${item.label}-${item.href ?? "current"}`}>
             {index > 0 ? <BreadcrumbSeparator /> : null}
             <BreadcrumbItem>
               {item.href ? (

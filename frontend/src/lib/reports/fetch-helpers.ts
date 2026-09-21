@@ -47,7 +47,7 @@ function flattenGrantReportRow(row: Record<string, unknown>): Record<string, unk
     ...row,
     program_name: program?.name ?? "-",
     verifier_name: verifier?.name ?? "-",
-    payment_label: payment === "cash" ? "Tunai" : payment === "transfer" ? "Transfer" : "-",
+    payment_label: { cash: "Tunai", transfer: "Transfer" }[payment] ?? "-",
   };
 }
 

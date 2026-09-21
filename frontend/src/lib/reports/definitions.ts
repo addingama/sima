@@ -1,3 +1,4 @@
+import { apiGet } from "@/lib/api/client";
 import {
   currencyColumn,
   dateColumn,
@@ -6,7 +7,6 @@ import {
   statusColumn,
   textColumn,
 } from "@/lib/reports/columns";
-import { apiGet } from "@/lib/api/client";
 import {
   fetchApprovalReport,
   fetchFundBalances,
@@ -352,7 +352,8 @@ export const approvalReport: ReportDef = {
 export const grantApplicationReport: ReportDef = {
   id: "grant-applications",
   title: "Pengajuan Bantuan",
-  description: "Ringkasan usulan, persetujuan, dan serah terima bantuan per penerima. Bisa disaring periode, status, cara bayar, dan program.",
+  description:
+    "Ringkasan usulan, persetujuan, dan serah terima bantuan per penerima. Bisa disaring periode, status, cara bayar, dan program.",
   path: "/dashboard/reports/bantuan",
   paginated: true,
   columns: [
