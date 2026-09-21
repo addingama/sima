@@ -95,9 +95,14 @@ export function CrudDetailPage({
 
   const title =
     typeof config.titleField === "function" ? config.titleField(data) : String(data[config.titleField] ?? config.label);
-  const hasManagePermission = hasPermission(user, config.permissions.manage ?? config.permissions.create ?? "");
-  const canEdit = hasManagePermission && (config.canEdit?.(data) ?? true);
-  const canDelete = hasManagePermission && (config.canDelete?.(data) ?? false);
+  const hasEditPermission = hasPermission(
+    user,
+    config.permissions.update ?? config.permissions.manage ?? config.permissions.create ?? "",
+  );
+  const canEdit = hasEditPermission && (config.canEdit?.(data, user) ?? true);
+  const canDelete =
+    hasPermission(user, config.permissions.delete ?? config.permissions.manage ?? config.permissions.create ?? "") &&
+    (config.canDelete?.(data) ?? false);
   let lineItems: Array<Record<string, unknown>> = [];
   if (config.lineItems?.key === "allocations") {
     lineItems = (data.allocations as Array<Record<string, unknown>> | undefined) ?? [];

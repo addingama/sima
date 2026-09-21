@@ -15,7 +15,7 @@ Identitas pengguna: tabel `users` + Sanctum yang sama. Tidak ada password terpis
 1. Bounded context terpisah dari `ledger_entries`. Modul ini tidak mem-posting jurnal.
 2. Satu akun login SIMA (permission baru, bukan user baru).
 3. Penerima **tidak** mengajukan dan **tidak** punya akun. Petugas memasukkan data dari **rekomendasi orang**.
-4. Verifikasi = validasi + kelengkapan data. Rekening **tidak wajib** (jalur utama: tunai).
+4. Verifikasi = **kerja lapangan data**, bukan ceklis setuju/tolak. Verifikator assigned **mengisi/memperbaiki data dasar** yang kosong atau salah saat rekomendasi, **dan mengumpulkan lampiran pendukung**. Rekening **tidak wajib** (jalur utama: tunai).
 5. Alur: rekomendasi → verifikasi → approval → bendahara → serah terima tunai + foto → selesai.
 6. **Selesai** hanya jika foto penyerahan ada **dan** pengeluaran tertaut berstatus `approved`.
 7. **Satu pengeluaran per penerima.** Kas fisik boleh disiapkan sekaligus; jurnal tidak boleh digabung.
@@ -63,7 +63,7 @@ Field yang tidak disebut di tahap itu **opsional** (boleh diisi lebih awal).
 | Telepon penerima | Tidak | |
 | `program_id` | Tidak | Tautan Event/Program SIMA |
 | Catatan | Tidak | |
-| Lampiran awal | Tidak | |
+| Lampiran awal | Tidak | Boleh; kelengkapan bukan syarat kirim ke verifikasi |
 
 Penerima **bukan** `vendors`. Data tinggal di pengajuan. Master penerima bantuan terpisah hanya jika nanti orang yang sama sering muncul.
 
@@ -76,17 +76,20 @@ Penerima **bukan** `vendors`. Data tinggal di pengajuan. Master penerima bantuan
 
 ### `verification` — sebelum naik ke approval
 
-Diisi/dikonfirmasi oleh **verifikator yang di-assign** (atau dikembalikan ke tahap ini).
+Diisi/dikonfirmasi oleh **verifikator yang di-assign** (atau dikembalikan ke tahap ini). Petugas input **tidak** mengedit kartu setelah dikirim ke verifikasi.
+
+Verifikator boleh mengubah field data penerima & berkas (nama, telepon, alamat, NIK, alasan, pemberi rekomendasi, cara bayar, rekening, program, catatan). **Nominal usulan** tidak diubah di tahap ini; koreksi nominal memakai `verified_amount`.
 
 | Field | Wajib | Catatan |
 |-------|--------|---------|
-| Identitas penerima | Ya | Minimal NIK **atau** dokumen identitas terlampir |
-| Alamat / cara menemui | Ya | Cukup untuk serah terima tunai |
+| Identitas penerima | Ya | Minimal NIK **atau** dokumen identitas terlampir (`title: identity`) |
+| Alamat / cara menemui | Ya | Cukup untuk serah terima tunai; isi jika kosong di rekomendasi |
+| Telepon penerima | Tidak | Dilengkapi bila belum ada |
 | Nominal hasil verifikasi | Ya | Default = usulan; boleh diubah, `> 0` |
 | Cara bayar | Ya | |
 | Rekening (bank, no. rekening, atas nama) | Hanya jika `transfer` | Tidak menahan kartu tunai |
 | Catatan verifikator | Ya | Jejak “sudah dicek” |
-| Lampiran pendukung | Kebijakan lembaga | Sistem: identitas wajib *salah satu* dari field NIK atau file |
+| Lampiran pendukung | Kebijakan lembaga | Identitas = NIK **atau** file `identity`. Selain itu: KK, foto kondisi, surat RT, dll. (judul bebas) |
 
 ### `pending_approval` — keputusan ketua
 
@@ -134,7 +137,7 @@ Transfer (pengecualian): foto opsional; **Selesai** jika pengeluaran `approved` 
 | Buat `draft` | `grant.create` | — |
 | Isi / ganti verifikator | `grant.assign` | Target user punya `grant.verify`. Pembuat kartu juga boleh assign selama `draft` / `verification` |
 | `draft` → `verification` | Pembuat, `grant.assign`, atau admin | Verifikator sudah terisi |
-| Lengkapi data verifikasi | Verifikator **yang di-assign**, atau admin | Record-level |
+| Lengkapi data + lampiran | Verifikator **yang di-assign**, atau admin | Record-level; termasuk perbaiki data dasar yang kosong |
 | `verification` → `pending_approval` | Verifikator assigned, atau admin | Checklist verifikasi lengkap |
 | Setujui → `approved` | `grant.approve` (ketua) | — |
 | Tolak → `rejected` | `grant.approve` | Alasan wajib |
@@ -157,7 +160,7 @@ Format sama dengan `config/sima.php`: `modul.aksi`.
 |------------|------|
 | `grant.view` | Lihat kartu (scope: lihat bawah) |
 | `grant.create` | Input rekomendasi |
-| `grant.update` | Ubah field yang masih boleh di status itu |
+| `grant.update` | Ubah field yang masih boleh di status itu (draft: pembuat; verifikasi: verifikator assigned) |
 | `grant.assign` | Isi / ganti `assigned_verifier_id` |
 | `grant.verify` | Syarat **boleh ditugaskan** + kerjakan kartu assigned |
 | `grant.approve` | Setujui / tolak / kembalikan |

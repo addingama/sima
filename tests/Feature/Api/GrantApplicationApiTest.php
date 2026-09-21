@@ -47,21 +47,59 @@ class GrantApplicationApiTest extends TestCase
     }
 
     #[Test]
-    public function assigned_verifier_can_submit_for_approval_after_completing_data(): void
+    public function assigned_verifier_can_complete_missing_basic_data_and_attach_supporting_files(): void
     {
         $id = $this->createAssignedInVerification();
 
         $this->putJson("/api/grant-applications/{$id}", [
+            'recipient_name' => 'Siti Aminah (diperbaiki)',
+            'recipient_phone' => '08123456789',
             'recipient_identity_number' => '3201010101010001',
             'recipient_address' => 'Jl. Melati No. 1',
+            'reason' => 'Bantuan sembako — dikonfirmasi di lapangan',
+            'recommender_name' => 'Pak RT RW 05',
             'verified_amount' => '200000.00',
             'verifier_notes' => 'Data lengkap, layak dibantu.',
-        ])->assertOk();
+            'recommended_amount' => '999999.00',
+        ])->assertOk()
+            ->assertJsonPath('data.recipient_name', 'Siti Aminah (diperbaiki)')
+            ->assertJsonPath('data.recipient_phone', '08123456789')
+            ->assertJsonPath('data.reason', 'Bantuan sembako — dikonfirmasi di lapangan')
+            ->assertJsonPath('data.recommended_amount', '250000.00');
+
+        $this->post('/api/attachments', [
+            'attachable_type' => 'grant_application',
+            'attachable_id' => $id,
+            'title' => 'kk',
+            'file' => UploadedFile::fake()->image('kk.jpg', 80, 80),
+        ], ['Accept' => 'application/json'])->assertCreated();
 
         $this->postJson("/api/grant-applications/{$id}/submit-for-approval")
             ->assertOk()
             ->assertJsonPath('data.status', 'pending_approval')
             ->assertJsonPath('data.verified_amount', '200000.00');
+    }
+
+    #[Test]
+    public function asisten_cannot_update_after_sent_to_verification(): void
+    {
+        $asisten = $this->actingAsRole('asisten_bendahara');
+        $verifier = $this->makeUser('verifikator');
+
+        $id = $this->postJson('/api/grant-applications', $this->draftPayload())
+            ->assertCreated()
+            ->json('data.id');
+
+        $this->postJson("/api/grant-applications/{$id}/assign", [
+            'assigned_verifier_id' => $verifier->id,
+        ])->assertOk();
+
+        $this->postJson("/api/grant-applications/{$id}/send-to-verification")->assertOk();
+
+        Sanctum::actingAs($asisten);
+        $this->putJson("/api/grant-applications/{$id}", [
+            'recipient_address' => 'Tidak boleh diisi petugas input',
+        ])->assertForbidden();
     }
 
     #[Test]

@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 
 import type { ColumnDef } from "@tanstack/react-table";
 
+import type { SimaUser } from "@/lib/api/types";
+
 export type FieldType =
   | "text"
   | "email"
@@ -83,6 +85,7 @@ export interface ResourceDef {
     view: string;
     manage?: string;
     create?: string;
+    update?: string;
     delete?: string;
   };
   titleField: string | ((row: Record<string, unknown>) => string);
@@ -107,7 +110,7 @@ export interface ResourceDef {
     auditableType: string;
     permission: string;
   };
-  canEdit?: (row: Record<string, unknown>) => boolean;
+  canEdit?: (row: Record<string, unknown>, user?: SimaUser | null) => boolean;
   canDelete?: (row: Record<string, unknown>) => boolean;
   getCreateDefaults?: () => Record<string, unknown>;
   mapToForm?: (row: Record<string, unknown>) => Record<string, unknown>;

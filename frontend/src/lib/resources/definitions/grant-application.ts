@@ -1,3 +1,5 @@
+import { hasPermission } from "@/lib/auth/permissions";
+
 import { currencyColumn, linkColumn, nestedNameColumn, statusColumn } from "../columns";
 import type { ResourceDef } from "../types";
 
@@ -11,6 +13,7 @@ export const grantApplicationResource: ResourceDef = {
   permissions: {
     view: "grant.view",
     create: "grant.create",
+    update: "grant.update",
   },
   titleField: (row) => String(row.application_number ?? row.recipient_name ?? `Pengajuan #${row.id}`),
   listColumns: [
@@ -41,11 +44,38 @@ export const grantApplicationResource: ResourceDef = {
   defaultSort: { field: "created_at", direction: "desc" },
   formFields: [
     { name: "recipient_name", label: "Nama penerima", type: "text", required: true },
-    { name: "recipient_phone", label: "Telepon penerima", type: "text" },
-    { name: "recipient_address", label: "Alamat / cara menemui", type: "textarea" },
-    { name: "recipient_identity_number", label: "NIK / nomor identitas", type: "text" },
-    { name: "recommended_amount", label: "Nominal usulan", type: "currency", required: true },
-    { name: "verified_amount", label: "Nominal hasil verifikasi", type: "currency", showOnEditOnly: true },
+    {
+      name: "recipient_phone",
+      label: "Telepon penerima",
+      type: "text",
+      helperText: "Boleh dilengkapi saat verifikasi.",
+    },
+    {
+      name: "recipient_address",
+      label: "Alamat / cara menemui",
+      type: "textarea",
+      helperText: "Wajib sebelum approval. Verifikator mengisi jika masih kosong.",
+    },
+    {
+      name: "recipient_identity_number",
+      label: "NIK / nomor identitas",
+      type: "text",
+      helperText: "Wajib NIK atau lampiran judul identity sebelum approval.",
+    },
+    {
+      name: "recommended_amount",
+      label: "Nominal usulan",
+      type: "currency",
+      required: true,
+      helperText: "Terkunci setelah kirim ke verifikasi. Koreksi nominal memakai hasil verifikasi.",
+    },
+    {
+      name: "verified_amount",
+      label: "Nominal hasil verifikasi",
+      type: "currency",
+      showOnEditOnly: true,
+      helperText: "Default sama dengan usulan. Verifikator boleh mengubah.",
+    },
     { name: "reason", label: "Alasan / jenis bantuan", type: "textarea", required: true },
     { name: "recommender_name", label: "Nama pemberi rekomendasi", type: "text", required: true },
     { name: "recommender_contact", label: "Kontak pemberi rekomendasi", type: "text" },
@@ -87,11 +117,18 @@ export const grantApplicationResource: ResourceDef = {
       name: "assigned_verifier_id",
       label: "Verifikator",
       type: "relation",
-      helperText: "Boleh dikosongkan saat input.",
+      showOnCreateOnly: true,
+      helperText: "Boleh dikosongkan saat input. Setelah itu tugaskan dari halaman detail.",
       relation: { resource: "/grant-applications/verifiers", labelKey: "name", params: { per_page: 100 } },
     },
     { name: "notes", label: "Catatan", type: "textarea" },
-    { name: "verifier_notes", label: "Catatan verifikator", type: "textarea", showOnEditOnly: true },
+    {
+      name: "verifier_notes",
+      label: "Catatan verifikator",
+      type: "textarea",
+      showOnEditOnly: true,
+      helperText: "Wajib sebelum diajukan ke approval.",
+    },
   ],
   detailFields: [
     { label: "No. Pengajuan", accessor: "application_number" },
@@ -122,7 +159,7 @@ export const grantApplicationResource: ResourceDef = {
       permission: "grant.view",
       statuses: ["draft"],
       confirmTitle: "Kirim ke verifikasi?",
-      confirmDescription: "Verifikator yang ditugaskan akan melengkapi data penerima.",
+      confirmDescription: "Verifikator akan melengkapi data penerima dan lampiran pendukung.",
     },
     {
       action: "submit-for-approval",
@@ -130,6 +167,7 @@ export const grantApplicationResource: ResourceDef = {
       permission: "grant.verify",
       statuses: ["verification"],
       confirmTitle: "Berkas siap di-approval?",
+      confirmDescription: "Pastikan data dasar sudah benar dan lampiran pendukung sudah diunggah.",
     },
     {
       action: "approve",
@@ -165,8 +203,39 @@ export const grantApplicationResource: ResourceDef = {
   attachments: {
     attachableType: "grant_application",
     managePermission: "attachment.manage",
-    helperText: "Dokumen identitas: judul identity. Foto serah terima tunai: judul handover.",
+    helperText:
+      "Verifikator: unggah data tambahan (KK, foto, surat). Identitas: judul identity. Foto serah terima tunai: judul handover.",
   },
-  canEdit: (row) => row.status === "draft" || row.status === "verification",
+  canEdit: (row, user) => {
+    const status = String(row.status ?? "");
+    if (status === "draft") {
+      return true;
+    }
+
+    if (status !== "verification") {
+      return false;
+    }
+
+    if (hasPermission(user, "*") || user?.roles.includes("admin")) {
+      return true;
+    }
+
+    return Number(row.assigned_verifier_id) === Number(user?.id);
+  },
   getCreateDefaults: () => ({ payment_method: "cash" }),
+  mapToPayload: (values) => {
+    const payload = { ...values };
+    if (String(values.status ?? "") === "verification") {
+      delete payload.recommended_amount;
+      delete payload.assigned_verifier_id;
+    }
+    delete payload.status;
+    delete payload.status_label;
+    delete payload.application_number;
+    delete payload.assigned_verifier;
+    delete payload.attachments;
+    delete payload.disbursement;
+    delete payload.created_by;
+    return payload;
+  },
 };
