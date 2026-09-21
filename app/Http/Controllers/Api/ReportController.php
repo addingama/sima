@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\GrantApplication\ListGrantApplicationRequest;
 use App\Http\Requests\Report\FundStatementRequest;
 use App\Http\Requests\Report\ListLedgerRequest;
 use App\Http\Requests\Report\ListOpeningBalanceReportRequest;
 use App\Http\Requests\Report\ProgramReportRequest;
 use App\Http\Resources\FundResource;
+use App\Http\Resources\GrantApplicationResource;
 use App\Http\Resources\LedgerEntryResource;
 use App\Http\Resources\OpeningBalanceReportLineResource;
 use App\Http\Responses\ApiResponse;
+use App\Models\User;
 use App\Services\Report\ReportService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
@@ -134,6 +137,31 @@ class ReportController extends Controller
                 'pagination' => ApiResponse::lengthAwareMeta($paginator),
                 'total_amount' => $result['total_amount'],
                 'batch_count' => $result['batch_count'],
+            ],
+        );
+    }
+
+    #[OA\Get(
+        path: '/reports/grant-applications',
+        summary: 'Laporan pengajuan bantuan',
+        tags: ['Report'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
+    public function grantApplications(ListGrantApplicationRequest $request): JsonResponse
+    {
+        $viewer = $request->user();
+        abort_unless($viewer instanceof User, 401);
+
+        $result = $this->service->grantApplications($request->listQuery(50), $viewer);
+        $paginator = $result['paginator'];
+
+        return ApiResponse::success(
+            GrantApplicationResource::collection($paginator)->resolve($request),
+            null,
+            [
+                'pagination' => ApiResponse::lengthAwareMeta($paginator),
+                'summary' => $result['summary'],
             ],
         );
     }

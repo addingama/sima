@@ -97,6 +97,7 @@ Spesifikasi terkunci: [BANTUAN.md](BANTUAN.md). **Jangan implementasi sebelum is
 - [ ] **Backend domain** — model pengajuan, status, `assigned_verifier_id`, permission `grant.*`, policy record-level ([#41](https://github.com/addingama/sima/issues/41), branch `feature/grant-applications`)
 - [ ] **Tautan pengeluaran** — 1:1 ke `disbursements`, tanpa posting ledger dari modul bantuan ([#42](https://github.com/addingama/sima/issues/42))
 - [ ] **Frontend Kanban** — kolom = status tetap; drag hanya transisi legal; bukan template `/dashboard/kanban` dummy ([#43](https://github.com/addingama/sima/issues/43))
+- [ ] **Laporan bantuan** — ringkasan usulan/disetujui/serah terima + filter periode/status/cara bayar/program ([#45](https://github.com/addingama/sima/issues/45))
 
 ---
 

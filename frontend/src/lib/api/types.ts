@@ -15,6 +15,7 @@ export interface ApiMeta {
   pagination?: PaginationMeta;
   total_amount?: string;
   batch_count?: number;
+  summary?: Record<string, unknown>;
 }
 
 export interface PaginationMeta {

@@ -10,6 +10,7 @@ import { apiGet } from "@/lib/api/client";
 import {
   fetchApprovalReport,
   fetchFundBalances,
+  fetchGrantApplicationReport,
   fetchLedgerReport,
   fetchOpeningBalanceReport,
   fetchReportRows,
@@ -348,6 +349,69 @@ export const approvalReport: ReportDef = {
   fetchData: fetchApprovalReport,
 };
 
+export const grantApplicationReport: ReportDef = {
+  id: "grant-applications",
+  title: "Pengajuan Bantuan",
+  description: "Ringkasan usulan, persetujuan, dan serah terima bantuan per penerima. Bisa disaring periode, status, cara bayar, dan program.",
+  path: "/dashboard/reports/bantuan",
+  paginated: true,
+  columns: [
+    textColumn("application_number", "No. Pengajuan"),
+    dateColumn("created_at", "Tgl Pengajuan"),
+    textColumn("recipient_name", "Penerima"),
+    textColumn("reason", "Alasan"),
+    currencyColumn("recommended_amount", "Usulan"),
+    currencyColumn("approved_amount", "Disetujui"),
+    nestedColumn("payment_label", "Cara Bayar", (row) => String(row.payment_label ?? "-")),
+    nestedColumn("status_label", "Status", (row) => String(row.status_label ?? row.status ?? "-")),
+    nestedColumn("program_name", "Program", (row) => String(row.program_name ?? "-")),
+    nestedColumn("verifier_name", "Verifikator", (row) => String(row.verifier_name ?? "-")),
+    dateColumn("handed_over_on", "Tgl Serah Terima"),
+  ],
+  filters: [
+    { name: "from", label: "Dari Tanggal", type: "date" },
+    { name: "to", label: "Sampai Tanggal", type: "date" },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      allLabel: "Semua status",
+      options: [
+        { value: "draft", label: "Rekomendasi" },
+        { value: "verification", label: "Verifikasi" },
+        { value: "pending_approval", label: "Menunggu approval" },
+        { value: "approved", label: "Siap diserahkan" },
+        { value: "completed", label: "Selesai" },
+        { value: "rejected", label: "Ditolak" },
+      ],
+    },
+    {
+      name: "payment_method",
+      label: "Cara Bayar",
+      type: "select",
+      allLabel: "Semua cara bayar",
+      options: [
+        { value: "cash", label: "Tunai" },
+        { value: "transfer", label: "Transfer" },
+      ],
+    },
+    {
+      name: "program_id",
+      label: "Program",
+      type: "relation",
+      relation: { resource: "/programs", labelKey: "name", params: { per_page: 100 } },
+    },
+    { name: "q", label: "Cari penerima / nomor", type: "text", placeholder: "Nama, BNT/..." },
+  ],
+  groupByOptions: [
+    { value: "status_label", label: "Status" },
+    { value: "payment_label", label: "Cara Bayar" },
+    { value: "program_name", label: "Program" },
+    { value: "verifier_name", label: "Verifikator" },
+  ],
+  fetchData: fetchGrantApplicationReport,
+};
+
 export const openingBalanceReport: ReportDef = {
   id: "opening-balances",
   title: "Saldo Awal",
@@ -427,6 +491,7 @@ export const allReports = [
   byProgramReport,
   byDonorReport,
   byVendorReport,
+  grantApplicationReport,
   openingBalanceReport,
   approvalReport,
   auditReport,

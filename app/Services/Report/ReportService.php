@@ -2,6 +2,7 @@
 
 namespace App\Services\Report;
 
+use App\Domains\Grant\Repositories\GrantApplicationRepository;
 use App\Domains\Ledger\Services\BalanceService;
 use App\Domains\Ledger\Services\LedgerService;
 use App\Enums\LedgerAccountType;
@@ -12,6 +13,7 @@ use App\Models\LedgerEntry;
 use App\Models\OpeningBalanceLine;
 use App\Models\Program;
 use App\Models\ReceiptAllocation;
+use App\Models\User;
 use App\Support\Query\ListQueryApplier;
 use App\Support\Query\ListQueryDto;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -22,6 +24,7 @@ class ReportService
     public function __construct(
         private readonly LedgerService $ledger,
         private readonly BalanceService $balances,
+        private readonly GrantApplicationRepository $grants,
     ) {}
 
     /** @return array{rows: Collection<int, array<string, mixed>>, total: string} */
@@ -310,6 +313,15 @@ class ReportService
                 'sisa_dari_alokasi' => bcsub($totalAllocated, $totalSpent, 2),
                 'sisa_dari_anggaran' => bcsub($budget, $totalSpent, 2),
             ],
+        ];
+    }
+
+    /** @return array{paginator: LengthAwarePaginator, summary: array<string, int|string>} */
+    public function grantApplications(ListQueryDto $query, User $viewer): array
+    {
+        return [
+            'paginator' => $this->grants->paginate($query, $viewer),
+            'summary' => $this->grants->summarize($query, $viewer),
         ];
     }
 }

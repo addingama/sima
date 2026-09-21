@@ -2,7 +2,7 @@
 
 Dokumen ini mengunci keputusan produk untuk **modul kasus bantuan**. Bukan bagian Amanah Ledger.
 
-**Status:** backend domain (#41) + tautan pengeluaran 1:1 (#42) + Kanban UI (#43).
+**Status:** backend domain (#41) + tautan pengeluaran 1:1 (#42) + Kanban UI (#43) + laporan (#45).
 
 **Bukan** portal pemohon, **bukan** Trello bebas kolom, **bukan** pengeluaran. Kartu = satu penerima. Uang keluar hanya lewat Pengeluaran SIMA yang tertaut.
 
@@ -225,6 +225,26 @@ Invariant:
 - Detail kartu = formulir + lampiran + riwayat assignment/keputusan.
 
 Demo template `/dashboard/kanban` **bukan** fondasi modul ini (data dummy).
+
+---
+
+## Laporan organisasi
+
+Halaman **Laporan → Pengajuan Bantuan** (`/dashboard/reports/bantuan`, `GET /api/reports/grant-applications`, permission `report.view`).
+
+Bukan papan kerja. Ini daftar yang mudah disaring dan diekspor, plus kartu ringkasan untuk rapat/audit.
+
+| Kartu ringkasan | Arti |
+|-----------------|------|
+| Jumlah kartu | Semua pengajuan yang lolos filter |
+| Antrian | Masih di Rekomendasi / Verifikasi / Menunggu approval |
+| Usulan | Jumlah nominal rekomendasi |
+| Disetujui | Nominal `approved_amount` pada status Siap diserahkan + Selesai |
+| Siap diserahkan | Nominal sudah disetujui ketua, belum serah terima |
+| Sudah diserahkan | Nominal status Selesai |
+| Ditolak | Nominal usulan yang ditolak |
+
+Filter: periode (tanggal pengajuan), status, cara bayar, program, cari nama/nomor. Tabel bisa dikelompokkan status / cara bayar / program / verifikator. Data mengikuti scope yang sama dengan Kanban (`visibleTo`).
 
 ---
 

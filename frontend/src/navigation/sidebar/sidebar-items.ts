@@ -280,6 +280,13 @@ export const sidebarItems: NavGroup[] = [
             permission: "report.view",
           },
           {
+            id: "report-grant-applications",
+            title: "Pengajuan Bantuan",
+            url: "/dashboard/reports/bantuan",
+            icon: HeartHandshake,
+            permission: "report.view",
+          },
+          {
             id: "report-opening-balances",
             title: "Saldo Awal",
             url: "/dashboard/reports/opening-balances",

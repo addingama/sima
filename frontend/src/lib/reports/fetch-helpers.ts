@@ -38,6 +38,33 @@ export async function fetchOpeningBalanceReport(params: ListParams): Promise<Rep
   };
 }
 
+function flattenGrantReportRow(row: Record<string, unknown>): Record<string, unknown> {
+  const program = row.program as { name?: string } | undefined;
+  const verifier = row.assigned_verifier as { name?: string } | undefined;
+  const payment = String(row.payment_method ?? "");
+
+  return {
+    ...row,
+    program_name: program?.name ?? "-",
+    verifier_name: verifier?.name ?? "-",
+    payment_label: payment === "cash" ? "Tunai" : payment === "transfer" ? "Transfer" : "-",
+  };
+}
+
+export async function fetchGrantApplicationReport(params: ListParams): Promise<ReportFetchResult> {
+  const response = await apiGet<Array<Record<string, unknown>>>("/reports/grant-applications", {
+    ...params,
+    sort: params.sort ?? "created_at",
+    direction: params.direction ?? "desc",
+  });
+
+  return {
+    rows: response.data.map(flattenGrantReportRow),
+    pagination: response.meta?.pagination,
+    summary: response.meta?.summary,
+  };
+}
+
 export async function fetchCashAccounts(): Promise<Array<Record<string, unknown>>> {
   const response = await apiGet<Array<Record<string, unknown>>>("/accounts", {
     type: "cash",

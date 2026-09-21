@@ -44,6 +44,8 @@ class ListGrantApplicationRequest extends FormRequest
             'created_by' => ['nullable', 'integer', 'exists:users,id'],
             'payment_method' => ['nullable', 'in:cash,transfer'],
             'program_id' => ['nullable', 'integer', 'exists:programs,id'],
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date', 'after_or_equal:from'],
             'mine' => ['nullable', 'boolean'],
         ]);
     }
