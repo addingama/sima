@@ -4,7 +4,19 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Eye, ImageIcon, Paperclip, RotateCcw, Trash2, Upload, ZoomIn, ZoomOut } from "lucide-react";
+import {
+  Download,
+  ExternalLink,
+  Eye,
+  FileText,
+  ImageIcon,
+  Paperclip,
+  RotateCcw,
+  Trash2,
+  Upload,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { ErrorState } from "@/components/sima/error-state";
@@ -27,6 +39,10 @@ const PREVIEW_ZOOM_STEP = 0.25;
 
 function isImageAttachment(attachment: AttachmentRecord): boolean {
   return attachment.mime_type.startsWith("image/");
+}
+
+function isPdfAttachment(attachment: AttachmentRecord): boolean {
+  return attachment.mime_type === "application/pdf" || attachment.original_name.toLowerCase().endsWith(".pdf");
 }
 
 function clampPreviewZoom(value: number): number {
@@ -232,6 +248,47 @@ function AttachmentImagePreview({ attachment }: { attachment: AttachmentRecord }
   );
 }
 
+function AttachmentKindIcon({
+  attachment,
+  openingPdfId,
+  onPreviewImage,
+  onOpenPdf,
+}: {
+  attachment: AttachmentRecord;
+  openingPdfId: number | null;
+  onPreviewImage: (attachment: AttachmentRecord) => void;
+  onOpenPdf: (attachment: AttachmentRecord) => void;
+}) {
+  if (isImageAttachment(attachment)) {
+    return (
+      <button
+        type="button"
+        className="flex size-12 shrink-0 items-center justify-center rounded-md border bg-muted/30 text-muted-foreground transition-colors hover:bg-muted"
+        onClick={() => onPreviewImage(attachment)}
+        aria-label={`Preview ${attachment.original_name}`}
+      >
+        <ImageIcon className="size-5" />
+      </button>
+    );
+  }
+
+  if (isPdfAttachment(attachment)) {
+    return (
+      <button
+        type="button"
+        className="flex size-12 shrink-0 items-center justify-center rounded-md border bg-muted/30 text-muted-foreground transition-colors hover:bg-muted"
+        disabled={openingPdfId === attachment.id}
+        onClick={() => onOpenPdf(attachment)}
+        aria-label={`Buka PDF ${attachment.original_name}`}
+      >
+        <FileText className="size-5" />
+      </button>
+    );
+  }
+
+  return <Paperclip className="mt-0.5 size-4 shrink-0 text-muted-foreground" />;
+}
+
 export function AttachmentPanel({
   attachableType,
   attachableId,
@@ -249,8 +306,18 @@ export function AttachmentPanel({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState(defaultTitle);
   const [previewAttachment, setPreviewAttachment] = useState<AttachmentRecord | null>(null);
+  const [openingPdfId, setOpeningPdfId] = useState<number | null>(null);
+  const pdfObjectUrlsRef = useRef<string[]>([]);
   const queryClient = useQueryClient();
   const canManage = hasPermission(user, managePermission);
+
+  useEffect(() => {
+    return () => {
+      for (const url of pdfObjectUrlsRef.current) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, []);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["/attachments", attachableType, attachableId],
@@ -308,6 +375,28 @@ export function AttachmentPanel({
     },
   });
 
+  const openPdfInNewTab = async (attachment: AttachmentRecord) => {
+    const tab = window.open("about:blank", "_blank");
+    if (!tab) {
+      toast.error("Izinkan pop-up browser untuk membuka PDF.");
+      return;
+    }
+
+    setOpeningPdfId(attachment.id);
+    try {
+      const blob = await apiBlob(`/attachments/${attachment.id}/download`);
+      const pdfBlob = new Blob([blob], { type: "application/pdf" });
+      const objectUrl = URL.createObjectURL(pdfBlob);
+      pdfObjectUrlsRef.current.push(objectUrl);
+      tab.location.replace(objectUrl);
+    } catch (error) {
+      tab.close();
+      toast.error(error instanceof ApiError ? error.message : "Gagal membuka PDF.");
+    } finally {
+      setOpeningPdfId(null);
+    }
+  };
+
   let attachmentListContent: ReactNode;
 
   if (isError) {
@@ -325,18 +414,12 @@ export function AttachmentPanel({
             className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex min-w-0 items-start gap-3">
-              {isImageAttachment(attachment) ? (
-                <button
-                  type="button"
-                  className="flex size-12 shrink-0 items-center justify-center rounded-md border bg-muted/30 text-muted-foreground transition-colors hover:bg-muted"
-                  onClick={() => setPreviewAttachment(attachment)}
-                  aria-label={`Preview ${attachment.original_name}`}
-                >
-                  <ImageIcon className="size-5" />
-                </button>
-              ) : (
-                <Paperclip className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-              )}
+              <AttachmentKindIcon
+                attachment={attachment}
+                openingPdfId={openingPdfId}
+                onPreviewImage={setPreviewAttachment}
+                onOpenPdf={(item) => void openPdfInNewTab(item)}
+              />
               <div className="min-w-0">
                 <p className="truncate font-medium text-sm">{attachment.title || attachment.original_name}</p>
                 <p className="text-muted-foreground text-xs">
@@ -349,6 +432,18 @@ export function AttachmentPanel({
                 <Button type="button" size="sm" variant="outline" onClick={() => setPreviewAttachment(attachment)}>
                   <Eye className="size-4" />
                   Preview
+                </Button>
+              ) : null}
+              {isPdfAttachment(attachment) ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={openingPdfId === attachment.id}
+                  onClick={() => void openPdfInNewTab(attachment)}
+                >
+                  <ExternalLink className="size-4" />
+                  {openingPdfId === attachment.id ? "Membuka..." : "Buka"}
                 </Button>
               ) : null}
               <Button
