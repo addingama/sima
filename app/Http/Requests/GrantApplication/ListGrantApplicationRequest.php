@@ -3,8 +3,10 @@
 namespace App\Http\Requests\GrantApplication;
 
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryType;
 use App\Http\Requests\Concerns\HasListQuery;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ListGrantApplicationRequest extends FormRequest
 {
@@ -41,7 +43,9 @@ class ListGrantApplicationRequest extends FormRequest
                 }
             }],
             'assigned_verifier_id' => ['nullable', 'integer', 'exists:users,id'],
+            'assigned_handover_id' => ['nullable', 'integer', 'exists:users,id'],
             'created_by' => ['nullable', 'integer', 'exists:users,id'],
+            'beneficiary_type' => ['nullable', Rule::enum(GrantBeneficiaryType::class)],
             'payment_method' => ['nullable', 'in:cash,transfer'],
             'program_id' => ['nullable', 'integer', 'exists:programs,id'],
             'from' => ['nullable', 'date'],

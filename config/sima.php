@@ -79,7 +79,7 @@ return [
             'liability.view', 'liability.manage',
             'attachment.view', 'attachment.manage',
             'report.view',
-            'grant.view', 'grant.create', 'grant.update', 'grant.assign', 'grant.handover',
+            'grant.view', 'grant.create', 'grant.update', 'grant.handover',
         ],
 
         UserRole::BENDAHARA->value => [

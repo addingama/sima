@@ -17,7 +17,9 @@ class AssignGrantApplicationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'assigned_verifier_id' => ['required', 'integer', 'exists:users,id'],
+            'assigned_verifier_id' => ['sometimes', 'required_without:assigned_handover_id', 'integer', 'exists:users,id'],
+            'assigned_handover_id' => ['sometimes', 'required_without:assigned_verifier_id', 'integer', 'exists:users,id'],
+            'reason' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

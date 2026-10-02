@@ -61,6 +61,19 @@ class GrantApplicationController extends Controller
         return $this->ok($users);
     }
 
+    public function handoverOfficers(): JsonResponse
+    {
+        $this->authorize('viewAny', GrantApplication::class);
+
+        $users = User::query()
+            ->permission('grant.handover')
+            ->where('users.is_active', true)
+            ->orderBy('users.name')
+            ->get(['users.id', 'users.name']);
+
+        return $this->ok($users);
+    }
+
     #[OA\Post(
         path: '/grant-applications',
         summary: 'Buat pengajuan bantuan (rekomendasi)',
@@ -114,7 +127,7 @@ class GrantApplicationController extends Controller
     {
         $grant = $this->service->assign(
             $grantApplication,
-            (int) $request->validated('assigned_verifier_id'),
+            $request->validated(),
             $request->user(),
         );
 
@@ -232,6 +245,8 @@ class GrantApplicationController extends Controller
             $grantApplication,
             $request->user(),
             $request->validated('handed_over_on'),
+            $request->validated('handover_recipient_name'),
+            $request->validated('handover_recipient_notes'),
         );
 
         return $this->resource(new GrantApplicationResource($this->service->findForShow($grant)));

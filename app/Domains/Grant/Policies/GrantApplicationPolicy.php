@@ -26,7 +26,9 @@ class GrantApplicationPolicy
             return true;
         }
 
-        return $this->isCreator($user, $grant) || $this->isAssignedVerifier($user, $grant);
+        return $this->isCreator($user, $grant)
+            || $this->isAssignedVerifier($user, $grant)
+            || $this->isAssignedHandover($user, $grant);
     }
 
     public function create(User $user): bool
@@ -57,11 +59,16 @@ class GrantApplicationPolicy
             return false;
         }
 
-        if (! in_array($grant->status, [GrantApplicationStatus::DRAFT, GrantApplicationStatus::VERIFICATION], true)) {
+        if (! in_array($grant->status, [
+            GrantApplicationStatus::DRAFT,
+            GrantApplicationStatus::VERIFICATION,
+            GrantApplicationStatus::PENDING_APPROVAL,
+            GrantApplicationStatus::APPROVED,
+        ], true)) {
             return false;
         }
 
-        return $this->seesAll($user) || $this->isCreator($user, $grant);
+        return $this->seesAll($user);
     }
 
     public function sendToVerification(User $user, GrantApplication $grant): bool
@@ -113,7 +120,8 @@ class GrantApplicationPolicy
     public function complete(User $user, GrantApplication $grant): bool
     {
         return $this->allows($user, 'grant.handover')
-            && $grant->status === GrantApplicationStatus::APPROVED;
+            && $grant->status === GrantApplicationStatus::APPROVED
+            && ($this->isAssignedHandover($user, $grant) || $user->hasRole('admin'));
     }
 
     public function createDisbursement(User $user, GrantApplication $grant): bool
@@ -125,7 +133,8 @@ class GrantApplicationPolicy
 
     private function seesAll(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'ketua', 'bendahara', 'auditor']);
+        return $user->hasAnyRole(['admin', 'ketua', 'bendahara', 'auditor'])
+            || $this->allows($user, 'grant.assign');
     }
 
     private function isCreator(User $user, GrantApplication $grant): bool
@@ -137,5 +146,11 @@ class GrantApplicationPolicy
     {
         return $grant->assigned_verifier_id !== null
             && (int) $grant->assigned_verifier_id === (int) $user->getKey();
+    }
+
+    private function isAssignedHandover(User $user, GrantApplication $grant): bool
+    {
+        return $grant->assigned_handover_id !== null
+            && (int) $grant->assigned_handover_id === (int) $user->getKey();
     }
 }

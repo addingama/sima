@@ -8,6 +8,7 @@ use App\Domains\Grant\DTOs\UpdateGrantApplicationDto;
 use App\Domains\Grant\Repositories\GrantApplicationRepository;
 use App\Domains\Grant\Validators\GrantApplicationValidator;
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryType;
 use App\Enums\GrantPaymentMethod;
 use App\Exceptions\DomainException;
 use App\Models\Disbursement;
@@ -22,9 +23,13 @@ class GrantApplicationService
 {
     private const DRAFT_FIELDS = [
         'recipient_name',
+        'beneficiary_type',
         'recipient_phone',
         'recipient_address',
         'recipient_identity_number',
+        'organization_pic_name',
+        'organization_pic_contact',
+        'organization_pic_relationship',
         'recommended_amount',
         'reason',
         'recommender_name',
@@ -33,16 +38,22 @@ class GrantApplicationService
         'bank_name',
         'bank_account_number',
         'bank_account_holder',
+        'bank_account_owner_type',
+        'bank_account_holder_relationship',
+        'bank_account_use_reason',
         'notes',
         'program_id',
-        'assigned_verifier_id',
     ];
 
     private const VERIFICATION_FIELDS = [
         'recipient_name',
+        'beneficiary_type',
         'recipient_phone',
         'recipient_address',
         'recipient_identity_number',
+        'organization_pic_name',
+        'organization_pic_contact',
+        'organization_pic_relationship',
         'verified_amount',
         'reason',
         'recommender_name',
@@ -51,6 +62,9 @@ class GrantApplicationService
         'bank_name',
         'bank_account_number',
         'bank_account_holder',
+        'bank_account_owner_type',
+        'bank_account_holder_relationship',
+        'bank_account_use_reason',
         'notes',
         'verifier_notes',
         'program_id',
@@ -72,6 +86,7 @@ class GrantApplicationService
     {
         return $grant->load([
             'assignedVerifier:id,name',
+            'assignedHandover:id,name',
             'program:id,code,name',
             'createdBy:id,name',
             'handedOverBy:id,name',
@@ -89,12 +104,8 @@ class GrantApplicationService
     {
         $payload = $this->normalizeAmounts($dto->data, ['recommended_amount']);
         $payload['payment_method'] = $payload['payment_method'] ?? GrantPaymentMethod::CASH->value;
-
-        if (! empty($payload['assigned_verifier_id'])) {
-            $this->validator->assertAssignableVerifier(
-                User::query()->findOrFail((int) $payload['assigned_verifier_id'])
-            );
-        }
+        $payload['assigned_verifier_id'] = $dto->actor->can('grant.verify') ? $dto->actor->getKey() : null;
+        $payload['assigned_handover_id'] = $dto->actor->can('grant.handover') ? $dto->actor->getKey() : null;
 
         return DB::transaction(function () use ($dto, $payload): GrantApplication {
             return $this->repository->create([
@@ -125,31 +136,44 @@ class GrantApplicationService
         $payload = array_intersect_key($dto->data, array_flip($allowed));
         $payload = $this->normalizeAmounts($payload, ['recommended_amount', 'verified_amount']);
 
-        if (array_key_exists('assigned_verifier_id', $payload) && $payload['assigned_verifier_id']) {
-            $this->validator->assertAssignableVerifier(
-                User::query()->findOrFail((int) $payload['assigned_verifier_id'])
-            );
-        }
-
         return DB::transaction(function () use ($grant, $payload): GrantApplication {
             return $this->repository->update($grant, $payload);
         });
     }
 
-    public function assign(GrantApplication $grant, int $verifierId, User $actor): GrantApplication
+    /** @param array<string, mixed> $assignment */
+    public function assign(GrantApplication $grant, array $assignment, User $actor): GrantApplication
     {
-        $this->validator->assertStatus($grant, [
-            GrantApplicationStatus::DRAFT,
-            GrantApplicationStatus::VERIFICATION,
-        ]);
+        $payload = [];
 
-        $verifier = User::query()->findOrFail($verifierId);
-        $this->validator->assertAssignableVerifier($verifier);
-
-        return DB::transaction(function () use ($grant, $verifierId): GrantApplication {
-            return $this->repository->update($grant, [
-                'assigned_verifier_id' => $verifierId,
+        if (array_key_exists('assigned_verifier_id', $assignment)) {
+            $this->validator->assertStatus($grant, [
+                GrantApplicationStatus::DRAFT,
+                GrantApplicationStatus::VERIFICATION,
             ]);
+            $verifier = User::query()->findOrFail((int) $assignment['assigned_verifier_id']);
+            $this->validator->assertAssignableVerifier($verifier);
+            $payload['assigned_verifier_id'] = $verifier->getKey();
+        }
+
+        if (array_key_exists('assigned_handover_id', $assignment)) {
+            $this->validator->assertStatus($grant, [
+                GrantApplicationStatus::DRAFT,
+                GrantApplicationStatus::VERIFICATION,
+                GrantApplicationStatus::PENDING_APPROVAL,
+                GrantApplicationStatus::APPROVED,
+            ]);
+            $handover = User::query()->findOrFail((int) $assignment['assigned_handover_id']);
+            $this->validator->assertAssignableHandover($handover);
+            if ($grant->status === GrantApplicationStatus::APPROVED && ! filled($assignment['reason'] ?? null)) {
+                throw new DomainException('Alasan wajib diisi saat mengganti petugas serah terima setelah approval.');
+            }
+            $payload['assigned_handover_id'] = $handover->getKey();
+            $payload['handover_assignment_reason'] = $assignment['reason'] ?? null;
+        }
+
+        return DB::transaction(function () use ($grant, $payload): GrantApplication {
+            return $this->repository->update($grant, $payload);
         });
     }
 
@@ -194,6 +218,7 @@ class GrantApplicationService
         $this->validator->assertStatus($grant, [GrantApplicationStatus::PENDING_APPROVAL]);
 
         $approved = bcadd((string) ($amount ?? $grant->verified_amount ?? $grant->recommended_amount), '0', 2);
+        $this->validator->assertReadyForApprovalDecision($grant);
         $this->validator->assertApprovedAmount($grant, $approved);
 
         return DB::transaction(function () use ($grant, $actor, $approved, $notes): GrantApplication {
@@ -261,7 +286,7 @@ class GrantApplicationService
                 'program_id' => $data['program_id'] ?? $grant->program_id,
                 'vendor_id' => $data['vendor_id'] ?? null,
                 'amount' => $amount,
-                'payee' => $grant->recipient_name,
+                'payee' => $this->disbursementPayee($grant),
                 'category' => $data['category'] ?? 'bantuan',
                 'reference_number' => $data['reference_number'] ?? $grant->application_number,
                 'description' => $data['description'] ?? ('Pengajuan bantuan '.$grant->application_number),
@@ -302,17 +327,24 @@ class GrantApplicationService
         });
     }
 
-    public function complete(GrantApplication $grant, User $actor, string $handedOverOn): GrantApplication
-    {
+    public function complete(
+        GrantApplication $grant,
+        User $actor,
+        string $handedOverOn,
+        ?string $recipientName = null,
+        ?string $recipientNotes = null,
+    ): GrantApplication {
         $grant->loadMissing('disbursement', 'attachments');
-        $this->validator->assertReadyToComplete($grant);
+        $this->validator->assertReadyToComplete($grant, $recipientName, $recipientNotes);
 
-        return DB::transaction(function () use ($grant, $actor, $handedOverOn): GrantApplication {
+        return DB::transaction(function () use ($grant, $actor, $handedOverOn, $recipientName, $recipientNotes): GrantApplication {
             return $this->repository->update($grant, [
                 'status' => GrantApplicationStatus::COMPLETED->value,
                 'handed_over_on' => $handedOverOn,
                 'handed_over_at' => now(),
                 'handed_over_by' => $actor->getKey(),
+                'handover_recipient_name' => $recipientName,
+                'handover_recipient_notes' => $recipientNotes,
             ]);
         });
     }
@@ -331,5 +363,16 @@ class GrantApplicationService
         }
 
         return $data;
+    }
+
+    private function disbursementPayee(GrantApplication $grant): string
+    {
+        if ($grant->beneficiary_type === GrantBeneficiaryType::ORGANIZATION
+            && $grant->payment_method === GrantPaymentMethod::TRANSFER
+            && filled($grant->bank_account_holder)) {
+            return (string) $grant->bank_account_holder;
+        }
+
+        return $grant->recipient_name;
     }
 }

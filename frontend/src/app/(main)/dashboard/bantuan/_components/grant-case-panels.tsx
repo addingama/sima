@@ -20,24 +20,34 @@ export function GrantCasePanels({ row, onRefresh }: { row: Record<string, unknow
   const status = String(row.status ?? "");
   const assignMutation = useWorkflowAction("/grant-applications", id);
   const [verifierId, setVerifierId] = useState(String(row.assigned_verifier_id ?? ""));
+  const [handoverOfficerId, setHandoverOfficerId] = useState(String(row.assigned_handover_id ?? ""));
+  const [handoverAssignmentReason, setHandoverAssignmentReason] = useState("");
   const [handoverDate, setHandoverDate] = useState(new Date().toISOString().slice(0, 10));
+  const [handoverRecipientName, setHandoverRecipientName] = useState(String(row.organization_pic_name ?? ""));
+  const [handoverRecipientNotes, setHandoverRecipientNotes] = useState("");
   const [disbursementDate, setDisbursementDate] = useState(new Date().toISOString().slice(0, 10));
   const [accountId, setAccountId] = useState("");
   const [fundId, setFundId] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const canAssign = hasPermission(user, "grant.assign") && (status === "draft" || status === "verification");
+  const canAssignVerifier = hasPermission(user, "grant.assign") && (status === "draft" || status === "verification");
+  const canAssignHandover =
+    hasPermission(user, "grant.assign") &&
+    (status === "draft" || status === "verification" || status === "pending_approval" || status === "approved");
   const canCreateDisbursement =
     hasPermission(user, "disbursement.create") && status === "approved" && !row.disbursement_id;
-  const canComplete = hasPermission(user, "grant.handover") && status === "approved";
+  const canComplete =
+    hasPermission(user, "grant.handover") &&
+    status === "approved" &&
+    (hasPermission(user, "*") || Number(row.assigned_handover_id) === Number(user?.id));
 
-  if (!canAssign && !canCreateDisbursement && !canComplete) {
+  if (!canAssignVerifier && !canAssignHandover && !canCreateDisbursement && !canComplete) {
     return null;
   }
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      {canAssign ? (
+      {canAssignVerifier ? (
         <Card>
           <CardHeader>
             <CardTitle>Tugaskan verifikator</CardTitle>
@@ -67,6 +77,59 @@ export function GrantCasePanels({ row, onRefresh }: { row: Record<string, unknow
               }}
             >
               Simpan verifikator
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {canAssignHandover ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Tugaskan petugas serah terima</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <RelationSelect
+              resource="/grant-applications/handover-officers"
+              labelKey="name"
+              value={handoverOfficerId}
+              onChange={setHandoverOfficerId}
+              placeholder="Pilih petugas serah terima"
+            />
+            {status === "approved" ? (
+              <div className="space-y-1">
+                <Label htmlFor="grant-handover-assignment-reason">Alasan pergantian</Label>
+                <Input
+                  id="grant-handover-assignment-reason"
+                  value={handoverAssignmentReason}
+                  onChange={(event) => setHandoverAssignmentReason(event.target.value)}
+                  placeholder="Wajib setelah pengajuan disetujui"
+                />
+              </div>
+            ) : null}
+            <Button
+              size="sm"
+              disabled={
+                assignMutation.isPending ||
+                !handoverOfficerId ||
+                (status === "approved" && !handoverAssignmentReason.trim())
+              }
+              onClick={async () => {
+                try {
+                  await assignMutation.mutateAsync({
+                    action: "assign",
+                    body: {
+                      assigned_handover_id: Number(handoverOfficerId),
+                      reason: handoverAssignmentReason || null,
+                    },
+                  });
+                  toast.success("Petugas serah terima ditugaskan.");
+                  onRefresh();
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Gagal menugaskan.");
+                }
+              }}
+            >
+              Simpan petugas
             </Button>
           </CardContent>
         </Card>
@@ -154,13 +217,38 @@ export function GrantCasePanels({ row, onRefresh }: { row: Record<string, unknow
                 onChange={(event) => setHandoverDate(event.target.value)}
               />
             </div>
+            {String(row.beneficiary_type) === "organization" ? (
+              <>
+                <div className="space-y-1">
+                  <Label htmlFor="grant-handover-recipient">Penerima aktual</Label>
+                  <Input
+                    id="grant-handover-recipient"
+                    value={handoverRecipientName}
+                    onChange={(event) => setHandoverRecipientName(event.target.value)}
+                    placeholder="Nama orang yang menerima bantuan"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="grant-handover-notes">Keterangan jika bukan PIC</Label>
+                  <Input
+                    id="grant-handover-notes"
+                    value={handoverRecipientNotes}
+                    onChange={(event) => setHandoverRecipientNotes(event.target.value)}
+                  />
+                </div>
+              </>
+            ) : null}
             <Button
               size="sm"
-              disabled={busy}
+              disabled={busy || (String(row.beneficiary_type) === "organization" && !handoverRecipientName)}
               onClick={async () => {
                 setBusy(true);
                 try {
-                  await apiPost(`/grant-applications/${id}/complete`, { handed_over_on: handoverDate });
+                  await apiPost(`/grant-applications/${id}/complete`, {
+                    handed_over_on: handoverDate,
+                    handover_recipient_name: handoverRecipientName || null,
+                    handover_recipient_notes: handoverRecipientNotes || null,
+                  });
                   toast.success("Pengajuan ditandai selesai.");
                   onRefresh();
                 } catch (error) {

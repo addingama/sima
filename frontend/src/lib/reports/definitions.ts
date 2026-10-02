@@ -353,12 +353,13 @@ export const grantApplicationReport: ReportDef = {
   id: "grant-applications",
   title: "Pengajuan Bantuan",
   description:
-    "Ringkasan usulan, persetujuan, dan serah terima bantuan per penerima. Bisa disaring periode, status, cara bayar, dan program.",
+    "Ringkasan usulan, persetujuan, dan serah terima bantuan per penerima. Bisa disaring periode, jenis penerima, status, cara bayar, dan program.",
   path: "/dashboard/reports/bantuan",
   paginated: true,
   columns: [
     textColumn("application_number", "No. Pengajuan"),
     dateColumn("created_at", "Tgl Pengajuan"),
+    nestedColumn("beneficiary_type_label", "Jenis Penerima", (row) => String(row.beneficiary_type_label ?? "-")),
     textColumn("recipient_name", "Penerima"),
     textColumn("reason", "Alasan"),
     currencyColumn("recommended_amount", "Usulan"),
@@ -367,11 +368,25 @@ export const grantApplicationReport: ReportDef = {
     nestedColumn("status_label", "Status", (row) => String(row.status_label ?? row.status ?? "-")),
     nestedColumn("program_name", "Program", (row) => String(row.program_name ?? "-")),
     nestedColumn("verifier_name", "Verifikator", (row) => String(row.verifier_name ?? "-")),
+    nestedColumn("handover_name", "Petugas Serah Terima", (row) => {
+      const officer = row.assigned_handover as { name?: string } | null | undefined;
+      return officer?.name ?? "-";
+    }),
     dateColumn("handed_over_on", "Tgl Serah Terima"),
   ],
   filters: [
     { name: "from", label: "Dari Tanggal", type: "date" },
     { name: "to", label: "Sampai Tanggal", type: "date" },
+    {
+      name: "beneficiary_type",
+      label: "Jenis Penerima",
+      type: "select",
+      allLabel: "Semua jenis",
+      options: [
+        { value: "individual", label: "Perorangan" },
+        { value: "organization", label: "Organisasi / Instansi" },
+      ],
+    },
     {
       name: "status",
       label: "Status",
@@ -406,9 +421,11 @@ export const grantApplicationReport: ReportDef = {
   ],
   groupByOptions: [
     { value: "status_label", label: "Status" },
+    { value: "beneficiary_type_label", label: "Jenis Penerima" },
     { value: "payment_label", label: "Cara Bayar" },
     { value: "program_name", label: "Program" },
     { value: "verifier_name", label: "Verifikator" },
+    { value: "handover_name", label: "Petugas Serah Terima" },
   ],
   fetchData: fetchGrantApplicationReport,
 };

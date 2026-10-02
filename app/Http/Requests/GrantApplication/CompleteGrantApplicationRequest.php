@@ -18,6 +18,8 @@ class CompleteGrantApplicationRequest extends FormRequest
     {
         return [
             'handed_over_on' => ['required', 'date'],
+            'handover_recipient_name' => ['nullable', 'string', 'max:255'],
+            'handover_recipient_notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }
