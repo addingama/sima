@@ -26,22 +26,39 @@ Edit `.env`:
 | `APP_URL` | Ya | URL publik, mis. `https://sima.example.com` |
 | `DB_PASSWORD` | Ya | Password user MySQL aplikasi |
 | `MYSQL_ROOT_PASSWORD` | Ya | Password root MySQL |
-| `REDIS_PASSWORD` | Disarankan | Password Redis |
+| `REDIS_PASSWORD` | Ya | Password Redis |
 | `SANCTUM_STATEFUL_DOMAINS` | Ya | Domain frontend (tanpa scheme) |
+| `SESSION_SECURE_COOKIE` | Ya untuk HTTPS | Harus `true` pada production HTTPS |
+| `SESSION_DOMAIN` | Sesuai topologi | Domain cookie, mis. `.sima.example.com` |
+| `SIMA_PORTAL_AUTO_CREATE_USER` | Tidak | Default production `false`; aktifkan hanya bila memang diperlukan |
+| `SIMA_PORTAL_DEFAULT_PASSWORD` | Jika auto-create aktif | Minimal 12 karakter dan bukan password demo |
+
+Validasi konfigurasi sebelum build:
+
+```bash
+make prod-check
+# atau: sh scripts/check-production-env.sh
+```
+
+Preflight menolak secret kosong/placeholder, `APP_KEY` non-Laravel, cookie tidak aman pada HTTPS, konfigurasi S3 yang tidak lengkap, dan Compose yang invalid. Nilai secret tidak dicetak.
 
 ### 2. Build & jalankan
 
-```bash
-make prod-up
-# atau:
-docker compose -f docker-compose.prod.yml up -d --build
-```
-
-### 3. Seed awal (hanya pertama kali)
+Untuk setup/deploy di server gunakan script resmi:
 
 ```bash
-docker compose -f docker-compose.prod.yml exec app php artisan db:seed --force
+DEPLOY_PATH=/opt/sima DEPLOY_BRANCH=main sh scripts/deploy-vps.sh
 ```
+
+`make prod-up` tetap tersedia untuk smoke test lokal, tetapi tidak menggantikan preflight, backup, migration, dan health verification pada script deploy.
+
+### 3. Buat admin awal (hanya pertama kali)
+
+```bash
+docker compose -f docker-compose.prod.yml exec app php artisan sima:create-admin
+```
+
+Jangan menjalankan `db:seed` di production karena `UserSeeder` berisi akun contoh `*@sima.test`.
 
 ### 4. Verifikasi
 
@@ -183,14 +200,28 @@ Di balik layar, script menjalankan:
 ```bash
 git fetch --prune origin main
 git reset --hard origin/main
+sh scripts/check-production-env.sh
+php artisan sima:backup-db # bila stack lama sedang berjalan
 docker compose -f docker-compose.prod.yml build --pull app worker frontend
-docker compose -f docker-compose.prod.yml up -d --remove-orphans
-docker compose -f docker-compose.prod.yml exec app php artisan migrate --force
-docker compose -f docker-compose.prod.yml exec app php artisan config:cache
-docker compose -f docker-compose.prod.yml exec app php artisan route:cache
+docker compose -f docker-compose.prod.yml up -d --wait mysql redis
+docker compose -f docker-compose.prod.yml run --rm app php artisan migrate --force
+docker compose -f docker-compose.prod.yml up -d --wait --remove-orphans
+# Poll GET /api/health; gagal deploy bila tidak sehat dalam batas waktu.
 ```
 
 Perintah ini tidak menghapus named volume, sehingga `sima-prod_app_storage`, `sima-prod_mysql_data`, dan volume persisten lain tetap dipakai ulang.
+
+Opsi script:
+
+| Variabel | Default | Keterangan |
+|----------|---------|------------|
+| `DEPLOY_PATH` | wajib | Path repository pada VPS |
+| `DEPLOY_BRANCH` | `main` | Branch yang dideploy |
+| `DEPLOY_REPO` | kosong | Wajib hanya untuk clone pertama |
+| `ENV_FILE` | `.env` | File environment Compose |
+| `COMPOSE_FILE` | `docker-compose.prod.yml` | File Compose production |
+| `DEPLOY_BACKUP` | `true` | Backup DB sebelum update jika app lama sedang berjalan |
+| `SIMA_HEALTH_TIMEOUT` | `120` | Batas tunggu health check dalam detik |
 
 ## Monitoring
 
