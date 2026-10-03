@@ -6,7 +6,6 @@ use App\Enums\GrantApplicationStatus;
 use App\Enums\GrantBeneficiaryType;
 use App\Models\GrantApplication;
 use App\Models\LedgerEntry;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -74,9 +73,7 @@ class GrantApplicationApiTest extends TestCase
     #[Test]
     public function creator_is_automatically_assigned_for_their_execution_permissions(): void
     {
-        $user = User::factory()->create(['is_active' => true]);
-        $user->givePermissionTo(['grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover']);
-        Sanctum::actingAs($user);
+        $user = $this->actingAsRole('petugas_bantuan');
 
         $this->postJson('/api/grant-applications', $this->draftPayload())
             ->assertCreated()

@@ -194,7 +194,7 @@ Koordinator = admin atau ketua (`grant.assign` + lihat semua). Kartu belum di-as
 
 ### Pemetaan role existing
 
-Role baru tidak wajib di rilis pertama. Kewenangan berasal dari permission dan policy record-level; user dengan role apa pun dapat menjadi pengaju/verifikator/petugas serah terima jika memperoleh permission yang sesuai. Tabel berikut adalah pemetaan awal, bukan pembatas bahwa hanya role tersebut yang boleh mengajukan.
+Role `petugas_bantuan` disediakan untuk user lapangan yang hanya menangani kasus bantuan. Kewenangan tetap berasal dari permission dan policy record-level; user dengan role lain juga dapat menjadi pengaju/verifikator/petugas serah terima jika memperoleh permission yang sesuai. Tabel berikut adalah pemetaan awal, bukan pembatas bahwa hanya role tersebut yang boleh mengajukan.
 
 | Role | Grant |
 |------|--------|
@@ -202,6 +202,7 @@ Role baru tidak wajib di rilis pertama. Kewenangan berasal dari permission dan p
 | `asisten_bendahara` | `view`, `create`, `update` (punya sendiri / sesuai assignment), `handover` |
 | `bendahara` | `view` (semua), `handover`, plus pengeluaran existing |
 | `verifikator` | `view` (assigned), `verify`, `update` pada kartu assigned |
+| `petugas_bantuan` | `view`, `create`, `update`, `verify`, `handover` pada kartu sendiri/assigned; lampiran + lihat program; tanpa `assign`, `approve`, atau permission pengeluaran |
 | `ketua` | `view` (semua), `assign`, `approve` |
 | `auditor` | `view` (semua), tanpa aksi |
 | `donatur` | — |

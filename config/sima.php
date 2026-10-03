@@ -112,6 +112,12 @@ return [
             'grant.view', 'grant.verify', 'grant.update',
         ],
 
+        UserRole::PETUGAS_BANTUAN->value => [
+            'program.view',
+            'attachment.view', 'attachment.manage',
+            'grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover',
+        ],
+
         UserRole::KETUA->value => [
             'donor.view', 'vendor.view', 'fund.view', 'account.view', 'program.view',
             'receipt.view', 'receipt.approve', 'receipt.reject', 'receipt.reverse',

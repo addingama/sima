@@ -44,6 +44,26 @@ class RolePermissionApiTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_petugas_bantuan_has_only_case_execution_permissions(): void
+    {
+        $role = Role::findByName('petugas_bantuan', 'web');
+
+        $this->assertSame([
+            'attachment.manage',
+            'attachment.view',
+            'grant.create',
+            'grant.handover',
+            'grant.update',
+            'grant.verify',
+            'grant.view',
+            'program.view',
+        ], $role->permissions->pluck('name')->sort()->values()->all());
+
+        $this->assertFalse($role->hasPermissionTo('grant.assign'));
+        $this->assertFalse($role->hasPermissionTo('grant.approve'));
+        $this->assertFalse($role->hasPermissionTo('disbursement.create'));
+    }
+
     public function test_admin_can_sync_non_admin_role_permissions_and_audit_change(): void
     {
         $admin = $this->userWithRole('admin');
