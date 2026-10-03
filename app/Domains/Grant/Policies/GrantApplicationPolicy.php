@@ -47,10 +47,10 @@ class GrantApplicationPolicy
         }
 
         if ($grant->status === GrantApplicationStatus::DRAFT) {
-            return $this->isCreator($user, $grant) || $this->seesAll($user);
+            return $this->isCreator($user, $grant) || $this->isAdmin($user);
         }
 
-        return $this->isAssignedVerifier($user, $grant) || $this->seesAll($user);
+        return $this->isAssignedVerifier($user, $grant) || $this->isAdmin($user);
     }
 
     public function assign(User $user, GrantApplication $grant): bool
@@ -90,7 +90,7 @@ class GrantApplicationPolicy
             return false;
         }
 
-        return $this->isAssignedVerifier($user, $grant) || $this->seesAll($user);
+        return $this->isAssignedVerifier($user, $grant) || $this->isAdmin($user);
     }
 
     public function approve(User $user, GrantApplication $grant): bool
@@ -121,7 +121,7 @@ class GrantApplicationPolicy
     {
         return $this->allows($user, 'grant.handover')
             && $grant->status === GrantApplicationStatus::APPROVED
-            && ($this->isAssignedHandover($user, $grant) || $user->hasRole('admin'));
+            && ($this->isAssignedHandover($user, $grant) || $this->isAdmin($user));
     }
 
     public function createDisbursement(User $user, GrantApplication $grant): bool
@@ -140,6 +140,11 @@ class GrantApplicationPolicy
     private function isCreator(User $user, GrantApplication $grant): bool
     {
         return (int) $grant->created_by === (int) $user->getKey();
+    }
+
+    private function isAdmin(User $user): bool
+    {
+        return $user->hasRole('admin');
     }
 
     private function isAssignedVerifier(User $user, GrantApplication $grant): bool

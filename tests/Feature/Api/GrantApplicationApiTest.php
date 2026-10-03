@@ -6,6 +6,7 @@ use App\Enums\GrantApplicationStatus;
 use App\Enums\GrantBeneficiaryType;
 use App\Models\GrantApplication;
 use App\Models\LedgerEntry;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -58,15 +59,15 @@ class GrantApplicationApiTest extends TestCase
     }
 
     #[Test]
-    public function asisten_can_create_draft_without_verifier(): void
+    public function asisten_is_automatically_assigned_as_verifier_and_handover_officer(): void
     {
-        $this->actingAsRole('asisten_bendahara');
+        $asisten = $this->actingAsRole('asisten_bendahara');
 
         $this->postJson('/api/grant-applications', $this->draftPayload())
             ->assertCreated()
             ->assertJsonPath('data.status', 'draft')
-            ->assertJsonPath('data.assigned_verifier_id', null)
-            ->assertJsonPath('data.assigned_handover_id', fn (mixed $id): bool => is_int($id))
+            ->assertJsonPath('data.assigned_verifier_id', $asisten->id)
+            ->assertJsonPath('data.assigned_handover_id', $asisten->id)
             ->assertJsonPath('data.payment_method', 'cash');
     }
 
@@ -107,7 +108,9 @@ class GrantApplicationApiTest extends TestCase
     #[Test]
     public function cannot_send_to_verification_without_assigned_verifier(): void
     {
-        $this->actingAsRole('asisten_bendahara');
+        $creator = User::factory()->create(['is_active' => true]);
+        $creator->givePermissionTo(['grant.view', 'grant.create', 'grant.update', 'grant.handover']);
+        Sanctum::actingAs($creator);
         $id = $this->postJson('/api/grant-applications', $this->draftPayload())
             ->assertCreated()
             ->json('data.id');
@@ -192,6 +195,24 @@ class GrantApplicationApiTest extends TestCase
     }
 
     #[Test]
+    public function roles_that_see_all_cannot_edit_a_card_unless_they_are_creator_or_assignee(): void
+    {
+        $creator = $this->actingAsRole('petugas_bantuan');
+        $grant = GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::DRAFT,
+            'created_by' => $creator->id,
+        ]);
+
+        foreach (['bendahara', 'ketua', 'auditor'] as $role) {
+            $this->actingAsRole($role);
+            $this->getJson("/api/grant-applications/{$grant->id}")->assertOk();
+            $this->putJson("/api/grant-applications/{$grant->id}", [
+                'reason' => "Perubahan oleh {$role}",
+            ])->assertForbidden();
+        }
+    }
+
+    #[Test]
     public function ketua_sees_all_and_cannot_increase_approved_amount(): void
     {
         $id = $this->createPendingApproval();
@@ -271,10 +292,11 @@ class GrantApplicationApiTest extends TestCase
     #[Test]
     public function assign_rejects_user_without_grant_verify(): void
     {
-        $staff = $this->actingAsRole('asisten_bendahara');
+        $this->actingAsRole('asisten_bendahara');
         $id = $this->postJson('/api/grant-applications', $this->draftPayload())
             ->assertCreated()
             ->json('data.id');
+        $staff = User::factory()->create(['is_active' => true]);
 
         $this->actingAsRole('ketua');
         $this->postJson("/api/grant-applications/{$id}/assign", [

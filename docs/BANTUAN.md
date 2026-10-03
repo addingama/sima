@@ -194,17 +194,17 @@ Koordinator = admin atau ketua (`grant.assign` + lihat semua). Kartu belum di-as
 
 ### Pemetaan role existing
 
-Role `petugas_bantuan` disediakan untuk user lapangan yang hanya menangani kasus bantuan. Kewenangan tetap berasal dari permission dan policy record-level; user dengan role lain juga dapat menjadi pengaju/verifikator/petugas serah terima jika memperoleh permission yang sesuai. Tabel berikut adalah pemetaan awal, bukan pembatas bahwa hanya role tersebut yang boleh mengajukan.
+Role `petugas_bantuan` disediakan untuk user lapangan yang hanya menangani kasus bantuan. Semua role internal mendapat permission dasar yang sama untuk membuat, memverifikasi, dan menyerahkan pengajuan sendiri/assigned; `donatur` dikecualikan. Permission tambahan seperti assignment, approval, dan pengeluaran tetap mengikuti tanggung jawab role masing-masing.
 
 | Role | Grant |
 |------|--------|
 | `admin` | semua (`*`) |
-| `asisten_bendahara` | `view`, `create`, `update` (punya sendiri / sesuai assignment), `handover` |
-| `bendahara` | `view` (semua), `handover`, plus pengeluaran existing |
-| `verifikator` | `view` (assigned), `verify`, `update` pada kartu assigned |
+| `asisten_bendahara` | permission dasar petugas bantuan; plus permission keuangan existing |
+| `bendahara` | permission dasar petugas bantuan; lihat semua; plus permission pengeluaran existing |
+| `verifikator` | permission dasar petugas bantuan; plus permission verifikasi keuangan existing |
 | `petugas_bantuan` | `view`, `create`, `update`, `verify`, `handover` pada kartu sendiri/assigned; lampiran + lihat program; tanpa `assign`, `approve`, atau permission pengeluaran |
-| `ketua` | `view` (semua), `assign`, `approve` |
-| `auditor` | `view` (semua), tanpa aksi |
+| `ketua` | permission dasar petugas bantuan; lihat semua; plus `assign` dan `approve` |
+| `auditor` | permission dasar petugas bantuan; lihat semua; plus audit/report existing |
 | `donatur` | — |
 
 Pengeluaran tetap memakai `disbursement.*`. Modul bantuan tidak menambahkan jalan pintas posting ledger.
