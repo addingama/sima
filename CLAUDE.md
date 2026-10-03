@@ -124,11 +124,13 @@ Dana `SYS-SUSPENSE` tetap ada untuk kebutuhan sistem/legacy; alur aktif tidak me
 
 ### Role
 
-`admin`, `asisten_bendahara`, `bendahara`, `verifikator`, `ketua`, `auditor`, `donatur`.
+`admin`, `asisten_bendahara`, `bendahara`, `verifikator`, `petugas_bantuan`, `ketua`, `auditor`, `donatur`.
 
 - **asisten_bendahara** — input & submit; tidak approve/reverse penerimaan/pengeluaran.
 - **bendahara** — approver keuangan (`receipt.approve` / `receipt.reverse`, pengeluaran, dsb.).
 - **ketua** — approver pimpinan/eskalasi (bukan pengganti asisten).
+- **petugas_bantuan** — pengaju lapangan; dapat memverifikasi dan menyerahkan bantuan sendiri, tanpa assign/approve/pengeluaran.
+- Semua role internal memiliki permission dasar petugas bantuan (`grant.view/create/update/verify/handover`); `donatur` dikecualikan. Scope aksi tetap kartu sendiri/assigned.
 - Role `donatur` tidak mendapat `grant.*`.
 
 Daftar permission & pemetaan role ada di `config/sima.php`. Tes RBAC jangan mengasumsikan bendahara = clerk.

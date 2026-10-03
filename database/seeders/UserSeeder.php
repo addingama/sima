@@ -17,6 +17,7 @@ class UserSeeder extends Seeder
             ['Asisten Bendahara', 'asisten.bendahara@sima.test', UserRole::ASISTEN_BENDAHARA],
             ['Bendahara', 'bendahara@sima.test', UserRole::BENDAHARA],
             ['Verifikator', 'verifikator@sima.test', UserRole::VERIFIKATOR],
+            ['Petugas Bantuan', 'petugas.bantuan@sima.test', UserRole::PETUGAS_BANTUAN],
             ['Ketua', 'ketua@sima.test', UserRole::KETUA],
             ['Auditor', 'auditor@sima.test', UserRole::AUDITOR],
         ];

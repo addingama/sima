@@ -44,6 +44,53 @@ class RolePermissionApiTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_petugas_bantuan_has_only_case_execution_permissions(): void
+    {
+        $role = Role::findByName('petugas_bantuan', 'web');
+
+        $this->assertSame([
+            'attachment.manage',
+            'attachment.view',
+            'grant.create',
+            'grant.handover',
+            'grant.update',
+            'grant.verify',
+            'grant.view',
+            'program.view',
+        ], $role->permissions->pluck('name')->sort()->values()->all());
+
+        $this->assertFalse($role->hasPermissionTo('grant.assign'));
+        $this->assertFalse($role->hasPermissionTo('grant.approve'));
+        $this->assertFalse($role->hasPermissionTo('disbursement.create'));
+    }
+
+    public function test_all_internal_roles_share_basic_grant_execution_permissions_except_donatur(): void
+    {
+        $basicPermissions = [
+            'grant.view',
+            'grant.create',
+            'grant.update',
+            'grant.verify',
+            'grant.handover',
+            'attachment.view',
+            'attachment.manage',
+            'program.view',
+        ];
+
+        foreach (['admin', 'asisten_bendahara', 'bendahara', 'verifikator', 'petugas_bantuan', 'ketua', 'auditor'] as $roleName) {
+            $role = Role::findByName($roleName, 'web');
+
+            foreach ($basicPermissions as $permission) {
+                $this->assertTrue($role->hasPermissionTo($permission), "Role {$roleName} tidak memiliki {$permission}.");
+            }
+        }
+
+        $donatur = Role::findByName('donatur', 'web');
+        foreach ($basicPermissions as $permission) {
+            $this->assertFalse($donatur->hasPermissionTo($permission), "Donatur tidak boleh memiliki {$permission}.");
+        }
+    }
+
     public function test_admin_can_sync_non_admin_role_permissions_and_audit_change(): void
     {
         $admin = $this->userWithRole('admin');

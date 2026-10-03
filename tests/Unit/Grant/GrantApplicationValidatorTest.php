@@ -4,6 +4,7 @@ namespace Tests\Unit\Grant;
 
 use App\Domains\Grant\Validators\GrantApplicationValidator;
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryType;
 use App\Enums\GrantPaymentMethod;
 use App\Exceptions\DomainException;
 use App\Models\GrantApplication;
@@ -80,5 +81,50 @@ class GrantApplicationValidatorTest extends TestCase
         $this->expectExceptionMessage('grant.verify');
 
         $this->validator->assertAssignableVerifier($user);
+    }
+
+    #[Test]
+    public function organization_requires_complete_pic_data_before_approval(): void
+    {
+        $grant = GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::VERIFICATION,
+            'beneficiary_type' => GrantBeneficiaryType::ORGANIZATION,
+            'recipient_address' => 'Alamat organisasi',
+            'verified_amount' => '100000.00',
+            'verifier_notes' => 'OK',
+            'assigned_verifier_id' => User::factory(),
+            'organization_pic_name' => 'Ustaz Ahmad',
+        ]);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('kontak, dan hubungan PIC');
+
+        $this->validator->assertReadyForApproval($grant);
+    }
+
+    #[Test]
+    public function organization_pic_bank_account_requires_relationship_and_reason(): void
+    {
+        $grant = GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::VERIFICATION,
+            'beneficiary_type' => GrantBeneficiaryType::ORGANIZATION,
+            'recipient_address' => 'Alamat organisasi',
+            'organization_pic_name' => 'Ustaz Ahmad',
+            'organization_pic_contact' => '0812',
+            'organization_pic_relationship' => 'Ketua',
+            'payment_method' => GrantPaymentMethod::TRANSFER,
+            'bank_name' => 'Bank Amanah',
+            'bank_account_number' => '12345',
+            'bank_account_holder' => 'Ustaz Ahmad',
+            'bank_account_owner_type' => 'pic',
+            'verified_amount' => '100000.00',
+            'verifier_notes' => 'OK',
+            'assigned_verifier_id' => User::factory(),
+        ]);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('alasan penggunaan rekening pribadi PIC');
+
+        $this->validator->assertReadyForApproval($grant);
     }
 }

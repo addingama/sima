@@ -17,6 +17,7 @@ class GrantApplicationRepository
         return $this->applyListFilters(
             $this->visibleTo($viewer)->with([
                 'assignedVerifier:id,name',
+                'assignedHandover:id,name',
                 'program:id,code,name',
                 'createdBy:id,name',
                 'handedOverBy:id,name',
@@ -104,7 +105,8 @@ class GrantApplicationRepository
 
         return $query->where(function (Builder $w) use ($viewer): void {
             $w->where('created_by', $viewer->getKey())
-                ->orWhere('assigned_verifier_id', $viewer->getKey());
+                ->orWhere('assigned_verifier_id', $viewer->getKey())
+                ->orWhere('assigned_handover_id', $viewer->getKey());
         });
     }
 
@@ -124,7 +126,8 @@ class GrantApplicationRepository
 
     public function seesAll(User $viewer): bool
     {
-        return $viewer->hasAnyRole(['admin', 'ketua', 'bendahara', 'auditor']);
+        return $viewer->hasAnyRole(['admin', 'ketua', 'bendahara', 'auditor'])
+            || $viewer->can('grant.assign');
     }
 
     private function applyListFilters(Builder $builder, ListQueryDto $query, User $viewer): Builder
@@ -132,7 +135,7 @@ class GrantApplicationRepository
         return ListQueryApplier::apply(
             $builder,
             $query,
-            searchColumns: ['application_number', 'recipient_name', 'recommender_name', 'reason'],
+            searchColumns: ['application_number', 'recipient_name', 'organization_pic_name', 'recommender_name', 'reason'],
             sortable: ['created_at', 'application_number', 'recommended_amount', 'status'],
             defaultSort: 'created_at',
             filterCallbacks: $this->filterCallbacks($viewer),
@@ -147,7 +150,8 @@ class GrantApplicationRepository
                 if (filter_var($v, FILTER_VALIDATE_BOOLEAN)) {
                     $q->where(function (Builder $inner) use ($viewer): void {
                         $inner->where('created_by', $viewer->getKey())
-                            ->orWhere('assigned_verifier_id', $viewer->getKey());
+                            ->orWhere('assigned_verifier_id', $viewer->getKey())
+                            ->orWhere('assigned_handover_id', $viewer->getKey());
                     });
                 }
             },
@@ -161,6 +165,24 @@ class GrantApplicationRepository
                 if ($statuses !== []) {
                     $q->whereIn('status', $statuses);
                 }
+            },
+            'beneficiary_type' => function (Builder $q, mixed $v): void {
+                $q->where('beneficiary_type', (string) $v);
+            },
+            'assigned_verifier_id' => function (Builder $q, mixed $v): void {
+                $q->where('assigned_verifier_id', (int) $v);
+            },
+            'assigned_handover_id' => function (Builder $q, mixed $v): void {
+                $q->where('assigned_handover_id', (int) $v);
+            },
+            'created_by' => function (Builder $q, mixed $v): void {
+                $q->where('created_by', (int) $v);
+            },
+            'payment_method' => function (Builder $q, mixed $v): void {
+                $q->where('payment_method', (string) $v);
+            },
+            'program_id' => function (Builder $q, mixed $v): void {
+                $q->where('program_id', (int) $v);
             },
             'from' => function (Builder $q, mixed $v): void {
                 $q->whereDate('created_at', '>=', (string) $v);

@@ -79,7 +79,7 @@ return [
             'liability.view', 'liability.manage',
             'attachment.view', 'attachment.manage',
             'report.view',
-            'grant.view', 'grant.create', 'grant.update', 'grant.assign', 'grant.handover',
+            'grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover',
         ],
 
         UserRole::BENDAHARA->value => [
@@ -97,7 +97,7 @@ return [
             'liability.view', 'liability.manage',
             'attachment.view', 'attachment.manage',
             'report.view',
-            'grant.view', 'grant.handover',
+            'grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover',
         ],
 
         UserRole::VERIFIKATOR->value => [
@@ -109,7 +109,13 @@ return [
             'liability.view',
             'attachment.view', 'attachment.manage',
             'report.view',
-            'grant.view', 'grant.verify', 'grant.update',
+            'grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover',
+        ],
+
+        UserRole::PETUGAS_BANTUAN->value => [
+            'program.view',
+            'attachment.view', 'attachment.manage',
+            'grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover',
         ],
 
         UserRole::KETUA->value => [
@@ -120,19 +126,20 @@ return [
             'transfer.view',
             'reconciliation.view',
             'liability.view',
-            'attachment.view',
+            'attachment.view', 'attachment.manage',
             'report.view',
-            'grant.view', 'grant.assign', 'grant.approve',
+            'grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover',
+            'grant.assign', 'grant.approve',
         ],
 
         UserRole::AUDITOR->value => [
             'donor.view', 'vendor.view', 'fund.view', 'account.view', 'program.view',
             'receipt.view', 'disbursement.view',
             'bankfee.view', 'transfer.view', 'reconciliation.view',
-            'liability.view', 'attachment.view',
+            'liability.view', 'attachment.view', 'attachment.manage',
             'opening.view',
             'audit.view', 'report.view',
-            'grant.view',
+            'grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover',
         ],
 
         UserRole::DONATUR->value => [

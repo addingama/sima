@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\GrantApplication;
 
+use App\Enums\GrantBeneficiaryType;
 use App\Enums\GrantPaymentMethod;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -19,23 +20,29 @@ class UpdateGrantApplicationRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'beneficiary_type' => ['sometimes', Rule::enum(GrantBeneficiaryType::class)],
             'recipient_name' => ['sometimes', 'string', 'max:255'],
             'recipient_phone' => ['nullable', 'string', 'max:50'],
             'recipient_address' => ['nullable', 'string'],
             'recipient_identity_number' => ['nullable', 'string', 'max:32'],
+            'organization_pic_name' => ['nullable', 'string', 'max:255'],
+            'organization_pic_contact' => ['nullable', 'string', 'max:255'],
+            'organization_pic_relationship' => ['nullable', 'string', 'max:255'],
             'recommended_amount' => ['sometimes', 'numeric', 'gt:0'],
             'verified_amount' => ['sometimes', 'numeric', 'gt:0'],
             'reason' => ['sometimes', 'string'],
-            'recommender_name' => ['sometimes', 'string', 'max:255'],
+            'recommender_name' => ['nullable', 'string', 'max:255'],
             'recommender_contact' => ['nullable', 'string', 'max:255'],
             'payment_method' => ['sometimes', Rule::enum(GrantPaymentMethod::class)],
             'bank_name' => ['nullable', 'string', 'max:100'],
             'bank_account_number' => ['nullable', 'string', 'max:50'],
             'bank_account_holder' => ['nullable', 'string', 'max:255'],
+            'bank_account_owner_type' => ['nullable', 'in:beneficiary,pic'],
+            'bank_account_holder_relationship' => ['nullable', 'string', 'max:255'],
+            'bank_account_use_reason' => ['nullable', 'string'],
             'notes' => ['nullable', 'string'],
             'verifier_notes' => ['nullable', 'string'],
             'program_id' => ['nullable', 'integer', 'exists:programs,id'],
-            'assigned_verifier_id' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
 

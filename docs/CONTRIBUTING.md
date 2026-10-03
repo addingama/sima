@@ -49,6 +49,7 @@ Pastikan `frontend/.env` memakai `NEXT_PUBLIC_API_URL=http://localhost:8000/api`
 | admin@sima.test | admin |
 | bendahara@sima.test | bendahara |
 | verifikator@sima.test | verifikator |
+| petugas.bantuan@sima.test | petugas_bantuan |
 
 Password default: `password`
 

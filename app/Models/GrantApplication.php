@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryType;
 use App\Enums\GrantPaymentMethod;
 use App\Models\Concerns\HasAttachments;
 use Database\Factories\GrantApplicationFactory;
@@ -24,10 +25,14 @@ class GrantApplication extends Model implements Auditable
     protected $fillable = [
         'application_number',
         'status',
+        'beneficiary_type',
         'recipient_name',
         'recipient_phone',
         'recipient_address',
         'recipient_identity_number',
+        'organization_pic_name',
+        'organization_pic_contact',
+        'organization_pic_relationship',
         'recommended_amount',
         'verified_amount',
         'approved_amount',
@@ -38,6 +43,9 @@ class GrantApplication extends Model implements Auditable
         'bank_name',
         'bank_account_number',
         'bank_account_holder',
+        'bank_account_owner_type',
+        'bank_account_holder_relationship',
+        'bank_account_use_reason',
         'notes',
         'verifier_notes',
         'decision_notes',
@@ -45,6 +53,8 @@ class GrantApplication extends Model implements Auditable
         'rejection_reason',
         'program_id',
         'assigned_verifier_id',
+        'assigned_handover_id',
+        'handover_assignment_reason',
         'disbursement_id',
         'sent_to_verification_at',
         'sent_to_verification_by',
@@ -59,6 +69,8 @@ class GrantApplication extends Model implements Auditable
         'handed_over_on',
         'handed_over_at',
         'handed_over_by',
+        'handover_recipient_name',
+        'handover_recipient_notes',
         'created_by',
     ];
 
@@ -66,6 +78,7 @@ class GrantApplication extends Model implements Auditable
     {
         return [
             'status' => GrantApplicationStatus::class,
+            'beneficiary_type' => GrantBeneficiaryType::class,
             'payment_method' => GrantPaymentMethod::class,
             'recommended_amount' => 'decimal:2',
             'verified_amount' => 'decimal:2',
@@ -88,6 +101,11 @@ class GrantApplication extends Model implements Auditable
     public function assignedVerifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_verifier_id');
+    }
+
+    public function assignedHandover(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_handover_id');
     }
 
     public function disbursement(): BelongsTo

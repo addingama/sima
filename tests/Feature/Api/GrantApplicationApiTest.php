@@ -3,8 +3,10 @@
 namespace Tests\Feature\Api;
 
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryType;
 use App\Models\GrantApplication;
 use App\Models\LedgerEntry;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -57,21 +59,58 @@ class GrantApplicationApiTest extends TestCase
     }
 
     #[Test]
-    public function asisten_can_create_draft_without_verifier(): void
+    public function asisten_is_automatically_assigned_as_verifier_and_handover_officer(): void
     {
-        $this->actingAsRole('asisten_bendahara');
+        $asisten = $this->actingAsRole('asisten_bendahara');
 
         $this->postJson('/api/grant-applications', $this->draftPayload())
             ->assertCreated()
             ->assertJsonPath('data.status', 'draft')
-            ->assertJsonPath('data.assigned_verifier_id', null)
+            ->assertJsonPath('data.assigned_verifier_id', $asisten->id)
+            ->assertJsonPath('data.assigned_handover_id', $asisten->id)
             ->assertJsonPath('data.payment_method', 'cash');
+    }
+
+    #[Test]
+    public function creator_is_automatically_assigned_for_their_execution_permissions(): void
+    {
+        $user = $this->actingAsRole('petugas_bantuan');
+
+        $this->postJson('/api/grant-applications', $this->draftPayload())
+            ->assertCreated()
+            ->assertJsonPath('data.created_by', $user->id)
+            ->assertJsonPath('data.assigned_verifier_id', $user->id)
+            ->assertJsonPath('data.assigned_handover_id', $user->id);
+    }
+
+    #[Test]
+    public function organization_can_be_verified_without_an_identity_document(): void
+    {
+        $id = $this->createAssignedInVerification();
+
+        $this->putJson("/api/grant-applications/{$id}", [
+            'beneficiary_type' => GrantBeneficiaryType::ORGANIZATION->value,
+            'recipient_name' => 'Masjid Al Amanah',
+            'recipient_address' => 'Jl. Masjid No. 1',
+            'organization_pic_name' => 'Ustaz Ahmad',
+            'organization_pic_contact' => '08123456789',
+            'organization_pic_relationship' => 'Ketua DKM',
+            'verified_amount' => '250000.00',
+            'verifier_notes' => 'Kebutuhan telah diperiksa.',
+        ])->assertOk();
+
+        $this->postJson("/api/grant-applications/{$id}/submit-for-approval")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'pending_approval')
+            ->assertJsonPath('data.beneficiary_type', 'organization');
     }
 
     #[Test]
     public function cannot_send_to_verification_without_assigned_verifier(): void
     {
-        $this->actingAsRole('asisten_bendahara');
+        $creator = User::factory()->create(['is_active' => true]);
+        $creator->givePermissionTo(['grant.view', 'grant.create', 'grant.update', 'grant.handover']);
+        Sanctum::actingAs($creator);
         $id = $this->postJson('/api/grant-applications', $this->draftPayload())
             ->assertCreated()
             ->json('data.id');
@@ -125,10 +164,12 @@ class GrantApplicationApiTest extends TestCase
             ->assertCreated()
             ->json('data.id');
 
+        $this->actingAsRole('ketua');
         $this->postJson("/api/grant-applications/{$id}/assign", [
             'assigned_verifier_id' => $verifier->id,
         ])->assertOk();
 
+        Sanctum::actingAs($asisten);
         $this->postJson("/api/grant-applications/{$id}/send-to-verification")->assertOk();
 
         Sanctum::actingAs($asisten);
@@ -154,6 +195,24 @@ class GrantApplicationApiTest extends TestCase
     }
 
     #[Test]
+    public function roles_that_see_all_cannot_edit_a_card_unless_they_are_creator_or_assignee(): void
+    {
+        $creator = $this->actingAsRole('petugas_bantuan');
+        $grant = GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::DRAFT,
+            'created_by' => $creator->id,
+        ]);
+
+        foreach (['bendahara', 'ketua', 'auditor'] as $role) {
+            $this->actingAsRole($role);
+            $this->getJson("/api/grant-applications/{$grant->id}")->assertOk();
+            $this->putJson("/api/grant-applications/{$grant->id}", [
+                'reason' => "Perubahan oleh {$role}",
+            ])->assertForbidden();
+        }
+    }
+
+    #[Test]
     public function ketua_sees_all_and_cannot_increase_approved_amount(): void
     {
         $id = $this->createPendingApproval();
@@ -176,13 +235,70 @@ class GrantApplicationApiTest extends TestCase
     }
 
     #[Test]
+    public function ketua_cannot_approve_without_an_assigned_handover_officer(): void
+    {
+        $grant = GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::PENDING_APPROVAL,
+            'verified_amount' => '200000.00',
+            'assigned_handover_id' => null,
+        ]);
+
+        $this->actingAsRole('ketua');
+        $this->postJson("/api/grant-applications/{$grant->id}/approve", [
+            'approved_amount' => '200000.00',
+        ])->assertStatus(422)
+            ->assertJsonPath('errors.code', 'domain_rule_violation');
+    }
+
+    #[Test]
+    public function only_assigned_handover_officer_or_admin_can_complete(): void
+    {
+        $assigned = $this->makeUser('bendahara');
+        $grant = GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::APPROVED,
+            'approved_amount' => '250000.00',
+            'assigned_handover_id' => $assigned->id,
+        ]);
+
+        $this->actingAsRole('bendahara');
+        $this->postJson("/api/grant-applications/{$grant->id}/complete", [
+            'handed_over_on' => now()->toDateString(),
+        ])->assertForbidden();
+    }
+
+    #[Test]
+    public function reassigning_handover_after_approval_requires_a_reason(): void
+    {
+        $grant = GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::APPROVED,
+            'approved_amount' => '250000.00',
+            'assigned_handover_id' => $this->makeUser('bendahara')->id,
+        ]);
+        $replacement = $this->makeUser('bendahara');
+
+        $this->actingAsRole('ketua');
+        $this->postJson("/api/grant-applications/{$grant->id}/assign", [
+            'assigned_handover_id' => $replacement->id,
+        ])->assertStatus(422);
+
+        $this->postJson("/api/grant-applications/{$grant->id}/assign", [
+            'assigned_handover_id' => $replacement->id,
+            'reason' => 'Petugas sebelumnya berhalangan.',
+        ])->assertOk()
+            ->assertJsonPath('data.assigned_handover_id', $replacement->id)
+            ->assertJsonPath('data.handover_assignment_reason', 'Petugas sebelumnya berhalangan.');
+    }
+
+    #[Test]
     public function assign_rejects_user_without_grant_verify(): void
     {
-        $staff = $this->actingAsRole('asisten_bendahara');
+        $this->actingAsRole('asisten_bendahara');
         $id = $this->postJson('/api/grant-applications', $this->draftPayload())
             ->assertCreated()
             ->json('data.id');
+        $staff = User::factory()->create(['is_active' => true]);
 
+        $this->actingAsRole('ketua');
         $this->postJson("/api/grant-applications/{$id}/assign", [
             'assigned_verifier_id' => $staff->id,
         ])->assertStatus(422);
@@ -262,7 +378,8 @@ class GrantApplicationApiTest extends TestCase
         Storage::fake('local');
 
         $id = $this->createApprovedGrant('250000.00');
-        $this->actingAsRole('bendahara');
+        $handover = GrantApplication::query()->findOrFail($id)->assignedHandover;
+        Sanctum::actingAs($handover);
 
         $this->postJson("/api/grant-applications/{$id}/complete", [
             'handed_over_on' => now()->toDateString(),
@@ -289,6 +406,7 @@ class GrantApplicationApiTest extends TestCase
 
         $ledgerCount = LedgerEntry::query()->count();
 
+        Sanctum::actingAs($handover);
         $this->postJson("/api/grant-applications/{$id}/complete", [
             'handed_over_on' => now()->toDateString(),
         ])->assertStatus(422);
@@ -345,6 +463,7 @@ class GrantApplicationApiTest extends TestCase
     private function draftPayload(): array
     {
         return [
+            'beneficiary_type' => GrantBeneficiaryType::INDIVIDUAL->value,
             'recipient_name' => 'Siti Aminah',
             'recommended_amount' => '250000.00',
             'reason' => 'Bantuan sembako',
@@ -361,10 +480,14 @@ class GrantApplicationApiTest extends TestCase
             ->assertCreated()
             ->json('data.id');
 
+        $handover = $this->makeUser('bendahara');
+        $this->actingAsRole('ketua');
         $this->postJson("/api/grant-applications/{$id}/assign", [
             'assigned_verifier_id' => $verifier->id,
+            'assigned_handover_id' => $handover->id,
         ])->assertOk();
 
+        Sanctum::actingAs(GrantApplication::query()->findOrFail($id)->createdBy);
         $this->postJson("/api/grant-applications/{$id}/send-to-verification")
             ->assertOk()
             ->assertJsonPath('data.status', 'verification');

@@ -4,6 +4,7 @@ namespace App\Domains\Grant\Validators;
 
 use App\Enums\DisbursementStatus;
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryType;
 use App\Enums\GrantPaymentMethod;
 use App\Exceptions\DomainException;
 use App\Models\GrantApplication;
@@ -33,6 +34,17 @@ class GrantApplicationValidator
         }
     }
 
+    public function assertAssignableHandover(User $handover): void
+    {
+        if (! $handover->is_active) {
+            throw new DomainException('Petugas serah terima yang ditugaskan harus akun aktif.');
+        }
+
+        if (! $handover->can('grant.handover')) {
+            throw new DomainException('User yang ditugaskan harus memiliki permission grant.handover.');
+        }
+    }
+
     public function assertReadyForVerification(GrantApplication $grant): void
     {
         if ($grant->assigned_verifier_id === null) {
@@ -46,9 +58,17 @@ class GrantApplicationValidator
             throw new DomainException('Verifikator wajib terisi sebelum naik ke approval.');
         }
 
-        $hasIdentity = filled($grant->recipient_identity_number) || $grant->hasIdentityDocument();
-        if (! $hasIdentity) {
-            throw new DomainException('Identitas penerima wajib: isi NIK atau unggah dokumen identitas (title: identity).');
+        if ($grant->beneficiary_type === GrantBeneficiaryType::ORGANIZATION) {
+            if (! filled($grant->organization_pic_name)
+                || ! filled($grant->organization_pic_contact)
+                || ! filled($grant->organization_pic_relationship)) {
+                throw new DomainException('Nama, kontak, dan hubungan PIC organisasi wajib diisi sebelum approval.');
+            }
+        } else {
+            $hasIdentity = filled($grant->recipient_identity_number) || $grant->hasIdentityDocument();
+            if (! $hasIdentity) {
+                throw new DomainException('Identitas penerima wajib: isi NIK atau unggah dokumen identitas (title: identity).');
+            }
         }
 
         if (! filled($grant->recipient_address)) {
@@ -71,6 +91,19 @@ class GrantApplicationValidator
             if (! filled($grant->bank_name) || ! filled($grant->bank_account_number) || ! filled($grant->bank_account_holder)) {
                 throw new DomainException('Rekening (bank, nomor, atas nama) wajib jika cara bayar transfer.');
             }
+
+            if ($grant->beneficiary_type === GrantBeneficiaryType::ORGANIZATION
+                && $grant->bank_account_owner_type === 'pic'
+                && (! filled($grant->bank_account_holder_relationship) || ! filled($grant->bank_account_use_reason))) {
+                throw new DomainException('Hubungan pemilik rekening dan alasan penggunaan rekening pribadi PIC wajib diisi.');
+            }
+        }
+    }
+
+    public function assertReadyForApprovalDecision(GrantApplication $grant): void
+    {
+        if ($grant->assigned_handover_id === null) {
+            throw new DomainException('Petugas serah terima wajib ditugaskan sebelum pengajuan disetujui.');
         }
     }
 
@@ -91,8 +124,11 @@ class GrantApplicationValidator
         }
     }
 
-    public function assertReadyToComplete(GrantApplication $grant): void
-    {
+    public function assertReadyToComplete(
+        GrantApplication $grant,
+        ?string $recipientName = null,
+        ?string $recipientNotes = null,
+    ): void {
         $this->assertStatus($grant, [GrantApplicationStatus::APPROVED]);
 
         $disbursement = $grant->disbursement;
@@ -106,6 +142,16 @@ class GrantApplicationValidator
 
         if ($grant->payment_method === GrantPaymentMethod::CASH && ! $grant->hasHandoverPhoto()) {
             throw new DomainException('Foto penyerahan wajib untuk bantuan tunai (title lampiran: handover).');
+        }
+
+        if ($grant->beneficiary_type === GrantBeneficiaryType::ORGANIZATION) {
+            if (! filled($recipientName)) {
+                throw new DomainException('Nama penerima aktual wajib diisi untuk serah terima kepada organisasi.');
+            }
+
+            if ($recipientName !== $grant->organization_pic_name && ! filled($recipientNotes)) {
+                throw new DomainException('Keterangan wajib diisi jika penerima aktual berbeda dari PIC organisasi.');
+            }
         }
     }
 }
