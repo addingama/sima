@@ -241,6 +241,7 @@ php artisan migrate --seed
 | asisten.bendahara@sima.test | Asisten Bendahara |
 | bendahara@sima.test | Bendahara |
 | verifikator@sima.test | Verifikator |
+| petugas.bantuan@sima.test | Petugas Bantuan |
 | ketua@sima.test | Ketua |
 | auditor@sima.test | Auditor |
 | donatur@sima.test | Donatur (setelah `sima:seed-demo`) |

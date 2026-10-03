@@ -11,7 +11,7 @@ Jawaban siap pakai saat demo produk di depan pimpinan, bendahara, auditor, atau 
 | Item | Jawaban singkat |
 |------|----------------|
 | URL | Frontend `http://localhost:3000` (atau staging) |
-| Akun | `bendahara@sima.test`, `verifikator@sima.test`, `ketua@sima.test`, `donatur@sima.test` — password: `password` |
+| Akun | `bendahara@sima.test`, `verifikator@sima.test`, `petugas.bantuan@sima.test`, `ketua@sima.test`, `donatur@sima.test` — password: `password` |
 | Data contoh | `php artisan sima:seed-demo` (setelah `migrate --seed`) |
 | Reset data | `php artisan migrate:fresh --seed && php artisan sima:seed-demo` |
 | Jangan | Jangan demo di production dengan akun `*@sima.test` |

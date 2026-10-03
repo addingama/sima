@@ -49,6 +49,21 @@ class DemoDataSeederTest extends TestCase
     }
 
     #[Test]
+    public function user_seeder_creates_petugas_bantuan_sample_account(): void
+    {
+        $petugas = User::query()->where('email', 'petugas.bantuan@sima.test')->first();
+
+        $this->assertNotNull($petugas);
+        $this->assertSame('Petugas Bantuan', $petugas->name);
+        $this->assertTrue($petugas->is_active);
+        $this->assertTrue($petugas->hasRole('petugas_bantuan'));
+        $this->assertTrue($petugas->can('grant.create'));
+        $this->assertTrue($petugas->can('grant.verify'));
+        $this->assertTrue($petugas->can('grant.handover'));
+        $this->assertFalse($petugas->can('grant.approve'));
+    }
+
+    #[Test]
     public function seed_demo_rejects_when_already_seeded(): void
     {
         $this->seed(DemoDataSeeder::class);
