@@ -8,6 +8,7 @@ use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class RoleAccessMatrixTest extends TestCase
@@ -33,6 +34,25 @@ class RoleAccessMatrixTest extends TestCase
         'report.view' => '/api/reports/fund-balances',
         'user.manage' => '/api/users',
         'portal.view' => '/api/portal/summary',
+    ];
+
+    /** @var array<string, array{string, string}> */
+    private const MUTATION_ENDPOINTS = [
+        'donor.manage' => ['POST', '/api/donors'],
+        'vendor.manage' => ['POST', '/api/vendors'],
+        'fund.manage' => ['POST', '/api/funds'],
+        'account.manage' => ['POST', '/api/accounts'],
+        'program.manage' => ['POST', '/api/programs'],
+        'receipt.create' => ['POST', '/api/receipts'],
+        'disbursement.create' => ['POST', '/api/disbursements'],
+        'grant.create' => ['POST', '/api/grant-applications'],
+        'bankfee.manage' => ['POST', '/api/bank-fees'],
+        'transfer.manage' => ['POST', '/api/account-transfers'],
+        'opening.manage' => ['POST', '/api/opening-balances'],
+        'reconciliation.manage' => ['POST', '/api/bank-reconciliations'],
+        'liability.manage' => ['POST', '/api/liabilities'],
+        'attachment.manage' => ['POST', '/api/attachments'],
+        'user.manage' => ['POST', '/api/users'],
     ];
 
     protected function setUp(): void
@@ -86,6 +106,47 @@ class RoleAccessMatrixTest extends TestCase
             } else {
                 $response->assertForbidden();
             }
+        }
+    }
+
+    #[DataProvider('roles')]
+    public function test_mutation_endpoints_follow_the_permission_matrix_for_every_role(string $role): void
+    {
+        $user = User::factory()->create(['is_active' => true]);
+        $user->assignRole($role);
+        Sanctum::actingAs($user);
+
+        foreach (self::MUTATION_ENDPOINTS as $permission => [$method, $endpoint]) {
+            $response = $this->json($method, $endpoint, []);
+
+            if ($user->can($permission)) {
+                $this->assertNotSame(
+                    403,
+                    $response->status(),
+                    "Role {$role} seharusnya melewati middleware {$permission} pada {$method} {$endpoint}."
+                );
+            } else {
+                $response->assertForbidden();
+            }
+        }
+    }
+
+    #[DataProvider('roles')]
+    public function test_only_admin_can_manage_role_permissions(string $role): void
+    {
+        $user = User::factory()->create(['is_active' => true]);
+        $user->assignRole($role);
+        Sanctum::actingAs($user);
+        $targetRole = Role::findByName('bendahara', 'web');
+
+        $response = $this->putJson("/api/roles/{$targetRole->id}/permissions", [
+            'permissions' => ['fund.view'],
+        ]);
+
+        if ($role === 'admin') {
+            $response->assertOk();
+        } else {
+            $response->assertForbidden();
         }
     }
 
