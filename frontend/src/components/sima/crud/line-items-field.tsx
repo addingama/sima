@@ -9,7 +9,7 @@ import { CurrencyDisplay } from "@/components/sima/currency-display";
 import { MoneyInput } from "@/components/sima/money-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useResourceQuery } from "@/hooks/use-resource-query";
 import { parseAmount } from "@/lib/format/amount";
@@ -232,8 +232,11 @@ export function LineItemsField({
             <Controller
               control={control}
               name={`${name}.${index}.fund_id`}
-              render={({ field: formField }) => (
-                <Field className={showProgramColumn ? "md:col-span-4" : "md:col-span-5"}>
+              render={({ field: formField, fieldState }) => (
+                <Field
+                  data-invalid={fieldState.invalid}
+                  className={showProgramColumn ? "md:col-span-4" : "md:col-span-5"}
+                >
                   <FieldLabel>Dana Amanah</FieldLabel>
                   <RelationSelect
                     resource="/funds"
@@ -251,6 +254,7 @@ export function LineItemsField({
                       />
                     </FieldDescription>
                   ) : null}
+                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                 </Field>
               )}
             />
@@ -275,8 +279,11 @@ export function LineItemsField({
             <Controller
               control={control}
               name={`${name}.${index}.amount`}
-              render={({ field: formField }) => (
-                <Field className={showProgramColumn ? "md:col-span-2" : "md:col-span-3"}>
+              render={({ field: formField, fieldState }) => (
+                <Field
+                  data-invalid={fieldState.invalid}
+                  className={showProgramColumn ? "md:col-span-2" : "md:col-span-3"}
+                >
                   <FieldLabel>Nominal</FieldLabel>
                   <div className="flex items-center gap-2">
                     <MoneyInput
@@ -297,6 +304,7 @@ export function LineItemsField({
                       </Button>
                     ) : null}
                   </div>
+                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                 </Field>
               )}
             />

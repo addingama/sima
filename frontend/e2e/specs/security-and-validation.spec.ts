@@ -49,6 +49,7 @@ test("form penerimaan menahan submit ketika field wajib kosong", async ({ page }
 
   await expect(page.getByText("Akun Kas/Bank wajib diisi.")).toBeVisible();
   await expect(page.getByText("Nominal wajib diisi.").first()).toBeVisible();
+  await expect(page.getByText("Dana Amanah wajib dipilih.")).toBeVisible();
   await expect(page).toHaveURL(/\/dashboard\/receipts\/new$/);
 });
 
