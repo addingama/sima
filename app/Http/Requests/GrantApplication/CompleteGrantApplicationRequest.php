@@ -20,6 +20,7 @@ class CompleteGrantApplicationRequest extends FormRequest
             'handed_over_on' => ['required', 'date'],
             'handover_recipient_name' => ['nullable', 'string', 'max:255'],
             'handover_recipient_notes' => ['nullable', 'string', 'max:1000'],
+            'actual_beneficiary_count' => ['nullable', 'integer', 'min:1'],
         ];
     }
 }

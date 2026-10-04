@@ -3,6 +3,7 @@
 namespace App\Http\Requests\GrantApplication;
 
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryScope;
 use App\Enums\GrantBeneficiaryType;
 use App\Http\Requests\Concerns\HasListQuery;
 use Illuminate\Foundation\Http\FormRequest;
@@ -46,6 +47,7 @@ class ListGrantApplicationRequest extends FormRequest
             'assigned_handover_id' => ['nullable', 'integer', 'exists:users,id'],
             'created_by' => ['nullable', 'integer', 'exists:users,id'],
             'beneficiary_type' => ['nullable', Rule::enum(GrantBeneficiaryType::class)],
+            'beneficiary_scope' => ['nullable', Rule::enum(GrantBeneficiaryScope::class)],
             'payment_method' => ['nullable', 'in:cash,transfer'],
             'program_id' => ['nullable', 'integer', 'exists:programs,id'],
             'from' => ['nullable', 'date'],

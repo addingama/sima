@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryScope;
 use App\Enums\GrantBeneficiaryType;
 use App\Enums\GrantPaymentMethod;
 use App\Models\GrantApplication;
@@ -23,6 +24,7 @@ class GrantApplicationFactory extends Factory
             'application_number' => 'BNT/'.now()->year.'/'.str_pad((string) fake()->unique()->numberBetween(1, 999999), 6, '0', STR_PAD_LEFT),
             'status' => GrantApplicationStatus::DRAFT,
             'beneficiary_type' => GrantBeneficiaryType::INDIVIDUAL,
+            'beneficiary_scope' => GrantBeneficiaryScope::INDIVIDUAL,
             'recipient_name' => fake()->name(),
             'reason' => 'Bantuan sosial',
             'recommender_name' => fake()->name(),

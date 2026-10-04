@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\GrantApplication;
 
+use App\Enums\GrantBeneficiaryCountMethod;
+use App\Enums\GrantBeneficiaryScope;
 use App\Enums\GrantBeneficiaryType;
 use App\Enums\GrantPaymentMethod;
 use App\Models\GrantApplication;
@@ -10,6 +12,13 @@ use Illuminate\Validation\Rule;
 
 class StoreGrantApplicationRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'beneficiary_scope' => $this->input('beneficiary_scope', GrantBeneficiaryScope::INDIVIDUAL->value),
+        ]);
+    }
+
     public function authorize(): bool
     {
         return $this->user()?->can('create', GrantApplication::class) ?? false;
@@ -20,6 +29,11 @@ class StoreGrantApplicationRequest extends FormRequest
     {
         return [
             'beneficiary_type' => ['required', Rule::enum(GrantBeneficiaryType::class)],
+            'beneficiary_scope' => ['required', Rule::enum(GrantBeneficiaryScope::class)],
+            'target_beneficiary_count' => ['nullable', 'integer', 'min:1'],
+            'beneficiary_count_method' => ['nullable', Rule::enum(GrantBeneficiaryCountMethod::class)],
+            'beneficiary_location' => ['nullable', 'string', 'max:255'],
+            'beneficiary_count_notes' => ['nullable', 'string', 'max:2000'],
             'recipient_name' => ['required', 'string', 'max:255'],
             'recipient_phone' => ['nullable', 'string', 'max:50'],
             'recipient_address' => ['nullable', 'string'],

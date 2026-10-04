@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryCountMethod;
+use App\Enums\GrantBeneficiaryScope;
 use App\Enums\GrantBeneficiaryType;
 use App\Enums\GrantPaymentMethod;
 use App\Models\Concerns\HasAttachments;
@@ -26,6 +28,12 @@ class GrantApplication extends Model implements Auditable
         'application_number',
         'status',
         'beneficiary_type',
+        'beneficiary_scope',
+        'target_beneficiary_count',
+        'actual_beneficiary_count',
+        'beneficiary_count_method',
+        'beneficiary_location',
+        'beneficiary_count_notes',
         'recipient_name',
         'recipient_phone',
         'recipient_address',
@@ -79,6 +87,10 @@ class GrantApplication extends Model implements Auditable
         return [
             'status' => GrantApplicationStatus::class,
             'beneficiary_type' => GrantBeneficiaryType::class,
+            'beneficiary_scope' => GrantBeneficiaryScope::class,
+            'beneficiary_count_method' => GrantBeneficiaryCountMethod::class,
+            'target_beneficiary_count' => 'integer',
+            'actual_beneficiary_count' => 'integer',
             'payment_method' => GrantPaymentMethod::class,
             'recommended_amount' => 'decimal:2',
             'verified_amount' => 'decimal:2',

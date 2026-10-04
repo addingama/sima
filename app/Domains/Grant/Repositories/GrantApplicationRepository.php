@@ -36,7 +36,23 @@ class GrantApplicationRepository
                 'status,
                 COUNT(*) as cnt,
                 COALESCE(SUM(recommended_amount), 0) as recommended_sum,
-                COALESCE(SUM(approved_amount), 0) as approved_sum'
+                COALESCE(SUM(approved_amount), 0) as approved_sum,
+                COALESCE(SUM(CASE
+                    WHEN status = ? THEN 0
+                    WHEN beneficiary_scope = ? THEN COALESCE(target_beneficiary_count, 0)
+                    ELSE 1
+                END), 0) as target_beneficiary_sum,
+                COALESCE(SUM(CASE
+                    WHEN status != ? THEN 0
+                    WHEN beneficiary_scope = ? THEN COALESCE(actual_beneficiary_count, 0)
+                    ELSE 1
+                END), 0) as actual_beneficiary_sum',
+                [
+                    GrantApplicationStatus::REJECTED->value,
+                    'collective',
+                    GrantApplicationStatus::COMPLETED->value,
+                    'collective',
+                ]
             )
             ->groupBy('status')
             ->get();
@@ -48,6 +64,8 @@ class GrantApplicationRepository
         $siapDiserahkan = '0.00';
         $sudahDiserahkan = '0.00';
         $ditolak = '0.00';
+        $targetPenerimaManfaat = 0;
+        $realisasiPenerimaManfaat = 0;
 
         $queueStatuses = [
             GrantApplicationStatus::DRAFT->value,
@@ -64,6 +82,8 @@ class GrantApplicationRepository
             $recommended = bcadd((string) $row->recommended_sum, '0', 2);
             $approved = bcadd((string) $row->approved_sum, '0', 2);
             $usulan = bcadd($usulan, $recommended, 2);
+            $targetPenerimaManfaat += (int) $row->target_beneficiary_sum;
+            $realisasiPenerimaManfaat += (int) $row->actual_beneficiary_sum;
 
             if (in_array($status, $queueStatuses, true)) {
                 $antrian += $count;
@@ -92,6 +112,8 @@ class GrantApplicationRepository
             'siap_diserahkan' => $siapDiserahkan,
             'sudah_diserahkan' => $sudahDiserahkan,
             'ditolak' => $ditolak,
+            'target_penerima_manfaat' => $targetPenerimaManfaat,
+            'realisasi_penerima_manfaat' => $realisasiPenerimaManfaat,
         ];
     }
 
@@ -168,6 +190,9 @@ class GrantApplicationRepository
             },
             'beneficiary_type' => function (Builder $q, mixed $v): void {
                 $q->where('beneficiary_type', (string) $v);
+            },
+            'beneficiary_scope' => function (Builder $q, mixed $v): void {
+                $q->where('beneficiary_scope', (string) $v);
             },
             'assigned_verifier_id' => function (Builder $q, mixed $v): void {
                 $q->where('assigned_verifier_id', (int) $v);

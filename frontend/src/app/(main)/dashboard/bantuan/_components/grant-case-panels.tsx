@@ -14,6 +14,21 @@ import { ApiError, apiPost } from "@/lib/api/client";
 import { hasPermission } from "@/lib/auth/permissions";
 import { useAuth } from "@/providers/auth-provider";
 
+export function buildGrantCompletionPayload(
+  row: Record<string, unknown>,
+  handedOverOn: string,
+  recipientName: string,
+  recipientNotes: string,
+  actualCount: string,
+) {
+  return {
+    handed_over_on: handedOverOn,
+    handover_recipient_name: recipientName || null,
+    handover_recipient_notes: recipientNotes || null,
+    actual_beneficiary_count: String(row.beneficiary_scope) === "collective" ? Number(actualCount) : null,
+  };
+}
+
 export function GrantCasePanels({ row, onRefresh }: { row: Record<string, unknown>; onRefresh: () => void }) {
   const { user } = useAuth();
   const id = Number(row.id);
@@ -25,6 +40,7 @@ export function GrantCasePanels({ row, onRefresh }: { row: Record<string, unknow
   const [handoverDate, setHandoverDate] = useState(new Date().toISOString().slice(0, 10));
   const [handoverRecipientName, setHandoverRecipientName] = useState(String(row.organization_pic_name ?? ""));
   const [handoverRecipientNotes, setHandoverRecipientNotes] = useState("");
+  const [actualBeneficiaryCount, setActualBeneficiaryCount] = useState("");
   const [disbursementDate, setDisbursementDate] = useState(new Date().toISOString().slice(0, 10));
   const [accountId, setAccountId] = useState("");
   const [fundId, setFundId] = useState("");
@@ -238,17 +254,39 @@ export function GrantCasePanels({ row, onRefresh }: { row: Record<string, unknow
                 </div>
               </>
             ) : null}
+            {String(row.beneficiary_scope) === "collective" ? (
+              <div className="space-y-1">
+                <Label htmlFor="grant-actual-beneficiary-count">Realisasi orang terbantu</Label>
+                <Input
+                  id="grant-actual-beneficiary-count"
+                  type="number"
+                  min={1}
+                  value={actualBeneficiaryCount}
+                  onChange={(event) => setActualBeneficiaryCount(event.target.value)}
+                  placeholder={`Target: ${String(row.target_beneficiary_count ?? "-")}`}
+                />
+              </div>
+            ) : null}
             <Button
               size="sm"
-              disabled={busy || (String(row.beneficiary_type) === "organization" && !handoverRecipientName)}
+              disabled={
+                busy ||
+                (String(row.beneficiary_type) === "organization" && !handoverRecipientName) ||
+                (String(row.beneficiary_scope) === "collective" && Number(actualBeneficiaryCount) < 1)
+              }
               onClick={async () => {
                 setBusy(true);
                 try {
-                  await apiPost(`/grant-applications/${id}/complete`, {
-                    handed_over_on: handoverDate,
-                    handover_recipient_name: handoverRecipientName || null,
-                    handover_recipient_notes: handoverRecipientNotes || null,
-                  });
+                  await apiPost(
+                    `/grant-applications/${id}/complete`,
+                    buildGrantCompletionPayload(
+                      row,
+                      handoverDate,
+                      handoverRecipientName,
+                      handoverRecipientNotes,
+                      actualBeneficiaryCount,
+                    ),
+                  );
                   toast.success("Pengajuan ditandai selesai.");
                   onRefresh();
                 } catch (error) {

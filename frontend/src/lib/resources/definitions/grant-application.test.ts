@@ -15,9 +15,16 @@ describe("grantApplicationResource", () => {
   it("menggunakan default penerima perorangan dan pembayaran tunai", () => {
     expect(grantApplicationResource.getCreateDefaults?.()).toEqual({
       beneficiary_type: "individual",
+      beneficiary_scope: "individual",
       payment_method: "cash",
       bank_account_owner_type: "beneficiary",
     });
+  });
+
+  it("menampilkan field dampak hanya untuk bantuan kolektif", () => {
+    expect(field("target_beneficiary_count").visibleWhen?.({ beneficiary_scope: "collective" })).toBe(true);
+    expect(field("target_beneficiary_count").visibleWhen?.({ beneficiary_scope: "individual" })).toBe(false);
+    expect(field("beneficiary_count_method").visibleWhen?.({ beneficiary_scope: "collective" })).toBe(true);
   });
 
   it("menampilkan field PIC hanya untuk penerima organisasi", () => {

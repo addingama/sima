@@ -3,6 +3,8 @@
 namespace Tests\Feature\Api;
 
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryCountMethod;
+use App\Enums\GrantBeneficiaryScope;
 use App\Enums\GrantBeneficiaryType;
 use App\Models\GrantApplication;
 use App\Models\LedgerEntry;
@@ -103,6 +105,28 @@ class GrantApplicationApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.status', 'pending_approval')
             ->assertJsonPath('data.beneficiary_type', 'organization');
+    }
+
+    #[Test]
+    public function collective_assistance_exposes_impact_fields_and_requires_complete_target_data(): void
+    {
+        $this->actingAsRole('petugas_bantuan');
+
+        $payload = [
+            ...$this->draftPayload(),
+            'beneficiary_scope' => GrantBeneficiaryScope::COLLECTIVE->value,
+            'target_beneficiary_count' => 2500,
+            'beneficiary_count_method' => GrantBeneficiaryCountMethod::ESTIMATED->value,
+            'beneficiary_location' => 'Kecamatan Terpencil, Kota Amanah',
+            'beneficiary_count_notes' => 'Estimasi berdasarkan data penduduk lima desa.',
+        ];
+
+        $this->postJson('/api/grant-applications', $payload)
+            ->assertCreated()
+            ->assertJsonPath('data.beneficiary_scope', 'collective')
+            ->assertJsonPath('data.target_beneficiary_count', 2500)
+            ->assertJsonPath('data.beneficiary_count_method', 'estimated')
+            ->assertJsonPath('data.beneficiary_location', 'Kecamatan Terpencil, Kota Amanah');
     }
 
     #[Test]
@@ -418,10 +442,24 @@ class GrantApplicationApiTest extends TestCase
             'file' => UploadedFile::fake()->image('serah-terima.jpg', 100, 100),
         ], ['Accept' => 'application/json'])->assertCreated();
 
+        GrantApplication::query()->findOrFail($id)->update([
+            'beneficiary_scope' => GrantBeneficiaryScope::COLLECTIVE,
+            'target_beneficiary_count' => 2500,
+            'beneficiary_count_method' => GrantBeneficiaryCountMethod::ESTIMATED,
+            'beneficiary_location' => 'Kota Terpencil',
+            'beneficiary_count_notes' => 'Data penduduk wilayah distribusi.',
+        ]);
+
         $this->postJson("/api/grant-applications/{$id}/complete", [
             'handed_over_on' => now()->toDateString(),
+        ])->assertStatus(422);
+
+        $this->postJson("/api/grant-applications/{$id}/complete", [
+            'handed_over_on' => now()->toDateString(),
+            'actual_beneficiary_count' => 2320,
         ])->assertOk()
-            ->assertJsonPath('data.status', 'completed');
+            ->assertJsonPath('data.status', 'completed')
+            ->assertJsonPath('data.actual_beneficiary_count', 2320);
 
         $this->assertSame($ledgerCount, LedgerEntry::query()->count());
     }

@@ -21,6 +21,7 @@ export const grantApplicationResource: ResourceDef = {
       String(row.application_number ?? `#${row.id}`),
     ),
     { accessorKey: "beneficiary_type_label", header: "Jenis" },
+    { accessorKey: "beneficiary_scope_label", header: "Cakupan" },
     { accessorKey: "recipient_name", header: "Penerima" },
     currencyColumn("recommended_amount", "Nominal usulan"),
     statusColumn(),
@@ -28,6 +29,16 @@ export const grantApplicationResource: ResourceDef = {
     nestedNameColumn("assigned_handover", "Petugas serah terima"),
   ],
   filters: [
+    {
+      name: "beneficiary_scope",
+      label: "Cakupan penerima",
+      type: "select",
+      allLabel: "Semua cakupan",
+      options: [
+        { value: "individual", label: "Individual" },
+        { value: "collective", label: "Kolektif" },
+      ],
+    },
     {
       name: "beneficiary_type",
       label: "Jenis penerima",
@@ -55,6 +66,47 @@ export const grantApplicationResource: ResourceDef = {
   ],
   defaultSort: { field: "created_at", direction: "desc" },
   formFields: [
+    {
+      name: "beneficiary_scope",
+      label: "Cakupan penerima",
+      type: "select",
+      required: true,
+      options: [
+        { value: "individual", label: "Individual (1 orang)" },
+        { value: "collective", label: "Kolektif (banyak orang)" },
+      ],
+    },
+    {
+      name: "target_beneficiary_count",
+      label: "Target orang terbantu",
+      type: "number",
+      visibleWhen: (values) => values.beneficiary_scope === "collective",
+      helperText: "Wajib sebelum approval untuk bantuan kolektif.",
+    },
+    {
+      name: "beneficiary_count_method",
+      label: "Metode penghitungan",
+      type: "select",
+      visibleWhen: (values) => values.beneficiary_scope === "collective",
+      options: [
+        { value: "exact", label: "Hitungan pasti" },
+        { value: "estimated", label: "Estimasi" },
+      ],
+    },
+    {
+      name: "beneficiary_location",
+      label: "Lokasi manfaat",
+      type: "text",
+      visibleWhen: (values) => values.beneficiary_scope === "collective",
+      placeholder: "Contoh: Kecamatan X, Kota Y",
+    },
+    {
+      name: "beneficiary_count_notes",
+      label: "Dasar penghitungan",
+      type: "textarea",
+      visibleWhen: (values) => values.beneficiary_scope === "collective",
+      helperText: "Jelaskan sumber data atau cara menghitung jumlah penerima.",
+    },
     {
       name: "beneficiary_type",
       label: "Jenis penerima",
@@ -201,6 +253,12 @@ export const grantApplicationResource: ResourceDef = {
     { label: "No. Pengajuan", accessor: "application_number" },
     { label: "Status", accessor: "status_label" },
     { label: "Jenis penerima", accessor: "beneficiary_type_label" },
+    { label: "Cakupan penerima", accessor: "beneficiary_scope_label" },
+    { label: "Target orang terbantu", accessor: "target_beneficiary_count" },
+    { label: "Realisasi orang terbantu", accessor: "actual_beneficiary_count" },
+    { label: "Metode penghitungan", accessor: "beneficiary_count_method_label" },
+    { label: "Lokasi manfaat", accessor: "beneficiary_location" },
+    { label: "Dasar penghitungan", accessor: "beneficiary_count_notes" },
     { label: "Penerima", accessor: "recipient_name" },
     { label: "Telepon", accessor: "recipient_phone" },
     { label: "Alamat", accessor: "recipient_address" },
@@ -301,6 +359,7 @@ export const grantApplicationResource: ResourceDef = {
   },
   getCreateDefaults: () => ({
     beneficiary_type: "individual",
+    beneficiary_scope: "individual",
     payment_method: "cash",
     bank_account_owner_type: "beneficiary",
   }),
@@ -319,6 +378,12 @@ export const grantApplicationResource: ResourceDef = {
     delete payload.attachments;
     delete payload.disbursement;
     delete payload.created_by;
+    if (values.beneficiary_scope !== "collective") {
+      delete payload.target_beneficiary_count;
+      delete payload.beneficiary_count_method;
+      delete payload.beneficiary_location;
+      delete payload.beneficiary_count_notes;
+    }
     return payload;
   },
 };

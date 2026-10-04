@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\GrantApplication;
 
+use App\Enums\GrantBeneficiaryCountMethod;
+use App\Enums\GrantBeneficiaryScope;
 use App\Enums\GrantBeneficiaryType;
 use App\Enums\GrantPaymentMethod;
 use Illuminate\Foundation\Http\FormRequest;
@@ -21,6 +23,11 @@ class UpdateGrantApplicationRequest extends FormRequest
     {
         return [
             'beneficiary_type' => ['sometimes', Rule::enum(GrantBeneficiaryType::class)],
+            'beneficiary_scope' => ['sometimes', Rule::enum(GrantBeneficiaryScope::class)],
+            'target_beneficiary_count' => ['nullable', 'integer', 'min:1'],
+            'beneficiary_count_method' => ['nullable', Rule::enum(GrantBeneficiaryCountMethod::class)],
+            'beneficiary_location' => ['nullable', 'string', 'max:255'],
+            'beneficiary_count_notes' => ['nullable', 'string', 'max:2000'],
             'recipient_name' => ['sometimes', 'string', 'max:255'],
             'recipient_phone' => ['nullable', 'string', 'max:50'],
             'recipient_address' => ['nullable', 'string'],

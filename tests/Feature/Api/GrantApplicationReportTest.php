@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api;
 
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryScope;
 use App\Enums\GrantPaymentMethod;
 use App\Models\GrantApplication;
 use App\Models\Program;
@@ -111,6 +112,44 @@ class GrantApplicationReportTest extends TestCase
             ->assertJsonPath('meta.summary.antrian', 2)
             ->assertJsonPath('meta.summary.usulan', '30000.00')
             ->assertJsonPath('meta.summary.disetujui', '0.00');
+    }
+
+    #[Test]
+    public function summary_counts_individual_and_collective_impact_without_double_counting(): void
+    {
+        $admin = $this->actingAsRole('admin');
+
+        GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::COMPLETED,
+            'beneficiary_scope' => GrantBeneficiaryScope::INDIVIDUAL,
+            'created_by' => $admin->id,
+        ]);
+        GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::COMPLETED,
+            'beneficiary_scope' => GrantBeneficiaryScope::COLLECTIVE,
+            'target_beneficiary_count' => 2500,
+            'actual_beneficiary_count' => 2320,
+            'created_by' => $admin->id,
+        ]);
+        GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::REJECTED,
+            'beneficiary_scope' => GrantBeneficiaryScope::COLLECTIVE,
+            'target_beneficiary_count' => 900,
+            'created_by' => $admin->id,
+        ]);
+
+        $this->actingAsRole('auditor');
+
+        $this->getJson('/api/reports/grant-applications')
+            ->assertOk()
+            ->assertJsonPath('meta.summary.target_penerima_manfaat', 2501)
+            ->assertJsonPath('meta.summary.realisasi_penerima_manfaat', 2321);
+
+        $this->getJson('/api/reports/grant-applications?beneficiary_scope=collective')
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('meta.summary.target_penerima_manfaat', 2500)
+            ->assertJsonPath('meta.summary.realisasi_penerima_manfaat', 2320);
     }
 
     #[Test]
