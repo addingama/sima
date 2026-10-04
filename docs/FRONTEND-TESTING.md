@@ -9,6 +9,8 @@ cd frontend
 npm test                 # seluruh test satu kali
 npm run test:watch       # mode interaktif saat pengembangan
 npm run test:coverage    # test + laporan coverage HTML
+npm run test:e2e         # Playwright: login dan akses lintas role
+npm run test:e2e:ui      # mode UI Playwright untuk debugging lokal
 ```
 
 Laporan HTML tersimpan di `frontend/coverage/index.html` dan tidak masuk Git.
@@ -43,6 +45,7 @@ npm run check
 npm test
 npx tsc --noEmit
 npm run build
+npm run test:e2e
 ```
 
 ## Struktur saat ini
@@ -50,5 +53,19 @@ npm run build
 - Setup global: `frontend/src/test/setup.ts`
 - Konfigurasi runner: `frontend/vitest.config.mts`
 - Unit/component test: berdampingan dengan source di `frontend/src/**`
-- E2E: belum dikonfigurasi; rekomendasi runner adalah Playwright ketika fixture auth dan database test sudah tersedia.
+- E2E: `frontend/e2e/` dengan Playwright Chromium. Konfigurasi membangun ulang `storage/e2e.sqlite`, menjalankan seeder dasar + demo, lalu menyalakan Laravel `:8100` dan Next.js `:3100`. Database development tidak disentuh.
 
+## E2E lintas role
+
+Suite E2E memakai akun seed `*@sima.test` dengan password `password` dan mencakup `admin`, `asisten_bendahara`, `bendahara`, `verifikator`, `petugas_bantuan`, `ketua`, `auditor`, serta `donatur`.
+
+Prasyarat lokal satu kali:
+
+```bash
+cd frontend
+npx playwright install chromium
+```
+
+Setiap `npm run test:e2e` mereset **hanya** `storage/e2e.sqlite`. Trace, screenshot, dan video kegagalan berada di `frontend/test-results/`; laporan HTML berada di `frontend/playwright-report/`. Keduanya diabaikan Git.
+
+Suite memakai build directory `.next-e2e` dan port `3100`, sehingga tidak berbenturan dengan Next dev normal pada port `3000`.

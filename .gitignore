@@ -6,6 +6,7 @@
 /storage/*.key
 /storage/pail
 /storage/backups/*.sql.gz
+/storage/e2e.sqlite
 /vendor
 .env
 .env.backup

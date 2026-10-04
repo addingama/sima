@@ -515,14 +515,14 @@ Papan kerja ada di `/dashboard/bantuan`. Laporan organisasi berada di `/dashboar
 | Kas/Bank | ✅ | lihat | ✅ | lihat | — | lihat | lihat |
 | Donatur/Vendor | ✅ | ✅ | ✅ | lihat | — | lihat | lihat |
 | Program/Event | ✅ | lihat | ✅ | lihat | pilihan form saja | lihat | lihat |
-| Saldo awal | ✅ posting | — | lihat* | — | — | lihat* | lihat* |
+| Saldo awal | ✅ posting/lihat | — | — | — | — | — | lihat* |
 | Penerimaan | ✅ | buat/submit | buat/submit/approve | lihat | — | approve/eskalasi | lihat |
 | Pengeluaran | ✅ | buat/submit | buat/submit/verify/approve | verify | — | approve/eskalasi | lihat |
 | Biaya bank/transfer/rekonsiliasi | ✅ | draft sesuai permission | kelola/post | lihat terbatas | — | lihat terbatas | lihat terbatas |
 | Pengajuan bantuan | ✅ semua | dasar | dasar + pengeluaran | dasar | sendiri/assigned | assign/approve | dasar + lihat semua |
 | Laporan organisasi | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ |
 
-\* Posting opening: **admin** via menu Saldo Awal; auditor/ketua/bendahara melihat batch karena memiliki `opening.view`. Role `donatur` hanya menggunakan Portal Donatur dan tidak masuk matriks operasional internal.
+\* Posting opening: **admin** via menu Saldo Awal; auditor dapat melihat batch karena memiliki `opening.view`. Role `donatur` hanya menggunakan Portal Donatur dan tidak masuk matriks operasional internal.
 
 ---
 
