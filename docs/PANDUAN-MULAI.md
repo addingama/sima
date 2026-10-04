@@ -1,10 +1,11 @@
-# Panduan Memulai SIMA — Entry Data Awal & Master Data
+# Panduan Memulai SIMA — Go-live & Operasional Awal
 
-Dokumen ini menjelaskan **langkah demi langkah** yang harus dilakukan sebuah organisasi lembaga sosial untuk **pertama kali** menggunakan SIMA, dengan fokus pada **persiapan master data** dan **saldo awal (go-live)**.
+Dokumen ini menjelaskan **langkah demi langkah** yang harus dilakukan lembaga sosial saat pertama kali menggunakan SIMA: deploy produksi, menyiapkan pengguna dan master data, mem-posting saldo awal, memverifikasi buku, lalu menjalankan transaksi keuangan dan pengajuan bantuan.
 
-> **Cakupan:** panduan operasional untuk admin, bendahara, dan tim implementasi.  
+> **Cakupan:** panduan operasional untuk admin, bendahara, ketua, petugas bantuan, auditor, dan tim implementasi.
 > **Bukan** panduan instalasi server — lihat [DEPLOYMENT.md](DEPLOYMENT.md).  
 > **Konsep Dana Amanah:** lihat [DANA-AMANAH.md](DANA-AMANAH.md).
+> **Kontrak Pengajuan Bantuan:** lihat [BANTUAN.md](BANTUAN.md).
 
 ---
 
@@ -25,10 +26,11 @@ Persiapan organisasi
   → Pengguna & role
   → Dana Amanah
   → Kas/Bank
-  → Donatur & Program (opsional tapi disarankan)
+  → Donatur, Vendor & Program (sesuai kebutuhan)
   → Saldo awal (opening balance)
   → Verifikasi laporan & rekonsiliasi
-  → Operasional harian (penerimaan, pengeluaran, dll.)
+  → Operasional keuangan
+  → Operasional pengajuan bantuan
 ```
 
 ---
@@ -53,8 +55,10 @@ Siapkan worksheet dengan kolom minimal:
 | Saldo per rekening (cutover) | Sesuai mutasi bank / hitung kas fisik |
 | Pemecahan per Dana Amanah | Mis. BCA Rp 500 jt = Zakat 300 jt + Operasional 200 jt |
 | Daftar donatur aktif | Nama, kontak (opsional) |
+| Daftar vendor/penerima pembayaran | Nama, kontak, data pajak/bank jika dipakai |
 | Daftar program/event | Nama, periode, dana terkait |
 | Daftar pengguna | Nama, email, role |
+| Kebijakan bantuan | Siapa koordinator, verifikator, petugas serah terima, bukti, dan jalur tunai/transfer |
 
 **Aturan penting:** total saldo semua **Kas/Bank** harus sama dengan total saldo semua **Dana Amanah** (rekonsiliasi global SIMA).
 
@@ -75,8 +79,10 @@ Dana **sistem** (Suspense, Operasional, Biaya Bank, Opening Equity) sudah dibuat
 | **asisten_bendahara** | Asisten bendahara / staff input | Input master harian, penerimaan, pengeluaran, lampiran, dan submit transaksi |
 | **bendahara** | Ketua bendahara / approver keuangan | Master Dana/Kas (non-sistem), review, approve/reject/reverse transaksi keuangan |
 | **verifikator** | Staff verifikasi | Review pengeluaran |
+| **petugas_bantuan** | Ustad/petugas lapangan | Ajukan, verifikasi, dan serahkan bantuan sendiri/yang ditugaskan; tanpa akses keuangan/master data |
 | **ketua** | Ketua/pimpinan | Approve/reject/reverse transaksi sebagai approver pimpinan/eskalasi |
 | **auditor** | Auditor internal | Cek laporan & audit trail |
+| **donatur** | Donatur yang diberi akun portal | Hanya melihat profil dan penerimaan approved miliknya |
 
 Detail permission: [README.md — Role & Permission](../README.md#role--permission).
 
@@ -88,7 +94,9 @@ Detail permission: [README.md — Role & Permission](../README.md#role--permissi
 
 Ikuti [DEPLOYMENT.md](DEPLOYMENT.md) atau Quick Start di [README.md](../README.md).
 
-### 1.2 Migrasi & seed wajib
+### 1.2 Migrasi, seed, dan admin pertama
+
+**Lokal/staging** boleh memakai seed data pengembangan:
 
 ```bash
 php artisan migrate --seed
@@ -98,11 +106,17 @@ Seed otomatis membuat:
 
 | Hasil seed | Fungsi |
 |------------|--------|
-| **Role & permission** | RBAC (`admin`, `bendahara`, `verifikator`, `ketua`, `auditor`, `donatur`) |
+| **Role & permission** | RBAC (`admin`, `asisten_bendahara`, `bendahara`, `verifikator`, `petugas_bantuan`, `ketua`, `auditor`, `donatur`) |
 | **Dana sistem** | Suspense, Operasional, Biaya Admin Bank, Opening Equity |
-| **User contoh** | Satu akun per role (password dev: `password`) |
+| **User contoh** | Akun internal per role, termasuk `petugas.bantuan@sima.test` (password dev: `password`) |
 
-**Setelah produksi:** ganti password semua user contoh, buat user nyata organisasi.
+**Produksi:** jangan menjalankan `db:seed` dan jangan membawa akun `*@sima.test`. Script deployment menjalankan migrasi dengan `--force`; buat admin pertama setelah deploy:
+
+```bash
+docker compose -f docker-compose.prod.yml exec app php artisan sima:create-admin
+```
+
+Perintah lengkap, preflight environment, backup, dan health check dijelaskan di [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ### 1.3 Verifikasi health
 
@@ -116,7 +130,7 @@ Pastikan database & cache terhubung.
 
 - URL frontend: `/auth/v2/login` (atau sesuai deploy)
 - Login sebagai **admin** untuk fase master data inti
-- Ganti password akun demo sebelum go-live produksi
+- Pada lokal/staging, akun contoh memakai password `password`; akun tersebut tidak boleh ada di produksi
 
 ---
 
@@ -135,7 +149,7 @@ Pastikan database & cache terhubung.
 **Langkah go-live (disarankan):**
 
 1. **Produksi:** buat administrator pertama dengan `php artisan sima:create-admin` (lihat [DEPLOYMENT.md](DEPLOYMENT.md)).
-2. Login sebagai admin → **Pengaturan** → tambah bendahara, verifikator, ketua, auditor.
+2. Login sebagai admin → **Pengaturan** → tambah asisten bendahara, bendahara, verifikator, petugas bantuan, ketua, dan auditor sesuai struktur organisasi.
 3. Setiap user: email organisasi, role tunggal, status aktif.
 4. Reset password dari halaman detail/edit pengguna bila diperlukan.
 
@@ -151,10 +165,12 @@ Pastikan database & cache terhubung.
 | 4 | verifikator@lembaga.org | verifikator | Ya (jika ada workflow pengeluaran) |
 | 5 | ketua@lembaga.org | ketua | Opsional/eskalasi |
 | 6 | auditor@lembaga.org | auditor | Disarankan |
+| 7 | petugas.bantuan@lembaga.org | petugas_bantuan | Jika modul bantuan dipakai |
+| 8 | donatur@contoh.org | donatur | Opsional; hanya untuk portal donatur |
 
 ### 2.3 Nonaktifkan akun demo
 
-Setelah user produksi aktif, nonaktifkan atau hapus `*@sima.test` dari seeder development.
+Production tidak boleh di-seed dengan `UserSeeder`. Jika database staging yang pernah di-seed akan dipromosikan, **nonaktifkan** seluruh akun `*@sima.test`, buat ulang admin nyata, dan rotasi semua kredensial sebelum dibuka ke publik.
 
 ---
 
@@ -171,6 +187,7 @@ flowchart TD
     B --> F[Biaya Bank]
     B --> G[Rekonsiliasi Bank]
     H[Donatur] --> D
+    I[Vendor] --> E
     A --> E
     C --> D
     C --> E
@@ -250,6 +267,8 @@ flowchart TD
 4. Email/telepon/alamat — isi jika ada (opsional tapi disarankan untuk laporan & portal donatur ke depan).
 5. Import massal — **belum ada UI**; input manual atau script custom tim IT.
 
+**Portal donatur:** master donatur dapat ditautkan ke user ber-role `donatur`. Jika organisasi mengaktifkan `SIMA_PORTAL_AUTO_CREATE_USER`, pastikan password default kuat dan serahkan kredensial lewat kanal aman; konfigurasi produksi disarankan tetap `false` agar akun dibuat secara terkontrol. Donatur hanya dapat melihat profil, ringkasan, dan penerimaan **approved** miliknya di `/dashboard/portal-donatur`.
+
 **Kapan wajib sebelum transaksi?**
 
 - Wajib jika penerimaan akan dilink ke donatur.
@@ -279,13 +298,16 @@ flowchart TD
 
 ---
 
-### 3.5 Modul master belum tersedia
+### 3.5 Vendor dan modul pendukung
 
 | Modul | Status | Dampak go-live |
 |-------|--------|----------------|
-| **Vendor** | Ada — `/dashboard/vendors` | Relasi opsional di pengeluaran |
-| **Transfer antar rekening** | Ada — `/dashboard/transfers` | 2-leg account-only; Dana Amanah tidak berubah; `TRF/…` |
-| **Pengaturan user (UI)** | **Ada** — `/dashboard/settings` | — (pindah ke Fase 2) |
+| **Vendor** | Ada — `/dashboard/vendors` | Opsional di pengeluaran; buat untuk penerima pembayaran yang sering dipakai |
+| **Transfer antar rekening** | Ada — `/dashboard/transfers` | Memindahkan lokasi uang; Dana Amanah tidak berubah; nomor `TRF/…` |
+| **Transfer Dana Amanah** | Ada — `/dashboard/fund-transfers` | Memindahkan batas penggunaan dana; lokasi kas/bank tidak berubah |
+| **Pengaturan user** | Ada — `/dashboard/settings` | Dikerjakan pada Fase 2 |
+
+Vendor berbeda dari penerima manfaat bantuan. Jangan otomatis membuat vendor dari setiap penerima bantuan; `vendor_id` pada pengeluaran bersifat opsional.
 
 ---
 
@@ -420,14 +442,15 @@ Lakukan sebagai **admin + bendahara + auditor** bersama.
 - [ ] Dana sistem (Suspense) saldo masuk akal — idealnya mendekati nol jika belum ada penerimaan baru
 - [ ] User tiap role bisa login dan melihat menu sesuai permission
 
-### 5.3 Rekonsiliasi bank (opsional fase awal)
+### 5.3 Rekonsiliasi bank
 
 | Item | Detail |
 |------|--------|
-| **Menu** | Belum ada modul CRUD lengkap di UI (daftar read-only) |
-| **API** | `POST /bank-reconciliations` tersedia |
+| **Menu** | Keuangan → Rekonsiliasi Bank (`/dashboard/reconciliations`) |
+| **Fitur** | Buat periode, masukkan saldo rekening koran, tambah item rekonsiliasi/deferred bank fee, lihat detail, lalu selesaikan rekonsiliasi |
+| **Permission** | `reconciliation.view` untuk melihat; `reconciliation.manage` untuk membuat dan menyelesaikan |
 
-Rekonsiliasi bank pertama kali bisa dilakukan akhir bulan pertama operasi SIMA.
+Rekonsiliasi bank pertama dapat dilakukan pada cutover bila rekening koran tersedia, lalu diulang setiap akhir periode. Jangan menyamakan rekonsiliasi bank per rekening dengan rekonsiliasi global: keduanya harus sehat.
 
 ---
 
@@ -437,30 +460,69 @@ Setelah Fase 3–5 selesai, alur harian:
 
 | Urutan | Modul | Role tipikal | Catatan |
 |--------|-------|--------------|---------|
-| 1 | **Penerimaan** | Bendahara buat → Ketua approve | Wajib **alokasi dana** = total penerimaan |
-| 2 | **Pengeluaran** | Bendahara submit → Verifikator verify → Ketua approve | Multi sumber dana via `expense_fund_sources` |
+| 1 | **Penerimaan** | Asisten/bendahara buat & submit → bendahara/ketua approve | Wajib **alokasi dana** = total penerimaan |
+| 2 | **Pengeluaran** | Asisten/bendahara buat & submit → verifikator/bendahara verify → bendahara/ketua approve | Multi sumber dana via `expense_fund_sources` |
 | 3 | **Biaya Bank** | Bendahara buat → Post | Default dana: Operasional; **bukan** restricted |
-| 4 | **Liabilitas operasional** | Bendahara | Tagihan tertunda (gaji, sewa) — UI terbatas |
-| 5 | **Laporan** | Semua role view | Audit trail untuk auditor |
+| 4 | **Transfer rekening** | Asisten buat → bendahara post | Hanya memindahkan Kas/Bank; tidak mengubah Dana Amanah |
+| 5 | **Transfer Dana** | Asisten buat → bendahara post | Hanya memindahkan batas Dana Amanah; tidak mengubah Kas/Bank |
+| 6 | **Liabilitas operasional** | Asisten/bendahara | Buat/edit tagihan, settle ke pengeluaran approved, atau void dengan alasan |
+| 7 | **Rekonsiliasi bank** | Bendahara | Cocokkan SIMA dengan rekening koran dan selesaikan periode |
+| 8 | **Laporan & audit** | Pemegang `report.view`; auditor | Saldo, mutasi, ledger, approval, rekonsiliasi, opening, bantuan, dan audit trail |
 
-Workflow approval: menu **Approval** atau laporan Approval.
+Workflow approval transaksi keuangan tersedia di menu **Approval**. Transaksi approved tidak diedit atau dihapus; koreksi memakai reversal.
+
+---
+
+## Fase 7 — Pengajuan bantuan
+
+Modul bantuan adalah bounded context terpisah dari ledger. Pengajuan menyimpan kasus dan proses lapangan; uang keluar tetap harus melalui satu **Pengeluaran** SIMA yang tertaut. Detail aturan lengkap ada di [BANTUAN.md](BANTUAN.md).
+
+### 7.1 Siapkan akses dan kebijakan
+
+- Semua role internal dapat mengajukan, memverifikasi, dan menyerahkan bantuan sendiri/yang ditugaskan sesuai record-level policy; `donatur` tidak mendapat `grant.*`.
+- Gunakan role **`petugas_bantuan`** untuk petugas lapangan yang hanya membutuhkan Dashboard dan Pengajuan Bantuan. Menu Master Data dan Keuangan disembunyikan; akses teknis `program.view` hanya dipakai form bantuan.
+- **Ketua** menjadi koordinator: dapat menugaskan verifikator/petugas serah terima dan menyetujui, menolak, atau mengembalikan pengajuan.
+- Pengaju biasanya otomatis menjadi verifikator dan petugas serah terima jika memiliki permission terkait. Tahap verifikasi tetap wajib dilakukan terpisah.
+
+### 7.2 Alur operasional
+
+| Tahap | Pelaksana | Syarat utama |
+|-------|-----------|--------------|
+| **Rekomendasi** (`draft`) | User dengan `grant.create` | Penerima perorangan atau organisasi/instansi, nominal, alasan, dan cara bayar; lampiran awal opsional |
+| **Verifikasi** | Verifikator assigned | Lengkapi identitas/kontak/alamat, hasil verifikasi, catatan, dan data rekening jika transfer |
+| **Approval** | Ketua (`grant.approve`) | Nominal disetujui dan petugas serah terima sudah ditentukan |
+| **Pengeluaran** | Asisten/bendahara | Buat satu pengeluaran tertaut, pilih akun dan sumber Dana Amanah, lalu selesaikan workflow sampai `approved` |
+| **Serah terima** | Petugas assigned | Tunai: foto penyerahan; transfer: bukti transfer. Pengeluaran tertaut harus `approved` |
+| **Selesai** | Petugas assigned/admin | Tanggal, petugas, penerima aktual, bukti penyaluran, dan realisasi dampak kolektif lengkap |
+
+Penerima manfaat tidak perlu akun SIMA dan bukan master vendor. Dokumen pendukung boleh dilampirkan; untuk organisasi, dokumen legalitas tidak wajib. Pada penerima perorangan, identitas minimal berupa NIK atau lampiran identitas saat verifikasi.
+
+### 7.3 Bantuan individual dan kolektif
+
+- **Individual:** dampak dihitung satu orang.
+- **Kolektif:** gunakan untuk contoh distribusi air minum ke kota/komunitas. Catat target orang terbantu, lokasi, metode hitung (`exact` atau `estimated`), dan dasar hitung sebelum approval; catat realisasi orang terbantu sebelum selesai.
+- Satu kartu kolektif mewakili penerima administratif/organisasi dan dampaknya, sehingga tidak perlu membuat satu record untuk setiap warga.
+
+Papan kerja ada di `/dashboard/bantuan`. Laporan organisasi berada di `/dashboard/reports/bantuan` dan memerlukan `report.view`; role khusus `petugas_bantuan` bekerja dari dashboard serta Kanban, tanpa akses laporan keuangan.
 
 ---
 
 ## Matriks: siapa input apa?
 
-| Master / Aksi | Admin | Bendahara | Verifikator | Ketua |
-|---------------|:-----:|:---------:|:-----------:|:-----:|
-| Dana Amanah (CRUD) | ✅ | lihat | lihat | lihat |
-| Kas/Bank (CRUD) | ✅ | lihat | lihat | lihat |
-| Donatur | ✅ | ✅ | lihat | lihat |
-| Program/Event | ✅ | ✅ | lihat | lihat |
-| Saldo awal (opening) | ✅ | lihat* | lihat* | lihat* |
-| Penerimaan | ✅ | ✅ buat/submit | lihat | approve |
-| Pengeluaran | ✅ | ✅ buat/submit | verify | approve |
-| Biaya bank | ✅ | ✅ | lihat | lihat |
+| Master / Aksi | Admin | Asisten | Bendahara | Verifikator | Petugas bantuan | Ketua | Auditor |
+|---------------|:-----:|:-------:|:---------:|:-----------:|:----------------:|:-----:|:-------:|
+| Dana Amanah | ✅ | lihat | ✅ | lihat | — | lihat | lihat |
+| Kas/Bank | ✅ | lihat | ✅ | lihat | — | lihat | lihat |
+| Donatur/Vendor | ✅ | ✅ | ✅ | lihat | — | lihat | lihat |
+| Program/Event | ✅ | lihat | ✅ | lihat | pilihan form saja | lihat | lihat |
+| Saldo awal | ✅ posting | — | lihat* | — | — | lihat* | lihat* |
+| Penerimaan | ✅ | buat/submit | buat/submit/approve | lihat | — | approve/eskalasi | lihat |
+| Pengeluaran | ✅ | buat/submit | buat/submit/verify/approve | verify | — | approve/eskalasi | lihat |
+| Biaya bank/transfer/rekonsiliasi | ✅ | draft sesuai permission | kelola/post | lihat terbatas | — | lihat terbatas | lihat terbatas |
+| Pengajuan bantuan | ✅ semua | dasar | dasar + pengeluaran | dasar | sendiri/assigned | assign/approve | dasar + lihat semua |
+| Laporan organisasi | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ |
 
-\* Posting opening: **admin** via menu Saldo Awal; auditor/ketua/bendahara **lihat** batch jika punya `opening.view`.
+\* Posting opening: **admin** via menu Saldo Awal; auditor/ketua/bendahara melihat batch karena memiliki `opening.view`. Role `donatur` hanya menggunakan Portal Donatur dan tidak masuk matriks operasional internal.
 
 ---
 
@@ -473,7 +535,8 @@ Workflow approval: menu **Approval** atau laporan Approval.
 - [ ] Daftar dana amanah disepakati
 - [ ] Daftar rekening kas/bank disepakati
 - [ ] User & role produksi dibuat
-- [ ] Password demo diganti
+- [ ] Preflight produksi (`make prod-check`) lulus dan deploy memakai `scripts/deploy-vps.sh`
+- [ ] Admin pertama dibuat dengan `sima:create-admin`; tidak ada akun `*@sima.test`
 
 ### Master data di SIMA
 
@@ -481,6 +544,7 @@ Workflow approval: menu **Approval** atau laporan Approval.
 - [ ] Dana amanah organisasi diinput
 - [ ] Kas/bank diinput
 - [ ] Donatur diinput (jika dipakai)
+- [ ] Vendor diinput (jika dipakai)
 - [ ] Program diinput (jika dipakai)
 
 ### Saldo awal
@@ -494,8 +558,12 @@ Workflow approval: menu **Approval** atau laporan Approval.
 ### Operasional
 
 - [ ] Bendahara training: penerimaan + alokasi
-- [ ] Verifikator & ketua training: approval
+- [ ] Verifikator, bendahara, dan ketua training: approval keuangan
 - [ ] Prosedur reversal dipahami (tidak ada hapus transaksi)
+- [ ] Rekonsiliasi bank bulanan dan pemeriksaan rekonsiliasi global dijadwalkan
+- [ ] Jika modul bantuan dipakai: koordinator, verifikator, petugas serah terima, kebijakan bukti, dan cara menghitung dampak kolektif sudah ditetapkan
+- [ ] Petugas bantuan training: rekomendasi → verifikasi → approval → pengeluaran → serah terima
+- [ ] Backup dan health check produksi berhasil; prosedur restore/rollback dipahami tim IT
 
 ---
 
@@ -508,8 +576,11 @@ Workflow approval: menu **Approval** atau laporan Approval.
 | Bebankan biaya bank ke dana **restricted** | Ditolak sistem | Pakai Dana Operasional |
 | Lupa alokasi pada penerimaan | Tidak bisa submit/approve | Total alokasi = nominal penerimaan |
 | Hapus transaksi approved | Melanggar prinsip ledger | **Reverse** saja |
-| Bendahara buat Dana Amanah | Permission ditolak | Minta admin |
+| Menganggap ketua satu-satunya approver keuangan | Pekerjaan bendahara tertunda dan pemetaan role keliru | Bendahara adalah approver keuangan; ketua tersedia untuk approval pimpinan/eskalasi |
 | Double posting opening | Saldo dobel | Satu kali posting per baris worksheet |
+| Menjalankan `db:seed` di produksi | Membuat akun contoh dengan password demo | Gunakan migrasi deploy + `sima:create-admin` |
+| Menandai bantuan selesai sebelum pengeluaran approved | Kasus dan ledger tidak sinkron | Approve pengeluaran tertaut dan unggah bukti penyaluran dahulu |
+| Membuat satu penerima per warga untuk bantuan massal | Data membengkak dan dampak sulit direkap | Gunakan cakupan kolektif + target/realisasi orang terbantu |
 
 ---
 
@@ -520,15 +591,23 @@ Workflow approval: menu **Approval** atau laporan Approval.
 | Dana Amanah | `/dashboard/funds` |
 | Kas/Bank | `/dashboard/accounts` |
 | Donatur | `/dashboard/donors` |
+| Vendor | `/dashboard/vendors` |
 | Event/Program | `/dashboard/programs` |
 | Penerimaan | `/dashboard/receipts` |
 | Pengeluaran | `/dashboard/disbursements` |
 | Biaya Bank | `/dashboard/bank-fees` |
+| Transfer Rekening | `/dashboard/transfers` |
+| Transfer Dana Amanah | `/dashboard/fund-transfers` |
+| Rekonsiliasi Bank | `/dashboard/reconciliations` |
+| Liabilitas Operasional | `/dashboard/liabilities` |
+| Pengajuan Bantuan | `/dashboard/bantuan` |
 | Saldo Awal | `/dashboard/opening-balances` |
 | Pengaturan (Users) | `/dashboard/settings` |
 | Pengaturan (Role & Permission) | `/dashboard/roles` |
 | Laporan Saldo Awal | `/dashboard/reports/opening-balances` |
+| Laporan Pengajuan Bantuan | `/dashboard/reports/bantuan` |
 | Laporan | `/dashboard/reports` |
+| Portal Donatur | `/dashboard/portal-donatur` |
 
 ---
 
@@ -538,6 +617,7 @@ Workflow approval: menu **Approval** atau laporan Approval.
 - [BACKLOG.md](BACKLOG.md) — daftar pekerjaan belum selesai
 - [ARCHITECTURE.md](ARCHITECTURE.md) — aliran ledger
 - [DEPLOYMENT.md](DEPLOYMENT.md) — deploy produksi
+- [BANTUAN.md](BANTUAN.md) — aturan pengajuan, assignment, dampak, pengeluaran, dan serah terima bantuan
 - [README.md](../README.md) — konsep inti & role
 
 ---
@@ -550,3 +630,4 @@ Workflow approval: menu **Approval** atau laporan Approval.
 | Jun 2026 | Tambah §4.1 kapan memakai opening balance; update status UI/API Saldo Awal |
 | Jun 2026 | §4.2 mekanisme SYS-OPENING; laporan cutover; checklist & Fase 5 audit opening |
 | Jun 2026 | Fase 2 manajemen pengguna (UI Pengaturan, API users, sima:create-admin) |
+| Okt 2026 | Sinkronisasi role `petugas_bantuan`, keamanan seed produksi, approval keuangan, vendor/transfer/rekonsiliasi/liabilitas, deployment, dan alur pengajuan bantuan individual/kolektif |
