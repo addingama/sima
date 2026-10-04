@@ -4,6 +4,7 @@ namespace App\Domains\Grant\Validators;
 
 use App\Enums\DisbursementStatus;
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryScope;
 use App\Enums\GrantBeneficiaryType;
 use App\Enums\GrantPaymentMethod;
 use App\Exceptions\DomainException;
@@ -71,6 +72,16 @@ class GrantApplicationValidator
             }
         }
 
+        if ($grant->beneficiary_scope === GrantBeneficiaryScope::COLLECTIVE) {
+            if ($grant->target_beneficiary_count === null || $grant->target_beneficiary_count < 1) {
+                throw new DomainException('Target jumlah penerima manfaat wajib diisi untuk bantuan kolektif.');
+            }
+
+            if ($grant->beneficiary_count_method === null || ! filled($grant->beneficiary_location) || ! filled($grant->beneficiary_count_notes)) {
+                throw new DomainException('Metode hitung, lokasi manfaat, dan dasar penghitungan wajib diisi untuk bantuan kolektif.');
+            }
+        }
+
         if (! filled($grant->recipient_address)) {
             throw new DomainException('Alamat / cara menemui penerima wajib diisi sebelum approval.');
         }
@@ -128,6 +139,7 @@ class GrantApplicationValidator
         GrantApplication $grant,
         ?string $recipientName = null,
         ?string $recipientNotes = null,
+        ?int $actualBeneficiaryCount = null,
     ): void {
         $this->assertStatus($grant, [GrantApplicationStatus::APPROVED]);
 
@@ -152,6 +164,11 @@ class GrantApplicationValidator
             if ($recipientName !== $grant->organization_pic_name && ! filled($recipientNotes)) {
                 throw new DomainException('Keterangan wajib diisi jika penerima aktual berbeda dari PIC organisasi.');
             }
+        }
+
+        if ($grant->beneficiary_scope === GrantBeneficiaryScope::COLLECTIVE
+            && ($actualBeneficiaryCount === null || $actualBeneficiaryCount < 1)) {
+            throw new DomainException('Realisasi jumlah penerima manfaat wajib diisi untuk bantuan kolektif.');
         }
     }
 }

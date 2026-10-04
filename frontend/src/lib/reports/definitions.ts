@@ -360,7 +360,11 @@ export const grantApplicationReport: ReportDef = {
     textColumn("application_number", "No. Pengajuan"),
     dateColumn("created_at", "Tgl Pengajuan"),
     nestedColumn("beneficiary_type_label", "Jenis Penerima", (row) => String(row.beneficiary_type_label ?? "-")),
+    nestedColumn("beneficiary_scope_label", "Cakupan", (row) => String(row.beneficiary_scope_label ?? "-")),
     textColumn("recipient_name", "Penerima"),
+    textColumn("target_beneficiary_count", "Target Orang"),
+    textColumn("actual_beneficiary_count", "Realisasi Orang"),
+    textColumn("beneficiary_location", "Lokasi Manfaat"),
     textColumn("reason", "Alasan"),
     currencyColumn("recommended_amount", "Usulan"),
     currencyColumn("approved_amount", "Disetujui"),
@@ -377,6 +381,16 @@ export const grantApplicationReport: ReportDef = {
   filters: [
     { name: "from", label: "Dari Tanggal", type: "date" },
     { name: "to", label: "Sampai Tanggal", type: "date" },
+    {
+      name: "beneficiary_scope",
+      label: "Cakupan",
+      type: "select",
+      allLabel: "Semua cakupan",
+      options: [
+        { value: "individual", label: "Individual" },
+        { value: "collective", label: "Kolektif" },
+      ],
+    },
     {
       name: "beneficiary_type",
       label: "Jenis Penerima",

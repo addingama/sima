@@ -25,6 +25,8 @@ Identitas pengguna: tabel `users` + Sanctum yang sama. Tidak ada password terpis
 11. Verifikator (`assigned_verifier_id`) dan petugas serah terima (`assigned_handover_id`) ditetapkan **per penerima**, bukan antrian bebas.
 12. Assignment **boleh kosong** saat input. Verifikator wajib terisi sebelum kirim ke Verifikasi; petugas serah terima wajib terisi sebelum ketua menyetujui.
 13. Cara bayar default **tunai**. Transfer adalah pengecualian per kartu.
+14. Identitas penerima administratif dipisahkan dari cakupan dampak. Satu kartu dapat membantu satu orang (`individual`) atau banyak orang (`collective`) tanpa membuat record penerima per warga.
+15. Bantuan kolektif menyimpan target dan realisasi orang terbantu secara terpisah. Target diverifikasi sebelum approval; realisasi diisi saat serah terima selesai.
 
 ---
 
@@ -57,6 +59,10 @@ Field yang tidak disebut di tahap itu **opsional** (boleh diisi lebih awal).
 | Field | Wajib | Catatan |
 |-------|--------|---------|
 | Jenis penerima (`beneficiary_type`) | Ya | `individual` atau `organization` |
+| Cakupan penerima (`beneficiary_scope`) | Ya | `individual` (otomatis satu orang) atau `collective` (banyak orang) |
+| Target orang terbantu | Jika kolektif | Bilangan bulat positif; boleh dilengkapi saat verifikasi |
+| Lokasi manfaat | Jika kolektif | Wilayah atau komunitas yang menerima dampak bantuan |
+| Metode dan dasar penghitungan | Jika kolektif | `exact` atau `estimated`, disertai catatan sumber/cara hitung |
 | Nama penerima | Ya | Nama orang atau nama organisasi/instansi; bukan user sistem |
 | Nominal usulan | Ya | `decimal(18,2)`, `> 0` |
 | Alasan / jenis bantuan | Ya | Teks |
@@ -98,6 +104,7 @@ Verifikator boleh mengubah field data penerima & berkas (jenis/nama penerima, te
 | Rekening (bank, no. rekening, atas nama) | Hanya jika `transfer` | Rekening organisasi atau PIC diperbolehkan; rekening PIC wajib mencatat hubungan dan alasan penggunaan rekening pribadi |
 | Catatan verifikator | Ya | Jejak “sudah dicek” |
 | Lampiran pendukung | Kebijakan lembaga | Perorangan: identitas = NIK **atau** file `identity`. Organisasi: dokumen legalitas/pendukung tidak wajib, tetapi boleh dilampirkan jika tersedia |
+| Data dampak kolektif | Jika `beneficiary_scope=collective` | Target, lokasi, metode, dan dasar penghitungan wajib lengkap sebelum approval |
 
 ### `pending_approval` — keputusan ketua
 
@@ -134,6 +141,7 @@ Pengeluaran mengikuti alur SIMA yang sudah ada (`draft → submitted → verifie
 | Penerima aktual | Ya | Untuk organisasi: orang yang menerima bantuan; jika berbeda dari PIC, wajib ada keterangan |
 | Foto penyerahan | Ya, ≥ 1 lampiran (pola `attachments` morph) |
 | Pengeluaran tertaut | Ya, status `approved` |
+| Realisasi orang terbantu | Jika kolektif | Bilangan bulat positif; jumlah aktual berdasarkan hasil penyaluran |
 
 Tanpa foto: tidak **Selesai**. Tanpa pengeluaran `approved`: tidak **Selesai**. Foto tidak menggantikan jurnal.
 
@@ -259,8 +267,10 @@ Bukan papan kerja. Ini daftar yang mudah disaring dan diekspor, plus kartu ringk
 | Siap diserahkan | Nominal sudah disetujui ketua, belum serah terima |
 | Sudah diserahkan | Nominal status Selesai |
 | Ditolak | Nominal usulan yang ditolak |
+| Target penerima manfaat | Individual dihitung satu orang; kolektif memakai `target_beneficiary_count`; kartu ditolak tidak dihitung |
+| Realisasi penerima manfaat | Hanya status Selesai; individual dihitung satu orang, kolektif memakai `actual_beneficiary_count` |
 
-Filter: periode (tanggal pengajuan), status, jenis penerima, cara bayar, program, cari nama/nomor. Tabel bisa dikelompokkan status / jenis penerima / cara bayar / program / verifikator / petugas serah terima. Data mengikuti scope yang sama dengan Kanban (`visibleTo`).
+Filter: periode (tanggal pengajuan), status, jenis penerima, cakupan penerima, cara bayar, program, cari nama/nomor. Tabel menampilkan target, realisasi, dan lokasi manfaat serta dapat dikelompokkan status / jenis penerima / cara bayar / program / verifikator / petugas serah terima. Data mengikuti scope yang sama dengan Kanban (`visibleTo`).
 
 ---
 

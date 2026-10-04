@@ -4,6 +4,7 @@ namespace Tests\Unit\Grant;
 
 use App\Domains\Grant\Validators\GrantApplicationValidator;
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryScope;
 use App\Enums\GrantBeneficiaryType;
 use App\Enums\GrantPaymentMethod;
 use App\Exceptions\DomainException;
@@ -124,6 +125,25 @@ class GrantApplicationValidatorTest extends TestCase
 
         $this->expectException(DomainException::class);
         $this->expectExceptionMessage('alasan penggunaan rekening pribadi PIC');
+
+        $this->validator->assertReadyForApproval($grant);
+    }
+
+    #[Test]
+    public function collective_assistance_requires_complete_impact_target_before_approval(): void
+    {
+        $grant = GrantApplication::factory()->create([
+            'status' => GrantApplicationStatus::VERIFICATION,
+            'beneficiary_scope' => GrantBeneficiaryScope::COLLECTIVE,
+            'recipient_identity_number' => '123',
+            'recipient_address' => 'Kota terpencil',
+            'verified_amount' => '100000.00',
+            'verifier_notes' => 'Distribusi air layak dilakukan.',
+            'assigned_verifier_id' => User::factory(),
+        ]);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Target jumlah penerima manfaat');
 
         $this->validator->assertReadyForApproval($grant);
     }

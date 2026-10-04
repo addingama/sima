@@ -247,6 +247,7 @@ class GrantApplicationController extends Controller
             $request->validated('handed_over_on'),
             $request->validated('handover_recipient_name'),
             $request->validated('handover_recipient_notes'),
+            $request->integer('actual_beneficiary_count') ?: null,
         );
 
         return $this->resource(new GrantApplicationResource($this->service->findForShow($grant)));

@@ -230,6 +230,7 @@ gh issue create \
 - API `/api/grant-applications` — permission `grant.*`, scope `visibleTo`.
 - Selesai = status `approved` + pengeluaran tertaut `approved` + (tunai) lampiran judul `handover`.
 - Satu `disbursement_id` per pengajuan. Nomor `BNT/...`.
+- Dampak bantuan: cakupan individual/kolektif, target sebelum approval, dan realisasi orang terbantu saat selesai.
 - Laporan: `GET /api/reports/grant-applications` (`report.view`) + UI `/dashboard/reports/bantuan`.
 - Tes backend: `tests/Feature/Api/GrantApplicationApiTest.php`, `GrantApplicationReportTest.php`. Tes frontend berada berdampingan dengan source sebagai `*.test.ts` / `*.test.tsx`.
 

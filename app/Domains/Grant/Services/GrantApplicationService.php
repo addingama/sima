@@ -8,6 +8,7 @@ use App\Domains\Grant\DTOs\UpdateGrantApplicationDto;
 use App\Domains\Grant\Repositories\GrantApplicationRepository;
 use App\Domains\Grant\Validators\GrantApplicationValidator;
 use App\Enums\GrantApplicationStatus;
+use App\Enums\GrantBeneficiaryScope;
 use App\Enums\GrantBeneficiaryType;
 use App\Enums\GrantPaymentMethod;
 use App\Exceptions\DomainException;
@@ -24,6 +25,11 @@ class GrantApplicationService
     private const DRAFT_FIELDS = [
         'recipient_name',
         'beneficiary_type',
+        'beneficiary_scope',
+        'target_beneficiary_count',
+        'beneficiary_count_method',
+        'beneficiary_location',
+        'beneficiary_count_notes',
         'recipient_phone',
         'recipient_address',
         'recipient_identity_number',
@@ -48,6 +54,11 @@ class GrantApplicationService
     private const VERIFICATION_FIELDS = [
         'recipient_name',
         'beneficiary_type',
+        'beneficiary_scope',
+        'target_beneficiary_count',
+        'beneficiary_count_method',
+        'beneficiary_location',
+        'beneficiary_count_notes',
         'recipient_phone',
         'recipient_address',
         'recipient_identity_number',
@@ -103,6 +114,7 @@ class GrantApplicationService
     public function createFromDto(CreateGrantApplicationDto $dto): GrantApplication
     {
         $payload = $this->normalizeAmounts($dto->data, ['recommended_amount']);
+        $payload = $this->normalizeBeneficiaryImpact($payload);
         $payload['payment_method'] = $payload['payment_method'] ?? GrantPaymentMethod::CASH->value;
         $payload['assigned_verifier_id'] = $dto->actor->can('grant.verify') ? $dto->actor->getKey() : null;
         $payload['assigned_handover_id'] = $dto->actor->can('grant.handover') ? $dto->actor->getKey() : null;
@@ -135,6 +147,7 @@ class GrantApplicationService
 
         $payload = array_intersect_key($dto->data, array_flip($allowed));
         $payload = $this->normalizeAmounts($payload, ['recommended_amount', 'verified_amount']);
+        $payload = $this->normalizeBeneficiaryImpact($payload);
 
         return DB::transaction(function () use ($grant, $payload): GrantApplication {
             return $this->repository->update($grant, $payload);
@@ -333,11 +346,12 @@ class GrantApplicationService
         string $handedOverOn,
         ?string $recipientName = null,
         ?string $recipientNotes = null,
+        ?int $actualBeneficiaryCount = null,
     ): GrantApplication {
         $grant->loadMissing('disbursement', 'attachments');
-        $this->validator->assertReadyToComplete($grant, $recipientName, $recipientNotes);
+        $this->validator->assertReadyToComplete($grant, $recipientName, $recipientNotes, $actualBeneficiaryCount);
 
-        return DB::transaction(function () use ($grant, $actor, $handedOverOn, $recipientName, $recipientNotes): GrantApplication {
+        return DB::transaction(function () use ($grant, $actor, $handedOverOn, $recipientName, $recipientNotes, $actualBeneficiaryCount): GrantApplication {
             return $this->repository->update($grant, [
                 'status' => GrantApplicationStatus::COMPLETED->value,
                 'handed_over_on' => $handedOverOn,
@@ -345,6 +359,7 @@ class GrantApplicationService
                 'handed_over_by' => $actor->getKey(),
                 'handover_recipient_name' => $recipientName,
                 'handover_recipient_notes' => $recipientNotes,
+                'actual_beneficiary_count' => $actualBeneficiaryCount,
             ]);
         });
     }
@@ -361,6 +376,21 @@ class GrantApplicationService
                 $data[$key] = bcadd((string) $data[$key], '0', 2);
             }
         }
+
+        return $data;
+    }
+
+    /** @param array<string, mixed> $data */
+    private function normalizeBeneficiaryImpact(array $data): array
+    {
+        if (($data['beneficiary_scope'] ?? null) !== GrantBeneficiaryScope::INDIVIDUAL->value) {
+            return $data;
+        }
+
+        $data['target_beneficiary_count'] = null;
+        $data['beneficiary_count_method'] = null;
+        $data['beneficiary_location'] = null;
+        $data['beneficiary_count_notes'] = null;
 
         return $data;
     }
