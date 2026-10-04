@@ -1,6 +1,6 @@
 import { type APIRequestContext, expect, test } from "@playwright/test";
 
-import { type Role, roleAccounts } from "../fixtures/auth";
+import { loginAs, type Role, roleAccounts } from "../fixtures/auth";
 
 const apiUrl = "http://127.0.0.1:8100/api";
 
@@ -40,6 +40,16 @@ test("redirect halaman terlindungi dipertahankan setelah login", async ({ page }
 
   await expect(page).toHaveURL(/\/dashboard\/receipts$/);
   await expect(page.locator("main")).toBeVisible();
+});
+
+test("form penerimaan menahan submit ketika field wajib kosong", async ({ page }) => {
+  await loginAs(page, "asisten_bendahara");
+  await page.goto("/dashboard/receipts/new");
+  await page.getByRole("button", { name: "Simpan" }).click();
+
+  await expect(page.getByText("Akun Kas/Bank wajib diisi.")).toBeVisible();
+  await expect(page.getByText("Nominal wajib diisi.").first()).toBeVisible();
+  await expect(page).toHaveURL(/\/dashboard\/receipts\/new$/);
 });
 
 test("role terbatas ditolak oleh API walau endpoint dipanggil langsung", async ({ request }) => {
