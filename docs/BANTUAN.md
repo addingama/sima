@@ -241,7 +241,7 @@ Invariant:
 
 ## UI Kanban
 
-- Dashboard role khusus `petugas_bantuan` menampilkan ringkasan rekomendasi, tugas verifikasi, tugas serah terima, kasus selesai, serta akses cepat ke papan bantuan. Dashboard ini tidak memuat data atau endpoint keuangan.
+- Dashboard role khusus `petugas_bantuan` menampilkan ringkasan rekomendasi, tugas verifikasi, tugas serah terima, kasus selesai, serta akses cepat ke papan bantuan. Dashboard ini tidak memuat data atau endpoint keuangan. Navigasi petugas hanya menampilkan Dashboard dan Pengajuan Bantuan; Master Data disembunyikan, sedangkan permission teknis `program.view` tetap dipakai form untuk memilih program.
 - Kolom = status di atas, tidak bisa dibuat user.
 - Board default = **Antrian** (Rekomendasi → Siap diserahkan). **Selesai** dan **Ditolak** di tab Arsip.
 - Cari nama/nomor; filter jenis penerima; toggle **Yang saya verifikasi** (`assigned_verifier_id` = user login) dan **Yang saya serahkan** (`assigned_handover_id` = user login).
