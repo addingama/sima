@@ -48,6 +48,8 @@ export interface NavItemBase {
   permission?: string;
   /** Tampil jika user punya salah satu permission (diabaikan jika `permission` juga di-set dan lolos). */
   permissionsAny?: string[];
+  /** Sembunyikan menu untuk role tertentu meski permission teknis tetap diperlukan oleh form/API lain. */
+  hiddenForRoles?: string[];
 }
 
 export interface NavMainLinkItem extends NavItemBase {
@@ -76,7 +78,7 @@ export const sidebarItems: NavGroup[] = [
         title: "Dashboard",
         url: "/dashboard/default",
         icon: LayoutDashboard,
-        permission: "report.view",
+        permissionsAny: ["report.view", "grant.view"],
       },
     ],
   },
@@ -87,6 +89,7 @@ export const sidebarItems: NavGroup[] = [
         id: "master-data",
         title: "Master Data",
         icon: Database,
+        hiddenForRoles: ["petugas_bantuan"],
         subItems: [
           {
             id: "donors",
