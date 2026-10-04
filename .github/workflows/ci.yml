@@ -55,6 +55,9 @@ jobs:
           DB_DATABASE: ":memory:"
         run: php artisan test
 
+      - name: Validate production deployment scripts
+        run: sh tests/Scripts/check-production-env.sh
+
   frontend:
     name: Frontend — Lint & Build
     runs-on: ubuntu-latest
