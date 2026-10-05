@@ -223,6 +223,25 @@ test("asisten bendahara dapat membuat draft pengeluaran dengan sumber dana melal
   await expect(page.getByText("Dana Sosial Umum (Demo)", { exact: true })).toBeVisible();
 });
 
+test("asisten bendahara dapat mengubah penerima dan keterangan draft pengeluaran melalui UI", async ({
+  page,
+  request,
+}) => {
+  const disbursementId = await createDisbursement(request);
+  await loginAs(page, "asisten_bendahara");
+  await page.goto(`/dashboard/disbursements/${disbursementId}`);
+  await page.getByRole("link", { name: "Edit" }).click();
+
+  await page.getByLabel("Penerima").fill("Penerima Diperbarui lewat Browser");
+  await page.getByLabel("Keterangan").fill("Keterangan draft diperbarui dari browser E2E");
+  await page.getByRole("button", { name: "Simpan" }).click();
+
+  await expect(page).toHaveURL(new RegExp(`/dashboard/disbursements/${disbursementId}$`));
+  await expect(page.getByText("Data berhasil diperbarui.")).toBeVisible();
+  await expect(page.getByText("Penerima Diperbarui lewat Browser", { exact: true })).toBeVisible();
+  await expect(page.getByText("Keterangan draft diperbarui dari browser E2E", { exact: true })).toBeVisible();
+});
+
 test("bendahara dapat mengunggah dan melihat preview lampiran penerimaan melalui UI", async ({ page, request }) => {
   const receiptId = await createReceipt(request);
   await loginAs(page, "bendahara");
