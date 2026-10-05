@@ -108,7 +108,12 @@ export function CrudListPage({
 
   const { data, isLoading, isError, refetch } = useResourceQuery<Record<string, unknown>>(config.resource, params);
 
+  const canView = hasPermission(user, config.permissions.view);
   const canCreate = !hideCreate && hasPermission(user, config.permissions.create ?? config.permissions.manage ?? "");
+
+  if (!canView) {
+    return <ErrorState title="Tidak dapat mengakses" description="Anda tidak memiliki izin untuk melihat data ini." />;
+  }
 
   return (
     <div className="flex flex-col gap-6">
