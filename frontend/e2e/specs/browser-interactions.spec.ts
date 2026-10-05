@@ -193,6 +193,36 @@ test("asisten bendahara dapat membuat penerimaan dengan alokasi operasional dari
   await expect(page.getByText("Dana Sosial Umum (Demo)", { exact: true })).toBeVisible();
 });
 
+test("asisten bendahara dapat membuat draft pengeluaran dengan sumber dana melalui UI", async ({ page }) => {
+  await loginAs(page, "asisten_bendahara");
+  await page.goto("/dashboard/disbursements/new");
+  await page
+    .getByRole("group")
+    .filter({ hasText: "Akun Kas/Bank" })
+    .getByRole("combobox")
+    .selectOption({ label: "BCA Operasional (Demo)" });
+  await page.getByLabel("Penerima").fill("Penerima Pengeluaran dari Browser");
+  await page.getByLabel("Keterangan").fill("Draft pengeluaran dibuat melalui browser E2E");
+
+  const moneyInputs = page.locator('input[inputmode="numeric"]');
+  await moneyInputs.nth(0).fill("25000");
+  const sourceCard = page.getByText("Sumber Dana", { exact: true }).locator("../..");
+  await sourceCard
+    .getByRole("group")
+    .filter({ hasText: "Dana Amanah" })
+    .getByRole("combobox")
+    .selectOption({ label: "Dana Sosial Umum (Demo)" });
+  await sourceCard.getByRole("button", { name: "Isi sisa" }).click();
+  await page.getByRole("button", { name: "Simpan" }).click();
+
+  await expect(page).toHaveURL(/\/dashboard\/disbursements\/\d+$/);
+  await expect(page.getByText("Data berhasil dibuat.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: /DSB\// })).toBeVisible();
+  await expect(page.getByText("draft", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Penerima Pengeluaran dari Browser", { exact: true })).toBeVisible();
+  await expect(page.getByText("Dana Sosial Umum (Demo)", { exact: true })).toBeVisible();
+});
+
 test("petugas bantuan tidak dapat membuka halaman master data lewat URL langsung", async ({ page }) => {
   await loginAs(page, "petugas_bantuan");
   await page.goto("/dashboard/funds");
