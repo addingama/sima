@@ -19,7 +19,10 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "node frontend/e2e/prepare.mjs && php artisan serve --host=127.0.0.1 --port=8100",
+      // Laravel's serve auto-reloader only forwards a small allowlist of environment
+      // variables to its child process. Disable it so the E2E CORS/database variables
+      // below reach the actual PHP server instead of falling back to the local .env.
+      command: "node frontend/e2e/prepare.mjs && php artisan serve --host=127.0.0.1 --port=8100 --no-reload",
       cwd: "..",
       url: "http://127.0.0.1:8100/api/health",
       reuseExistingServer: !process.env.CI,
