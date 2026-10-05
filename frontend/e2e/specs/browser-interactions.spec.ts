@@ -223,6 +223,28 @@ test("asisten bendahara dapat membuat draft pengeluaran dengan sumber dana melal
   await expect(page.getByText("Dana Sosial Umum (Demo)", { exact: true })).toBeVisible();
 });
 
+test("bendahara dapat mengunggah dan melihat preview lampiran penerimaan melalui UI", async ({ page, request }) => {
+  const receiptId = await createReceipt(request);
+  await loginAs(page, "bendahara");
+  await page.goto(`/dashboard/receipts/${receiptId}`);
+  await page.getByRole("tab", { name: "Lampiran" }).click();
+  await page.getByPlaceholder("Judul (opsional)").fill("Bukti transfer dari browser");
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "bukti-transfer.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+      "base64",
+    ),
+  });
+
+  await expect(page.getByText("Lampiran berhasil diunggah.")).toBeVisible();
+  await expect(page.getByText("Bukti transfer dari browser", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("dialog").getByRole("img", { name: "bukti-transfer.png" })).toBeVisible();
+});
+
 test("petugas bantuan tidak dapat membuka halaman master data lewat URL langsung", async ({ page }) => {
   await loginAs(page, "petugas_bantuan");
   await page.goto("/dashboard/funds");
