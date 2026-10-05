@@ -67,6 +67,47 @@ async function createDisbursement(request: APIRequestContext) {
   return (await response.json()).data.id as number;
 }
 
+async function createVerifiedGrant(request: APIRequestContext, collective = false) {
+  const token = await tokenFor(request, "petugas_bantuan");
+  const headers = { Authorization: `Bearer ${token}`, Accept: "application/json" };
+  const created = await request.post(`${apiUrl}/grant-applications`, {
+    headers,
+    data: {
+      beneficiary_type: "individual",
+      beneficiary_scope: collective ? "collective" : "individual",
+      recipient_name: collective ? "Warga Kolektif Browser" : "Penerima Bantuan Browser",
+      recommended_amount: "18000.00",
+      reason: "Workflow bantuan melalui browser",
+      recommender_name: "Petugas Browser",
+      ...(collective
+        ? {
+            target_beneficiary_count: 75,
+            beneficiary_count_method: "estimated",
+            beneficiary_location: "Desa Browser",
+            beneficiary_count_notes: "Estimasi data warga",
+          }
+        : {}),
+    },
+  });
+  expect(created.status()).toBe(201);
+  const id = (await created.json()).data.id as number;
+  expect((await request.post(`${apiUrl}/grant-applications/${id}/send-to-verification`, { headers })).status()).toBe(
+    200,
+  );
+  const updated = await request.put(`${apiUrl}/grant-applications/${id}`, {
+    headers,
+    data: {
+      recipient_identity_number: "3201010101010077",
+      recipient_address: "Alamat Bantuan Browser",
+      verified_amount: "18000.00",
+      verifier_notes: "Layak berdasarkan verifikasi browser",
+    },
+  });
+  expect(updated.status()).toBe(200);
+
+  return { id, token, headers };
+}
+
 test("bendahara dapat membuat, mengedit, mencari, dan menghapus vendor melalui UI", async ({ page }) => {
   const suffix = Date.now();
   const initialName = `Vendor Browser ${suffix}`;
@@ -227,4 +268,51 @@ test("pengeluaran approved dapat direverse melalui dialog alasan wajib", async (
   await reverseButton.click();
   await expect(page.getByText("Reverse berhasil.")).toBeVisible();
   await expect(page.getByText("reversed", { exact: true }).first()).toBeVisible();
+});
+
+test("bantuan dapat diajukan lalu dikembalikan ke verifikasi melalui UI", async ({ page, request }) => {
+  const grant = await createVerifiedGrant(request);
+  await loginAs(page, "petugas_bantuan");
+  await page.goto(`/dashboard/bantuan/${grant.id}`);
+  await page.getByRole("button", { name: "Ajukan ke approval" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Ajukan ke approval" }).click();
+  await expect(page.getByText("Menunggu approval", { exact: true }).first()).toBeVisible();
+
+  await page.context().clearCookies();
+  await loginAs(page, "ketua");
+  await page.goto(`/dashboard/bantuan/${grant.id}`);
+  await page.getByRole("button", { name: "Kembalikan" }).click();
+  const dialog = page.getByRole("alertdialog");
+  const returnButton = dialog.getByRole("button", { name: "Kembalikan" });
+  await expect(returnButton).toBeDisabled();
+  await dialog.getByLabel("Alasan pengembalian").fill("Mohon lengkapi hasil survei lapangan");
+  await returnButton.click();
+  await expect(page.getByText("Kembalikan berhasil.")).toBeVisible();
+  await expect(page.getByText("Verifikasi", { exact: true }).first()).toBeVisible();
+});
+
+test("bantuan kolektif mewajibkan realisasi orang terbantu sebelum selesai", async ({ page, request }) => {
+  const grant = await createVerifiedGrant(request, true);
+  expect(
+    (
+      await request.post(`${apiUrl}/grant-applications/${grant.id}/submit-for-approval`, { headers: grant.headers })
+    ).status(),
+  ).toBe(200);
+  const ketua = await tokenFor(request, "ketua");
+  expect(
+    (
+      await request.post(`${apiUrl}/grant-applications/${grant.id}/approve`, {
+        headers: { Authorization: `Bearer ${ketua}`, Accept: "application/json" },
+        data: { approved_amount: "18000.00" },
+      })
+    ).status(),
+  ).toBe(200);
+
+  await loginAs(page, "petugas_bantuan");
+  await page.goto(`/dashboard/bantuan/${grant.id}`);
+  const completeButton = page.getByRole("button", { name: "Tandai selesai" });
+  await expect(completeButton).toBeDisabled();
+  await page.getByLabel("Realisasi orang terbantu").fill("72");
+  await expect(completeButton).toBeEnabled();
+  await expect(page.getByPlaceholder("Target: 75")).toHaveValue("72");
 });
