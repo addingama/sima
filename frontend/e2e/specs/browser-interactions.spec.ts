@@ -161,6 +161,38 @@ test("form program menampilkan validasi lalu dapat membuat event darurat", async
   await expect(page.getByText("emergency", { exact: true })).toBeVisible();
 });
 
+test("asisten bendahara dapat membuat penerimaan dengan alokasi operasional dari UI", async ({ page }) => {
+  await loginAs(page, "asisten_bendahara");
+  await page.goto("/dashboard/receipts/new");
+  await page
+    .getByRole("group")
+    .filter({ hasText: "Akun Kas/Bank" })
+    .getByRole("combobox")
+    .selectOption({ label: "BCA Operasional (Demo)" });
+  await page.getByLabel("Channel").selectOption("transfer");
+
+  const moneyInputs = page.locator('input[inputmode="numeric"]');
+  await moneyInputs.nth(0).fill("100000");
+  await page.getByRole("button", { name: "10% Operasional" }).click();
+  await page.getByRole("button", { name: "Tambah Baris" }).click();
+
+  const allocationCard = page.getByText("Alokasi Dana", { exact: true }).locator("../..");
+  await allocationCard
+    .getByRole("group")
+    .filter({ hasText: "Dana Amanah" })
+    .nth(1)
+    .getByRole("combobox")
+    .selectOption({ label: "Dana Sosial Umum (Demo)" });
+  await allocationCard.getByRole("button", { name: "Isi sisa" }).click();
+  await page.getByRole("button", { name: "Simpan" }).click();
+
+  await expect(page).toHaveURL(/\/dashboard\/receipts\/\d+$/);
+  await expect(page.getByText("Data berhasil dibuat.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: /RCP\// })).toBeVisible();
+  await expect(page.getByText("Dana Operasional", { exact: false })).toBeVisible();
+  await expect(page.getByText("Dana Sosial Umum (Demo)", { exact: true })).toBeVisible();
+});
+
 test("petugas bantuan tidak dapat membuka halaman master data lewat URL langsung", async ({ page }) => {
   await loginAs(page, "petugas_bantuan");
   await page.goto("/dashboard/funds");
