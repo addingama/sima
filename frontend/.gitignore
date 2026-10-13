@@ -13,7 +13,10 @@
 /.next/
 /.next-e2e/
 /playwright-report/
+/playwright-report-demo/
 /test-results/
+/test-results-demo/
+/.next-e2e-demo/
 /out/
 
 # production

@@ -7,6 +7,7 @@
 /storage/pail
 /storage/backups/*.sql.gz
 /storage/e2e.sqlite
+/storage/e2e-demo.sqlite
 /vendor
 .env
 .env.backup
@@ -35,3 +36,4 @@ frontend/*.tsbuildinfo
 .venv-pptx/
 ~$*.pptx
 docs/demo/~$*
+docs/demo/videos/*.webm
