@@ -125,6 +125,7 @@ Spesifikasi terkunci: [BANTUAN.md](BANTUAN.md). **Jangan implementasi sebelum is
 
 ## P2 — Frontend & UX
 
+- [ ] **Automation testing semua role dan workflow utama** — matriks API/RBAC + Playwright E2E terisolasi + CI ([#57](https://github.com/addingama/sima/issues/57)); centang setelah PR merge
 - [ ] **Indikator loading saat filter laporan** — hindari persepsi hang (mis. laporan Approval)
 - [ ] **Halaman error/empty state konsisten** — semua modul CRUD punya retry
 - [ ] **Bahasa UI** — label `Restricted`/`Submitted` → Indonesia bila diinginkan organisasi

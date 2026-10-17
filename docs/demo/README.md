@@ -2,7 +2,13 @@
 
 | File | Isi |
 |------|-----|
-| [SIMA-Presentasi-Demo.pptx](./SIMA-Presentasi-Demo.pptx) | Slide presentasi produk (13 slide, widescreen) |
+| [SIMA-Presentasi-Demo.pptx](./SIMA-Presentasi-Demo.pptx) | Slide presentasi produk (26 slide, widescreen 16:9; video alur di slide 11–13, 15–16, 18) |
+| [videos/dashboard-dana.mp4](./videos/dashboard-dana.mp4) | Dashboard, Dana Amanah, kas/bank, rekonsiliasi Seimbang |
+| [videos/penerimaan.mp4](./videos/penerimaan.mp4) | Penerimaan + alokasi → submit → approve |
+| [videos/pengeluaran.mp4](./videos/pengeluaran.mp4) | Pengeluaran → submit → verifikasi → approve |
+| [videos/pengajuan-bantuan.mp4](./videos/pengajuan-bantuan.mp4) | Bantuan perorangan → selesai |
+| [videos/pengajuan-bantuan-instansi.mp4](./videos/pengajuan-bantuan-instansi.mp4) | Bantuan instansi/kelompok air bersih → selesai |
+| [videos/portal-donatur.mp4](./videos/portal-donatur.mp4) | Portal donatur: hanya donasi approved miliknya |
 | [FAQ-DEMO.md](./FAQ-DEMO.md) | FAQ + cheat sheet presenter |
 | [generate_pptx.py](./generate_pptx.py) | Script regenerasi PPT |
 
@@ -13,3 +19,15 @@ python3 -m venv .venv-pptx
 .venv-pptx/bin/pip install python-pptx
 .venv-pptx/bin/python docs/demo/generate_pptx.py
 ```
+
+## Regenerasi video demo
+
+Rekaman memakai Playwright (bukan suite E2E CI). Membutuhkan `ffmpeg`.
+
+```bash
+cd frontend
+npx playwright install chromium
+npm run demo:videos
+```
+
+Setelah itu regenerasi PPT agar semua video tertanam.

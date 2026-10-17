@@ -237,7 +237,7 @@ gh issue create \
 **Tes & CI:**
 - Backend: `php artisan test` (SQLite in-memory) + Pint.
 - Frontend lokal: `npm run check`, `npm test`, `npx tsc --noEmit`, dan `npm run build`.
-- Frontend unit/component: Vitest + React Testing Library. E2E browser belum dikonfigurasi.
+- Frontend unit/component: Vitest + React Testing Library. E2E browser memakai Playwright (`npm run test:e2e`) dengan SQLite terisolasi `storage/e2e.sqlite`; mencakup login, navigasi, dan halaman flow utama seluruh role.
 - Setiap agent/model wajib menjaga atau meningkatkan test sesuai perubahan kode yang dibuat.
 - Filter `mine` pada list grant: query string `"true"` harus di-boolean-kan di Form Request (`prepareForValidation`); Laravel `boolean` menolak string `"true"`.
 
