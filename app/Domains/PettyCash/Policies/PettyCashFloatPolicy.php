@@ -79,6 +79,13 @@ class PettyCashFloatPolicy
             && in_array($float->status, [PettyCashFloatStatus::DRAFT, PettyCashFloatStatus::REPORTING], true);
     }
 
+    public function reopen(User $user, PettyCashFloat $float): bool
+    {
+        return $this->allows($user, 'petty_cash.fund')
+            && $float->status === PettyCashFloatStatus::CLOSED
+            && $this->seesAll($user);
+    }
+
     public function cancel(User $user, PettyCashFloat $float): bool
     {
         return $this->allows($user, 'petty_cash.create')

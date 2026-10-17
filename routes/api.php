@@ -174,6 +174,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('petty-cash-floats/{pettyCashFloat}/lines', [PettyCashFloatController::class, 'storeLine'])->middleware('permission:petty_cash.update');
     Route::put('petty-cash-floats/{pettyCashFloat}/lines/{pettyCashLine}', [PettyCashFloatController::class, 'updateLine'])->middleware('permission:petty_cash.update');
     Route::delete('petty-cash-floats/{pettyCashFloat}/lines/{pettyCashLine}', [PettyCashFloatController::class, 'destroyLine'])->middleware('permission:petty_cash.update');
+    Route::post('petty-cash-floats/{pettyCashFloat}/disbursements', [PettyCashFloatController::class, 'createDisbursement'])->middleware('permission:petty_cash.fund');
+    Route::post('petty-cash-floats/{pettyCashFloat}/topup-requests', [PettyCashFloatController::class, 'storeTopup'])->middleware('permission:petty_cash.topup_request');
+    Route::post('petty-cash-floats/{pettyCashFloat}/close', [PettyCashFloatController::class, 'close'])->middleware('permission:petty_cash.close');
+    Route::post('petty-cash-floats/{pettyCashFloat}/reopen', [PettyCashFloatController::class, 'reopen'])->middleware('permission:petty_cash.fund');
+    Route::post('petty-cash-topup-requests/{pettyCashTopupRequest}/reject', [PettyCashFloatController::class, 'rejectTopup'])->middleware('permission:petty_cash.fund');
+    Route::post('petty-cash-topup-requests/{pettyCashTopupRequest}/fund', [PettyCashFloatController::class, 'fundTopup'])->middleware('permission:petty_cash.fund');
 
     /*
     |----------------------------------------------------------------------
