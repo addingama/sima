@@ -16,6 +16,7 @@ import {
 import { GripVertical } from "lucide-react";
 import { toast } from "sonner";
 
+import { type GrantNameMatch, GrantNameMatchBadge } from "@/app/(main)/dashboard/bantuan/_components/grant-name-match";
 import { CurrencyDisplay } from "@/components/sima/currency-display";
 import { apiPost } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
@@ -50,6 +51,9 @@ export type GrantCard = {
   status: string;
   status_label?: string | null;
   assigned_verifier?: { id: number; name: string } | null;
+  name_match_warning?: boolean;
+  name_matches?: GrantNameMatch[];
+  completed_assistance_count?: number;
 };
 
 function GrantKanbanCard({ grant, draggable }: { grant: GrantCard; draggable: boolean }) {
@@ -83,6 +87,11 @@ function GrantKanbanCard({ grant, draggable }: { grant: GrantCard; draggable: bo
           {grant.assigned_verifier?.name ? (
             <p className="mt-0.5 truncate text-muted-foreground text-xs">{grant.assigned_verifier.name}</p>
           ) : null}
+          <GrantNameMatchBadge
+            warning={grant.name_match_warning}
+            matches={grant.name_matches}
+            completedCount={grant.completed_assistance_count}
+          />
         </Link>
       </div>
     </article>

@@ -246,6 +246,7 @@ Invariant:
 - Board default = **Antrian** (Rekomendasi → Siap diserahkan). **Selesai** dan **Ditolak** di tab Arsip.
 - Cari nama/nomor; filter jenis penerima; toggle **Yang saya verifikasi** (`assigned_verifier_id` = user login) dan **Yang saya serahkan** (`assigned_handover_id` = user login).
 - Kartu ringkas (jenis/nama penerima, nomor, nominal; verifikator dan petugas serah terima jika ada). Kolom discroll vertikal.
+- Nama penerima yang sama dengan kartu lain (bukan Ditolak) menampilkan flag **Nama sama**. Bantuan berulang tetap boleh, tujuan sama atau berbeda. Flag ini untuk verifikator memvalidasi orang dan tujuannya, bukan untuk menahan alur. Kartu Selesai dengan nama yang sama juga dihitung sebagai **Sudah dibantu N kali**. NIK yang berbeda atau kosong tidak menyembunyikan flag.
 - Drag hanya untuk transisi yang diizinkan; gagal jika syarat field belum lengkap (pesan jelas).
 - Detail kartu = formulir + lampiran + riwayat assignment/keputusan.
 
