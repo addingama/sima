@@ -15,6 +15,7 @@ import {
   HeartHandshake,
   Landmark,
   LayoutDashboard,
+  PiggyBank,
   ReceiptText,
   Scale,
   Settings,
@@ -200,6 +201,18 @@ export const sidebarItems: NavGroup[] = [
         url: "/dashboard/bantuan",
         icon: HeartHandshake,
         permission: "grant.view",
+      },
+    ],
+  },
+  {
+    id: 36,
+    items: [
+      {
+        id: "kas-kecil",
+        title: "Kas Kecil",
+        url: "/dashboard/kas-kecil",
+        icon: PiggyBank,
+        permission: "petty_cash.view",
       },
     ],
   },

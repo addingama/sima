@@ -16,6 +16,13 @@ const variants: Record<string, "default" | "secondary" | "destructive" | "outlin
   void: "destructive",
   completed: "default",
   partially_settled: "outline",
+  // petty cash
+  reporting: "outline",
+  closed: "default",
+  cancelled: "destructive",
+  // topup requests
+  pending: "outline",
+  funded: "default",
 };
 
 export function StatusBadge({ status }: { status: string }) {

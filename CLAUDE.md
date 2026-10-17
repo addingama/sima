@@ -217,7 +217,7 @@ gh issue create \
 - CRUD user (`user.manage`), vendor, transfer, portal donatur, saldo awal.
 - Idempotency claim (race-safe), CI/tests, Docker.
 
-**Sudah ada (frontend):** `frontend/` Next.js — master data, keuangan, approval, laporan, portal, Kanban bantuan, laporan bantuan, dan dashboard operasional khusus `petugas_bantuan`. Template Shadcn Admin Dashboard. Unit/component test memakai Vitest + React Testing Library; panduan di `docs/FRONTEND-TESTING.md`.
+**Sudah ada (frontend):** `frontend/` Next.js — master data, keuangan, approval, laporan, portal, Kanban bantuan, laporan bantuan, dashboard operasional khusus `petugas_bantuan`, dan **kas kecil** (`/dashboard/kas-kecil`). Template Shadcn Admin Dashboard. Unit/component test memakai Vitest + React Testing Library; panduan di `docs/FRONTEND-TESTING.md`.
 
 **REST API (standar respons):**
 - Envelope JSON: `success`, `message`, `data`, `meta`, `errors`.
