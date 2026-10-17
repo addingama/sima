@@ -22,7 +22,8 @@ export default defineConfig({
     deviceScaleFactor: 1,
     locale: "id-ID",
     launchOptions: {
-      slowMo: 280,
+      // Cukup untuk terbaca di video; 280ms terlalu lambat untuk alur panjang.
+      slowMo: 90,
     },
   },
   webServer: [

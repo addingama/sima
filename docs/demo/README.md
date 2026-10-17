@@ -9,6 +9,8 @@
 | [videos/pengajuan-bantuan.mp4](./videos/pengajuan-bantuan.mp4) | Bantuan perorangan → selesai |
 | [videos/pengajuan-bantuan-instansi.mp4](./videos/pengajuan-bantuan-instansi.mp4) | Bantuan instansi/kelompok air bersih → selesai |
 | [videos/portal-donatur.mp4](./videos/portal-donatur.mp4) | Portal donatur: hanya donasi approved miliknya |
+| [videos/kas-kecil-operasional.mp4](./videos/kas-kecil-operasional.mp4) | Kas kecil operasional: buat float → cair DSB → belanja PJ → tutup |
+| [videos/kas-kecil-event.mp4](./videos/kas-kecil-event.mp4) | Kas kecil event: float terikat program → cair → belanja → tutup |
 | [FAQ-DEMO.md](./FAQ-DEMO.md) | FAQ + cheat sheet presenter |
 | [generate_pptx.py](./generate_pptx.py) | Script regenerasi PPT |
 
@@ -28,6 +30,13 @@ Rekaman memakai Playwright (bukan suite E2E CI). Membutuhkan `ffmpeg`.
 cd frontend
 npx playwright install chromium
 npm run demo:videos
+```
+
+Hanya kas kecil (operasional + event):
+
+```bash
+cd frontend
+npm run demo:petty-cash-video
 ```
 
 Setelah itu regenerasi PPT agar semua video tertanam.

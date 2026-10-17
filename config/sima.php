@@ -49,6 +49,11 @@ return [
         'grant.view', 'grant.create', 'grant.update',
         'grant.assign', 'grant.verify', 'grant.approve', 'grant.handover',
 
+        // Kas kecil / float (bukan ledger; uang via DSB/RCP tertaut)
+        'petty_cash.view', 'petty_cash.create', 'petty_cash.update',
+        'petty_cash.close', 'petty_cash.topup_request', 'petty_cash.fund',
+        'petty_cash.category.manage',
+
         // Audit, laporan, pengguna, portal
         'audit.view',
         'report.view',
@@ -80,6 +85,8 @@ return [
             'attachment.view', 'attachment.manage',
             'report.view',
             'grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover',
+            'petty_cash.view', 'petty_cash.create', 'petty_cash.update', 'petty_cash.close',
+            'petty_cash.topup_request', 'petty_cash.fund', 'petty_cash.category.manage',
         ],
 
         UserRole::BENDAHARA->value => [
@@ -98,6 +105,8 @@ return [
             'attachment.view', 'attachment.manage',
             'report.view',
             'grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover',
+            'petty_cash.view', 'petty_cash.create', 'petty_cash.update', 'petty_cash.close',
+            'petty_cash.topup_request', 'petty_cash.fund', 'petty_cash.category.manage',
         ],
 
         UserRole::VERIFIKATOR->value => [
@@ -110,12 +119,14 @@ return [
             'attachment.view', 'attachment.manage',
             'report.view',
             'grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover',
+            'petty_cash.view', 'petty_cash.update', 'petty_cash.close', 'petty_cash.topup_request',
         ],
 
         UserRole::PETUGAS_BANTUAN->value => [
             'program.view',
             'attachment.view', 'attachment.manage',
             'grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover',
+            'petty_cash.view', 'petty_cash.update', 'petty_cash.close', 'petty_cash.topup_request',
         ],
 
         UserRole::KETUA->value => [
@@ -130,6 +141,7 @@ return [
             'report.view',
             'grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover',
             'grant.assign', 'grant.approve',
+            'petty_cash.view', 'petty_cash.update', 'petty_cash.close', 'petty_cash.topup_request',
         ],
 
         UserRole::AUDITOR->value => [
@@ -140,6 +152,7 @@ return [
             'opening.view',
             'audit.view', 'report.view',
             'grant.view', 'grant.create', 'grant.update', 'grant.verify', 'grant.handover',
+            'petty_cash.view',
         ],
 
         UserRole::DONATUR->value => [

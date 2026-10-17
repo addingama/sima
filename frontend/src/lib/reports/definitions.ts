@@ -1,3 +1,7 @@
+import { createElement } from "react";
+
+import Link from "next/link";
+
 import { apiGet } from "@/lib/api/client";
 import {
   currencyColumn,
@@ -13,6 +17,7 @@ import {
   fetchGrantApplicationReport,
   fetchLedgerReport,
   fetchOpeningBalanceReport,
+  fetchPettyCashReport,
   fetchReportRows,
 } from "@/lib/reports/fetch-helpers";
 import type { ReportDef } from "@/lib/reports/types";
@@ -514,6 +519,69 @@ export const auditReport: ReportDef = {
   fetchData: (params) => fetchReportRows("/audits", { ...params, sort: "created_at", direction: "desc" }),
 };
 
+export const pettyCashReport: ReportDef = {
+  id: "petty-cash",
+  title: "Kas Kecil",
+  description:
+    "Rekapan keluar bendahara per float/event/PJ. Klik nomor float untuk drill-down ke detail baris belanja PJ.",
+  path: "/dashboard/reports/kas-kecil",
+  paginated: false,
+  permission: "report.view",
+  columns: [
+    {
+      id: "float_number",
+      header: "No. Float",
+      cell: ({ row }) => {
+        const id = row.original.id;
+        const number = String(row.original.float_number ?? "-");
+        if (!id) return number;
+        return createElement(
+          Link,
+          { href: `/dashboard/kas-kecil/${id}`, className: "text-primary underline-offset-4 hover:underline" },
+          number,
+        );
+      },
+    },
+    textColumn("title", "Judul"),
+    textColumn("purpose_label", "Tujuan"),
+    textColumn("custodian_name", "PJ"),
+    textColumn("program_name", "Program"),
+    textColumn("status", "Status"),
+    currencyColumn("funded_total", "Keluar Bendahara"),
+    currencyColumn("spent_total", "Belanja PJ"),
+    currencyColumn("returned_total", "Kembalian"),
+    currencyColumn("outstanding_total", "Outstanding"),
+    textColumn("topup_count", "Top-up"),
+  ],
+  filters: [
+    { name: "from", label: "Dari Tanggal", type: "date" },
+    { name: "to", label: "Sampai Tanggal", type: "date" },
+    {
+      name: "purpose",
+      label: "Tujuan",
+      type: "select",
+      allLabel: "Semua",
+      options: [
+        { value: "operational", label: "Operasional" },
+        { value: "event", label: "Event" },
+      ],
+    },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      allLabel: "Semua status",
+      options: [
+        { value: "draft", label: "Draft" },
+        { value: "reporting", label: "Reporting" },
+        { value: "closed", label: "Closed" },
+        { value: "cancelled", label: "Cancelled" },
+      ],
+    },
+  ],
+  fetchData: fetchPettyCashReport,
+};
+
 export const allReports = [
   fundBalancesReport,
   fundMutationReport,
@@ -524,6 +592,7 @@ export const allReports = [
   byDonorReport,
   byVendorReport,
   grantApplicationReport,
+  pettyCashReport,
   openingBalanceReport,
   approvalReport,
   auditReport,

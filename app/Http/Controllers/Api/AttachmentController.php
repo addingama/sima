@@ -13,6 +13,7 @@ use App\Models\BankFee;
 use App\Models\Disbursement;
 use App\Models\GrantApplication;
 use App\Models\OperationalLiability;
+use App\Models\PettyCashLine;
 use App\Models\Receipt;
 use App\Services\AttachmentFileService;
 use Illuminate\Database\Eloquent\Model;
@@ -30,6 +31,7 @@ class AttachmentController extends Controller
         'grant_application' => GrantApplication::class,
         'bank_fee' => BankFee::class,
         'liability' => OperationalLiability::class,
+        'petty_cash_line' => PettyCashLine::class,
     ];
 
     public function __construct(

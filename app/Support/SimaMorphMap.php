@@ -6,6 +6,7 @@ use App\Models\BankFee;
 use App\Models\Disbursement;
 use App\Models\GrantApplication;
 use App\Models\OperationalLiability;
+use App\Models\PettyCashLine;
 use App\Models\Receipt;
 use App\Models\ReceiptAllocation;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -22,6 +23,7 @@ final class SimaMorphMap
             'bank_fee' => BankFee::class,
             'operational_liability' => OperationalLiability::class,
             'receipt_allocation' => ReceiptAllocation::class,
+            'petty_cash_line' => PettyCashLine::class,
         ]);
     }
 }

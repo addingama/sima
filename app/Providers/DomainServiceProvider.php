@@ -22,6 +22,7 @@ use App\Domains\Expense\Listeners\LogExpenseAudit;
 use App\Domains\Expense\Listeners\RecordExpenseApproval;
 use App\Domains\Ledger\Events\LedgerJournalPosted;
 use App\Domains\Ledger\Listeners\VerifyLedgerInvariant;
+use App\Domains\PettyCash\Listeners\SyncPettyCashOnExpenseApproved;
 use App\Domains\Receipt\Events\ReceiptApproved;
 use App\Domains\Receipt\Events\ReceiptCreated;
 use App\Domains\Receipt\Events\ReceiptRejected;
@@ -65,6 +66,7 @@ class DomainServiceProvider extends ServiceProvider
         Event::listen(ExpenseSubmitted::class, [RecordExpenseApproval::class, 'handleSubmitted']);
         Event::listen(ExpenseVerified::class, [RecordExpenseApproval::class, 'handleVerified']);
         Event::listen(ExpenseApproved::class, [RecordExpenseApproval::class, 'handleApproved']);
+        Event::listen(ExpenseApproved::class, SyncPettyCashOnExpenseApproved::class);
         Event::listen(ExpenseRejected::class, [RecordExpenseApproval::class, 'handleRejected']);
         Event::listen(ExpenseReversed::class, [RecordExpenseApproval::class, 'handleReversed']);
 

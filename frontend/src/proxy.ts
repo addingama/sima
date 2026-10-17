@@ -5,7 +5,7 @@ import { AUTH_TOKEN_COOKIE } from "@/lib/auth/constants";
 
 const PUBLIC_PATHS = ["/auth", "/unauthorized"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(AUTH_TOKEN_COOKIE)?.value;
   const isPublic = PUBLIC_PATHS.some((path) => pathname.startsWith(path));

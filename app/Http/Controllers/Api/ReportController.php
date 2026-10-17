@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Domains\PettyCash\Services\PettyCashReportService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GrantApplication\ListGrantApplicationRequest;
 use App\Http\Requests\Report\FundStatementRequest;
 use App\Http\Requests\Report\ListLedgerRequest;
 use App\Http\Requests\Report\ListOpeningBalanceReportRequest;
+use App\Http\Requests\Report\PettyCashReportRequest;
 use App\Http\Requests\Report\ProgramReportRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\GrantApplicationResource;
@@ -20,7 +22,10 @@ use OpenApi\Attributes as OA;
 
 class ReportController extends Controller
 {
-    public function __construct(private readonly ReportService $service) {}
+    public function __construct(
+        private readonly ReportService $service,
+        private readonly PettyCashReportService $pettyCashReports,
+    ) {}
 
     #[OA\Get(
         path: '/reports/fund-balances',
@@ -163,6 +168,24 @@ class ReportController extends Controller
                 'pagination' => ApiResponse::lengthAwareMeta($paginator),
                 'summary' => $result['summary'],
             ],
+        );
+    }
+
+    #[OA\Get(
+        path: '/reports/petty-cash',
+        summary: 'Laporan kas kecil (float)',
+        tags: ['Report'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
+    public function pettyCash(PettyCashReportRequest $request): JsonResponse
+    {
+        $result = $this->pettyCashReports->floats($request->filters());
+
+        return ApiResponse::success(
+            $result['rows'],
+            null,
+            ['summary' => $result['summary']],
         );
     }
 }

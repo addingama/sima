@@ -15,6 +15,9 @@ const targets = [
   { match: /portal-donatur/, basename: "portal-donatur" },
   { match: /instansi|kolektif|air-bersih/, basename: "pengajuan-bantuan-instansi" },
   { match: /rekomendasi-sampai-selesai/, basename: "pengajuan-bantuan" },
+  // Keyword pendek di awal judul tes (Playwright memotong nama folder jika terlalu panjang).
+  { match: /ksk-ops/, basename: "kas-kecil-operasional" },
+  { match: /ksk-event|kas-kecil-event/, basename: "kas-kecil-event" },
 ];
 
 function findVideos(dir) {
@@ -76,11 +79,19 @@ if (!videos.length) {
 mkdirSync(outDir, { recursive: true });
 
 const used = new Set();
+let converted = 0;
 for (const target of targets) {
   const source = videos.find((path) => target.match.test(path) && !used.has(path));
   if (!source) {
-    throw new Error(`Tidak menemukan video untuk ${target.basename} (pola ${target.match}).`);
+    console.warn(`Skip ${target.basename} — tidak ada video.webm yang cocok (pola ${target.match}).`);
+    continue;
   }
   used.add(source);
   convert(source, target.basename);
+  converted += 1;
 }
+
+if (converted === 0) {
+  throw new Error(`Tidak ada video yang dikonversi dari ${resultsDir}.`);
+}
+console.log(`Selesai: ${converted} video → ${outDir}`);

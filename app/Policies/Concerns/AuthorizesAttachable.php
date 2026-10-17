@@ -6,6 +6,7 @@ use App\Models\BankFee;
 use App\Models\Disbursement;
 use App\Models\GrantApplication;
 use App\Models\OperationalLiability;
+use App\Models\PettyCashLine;
 use App\Models\Receipt;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,7 @@ trait AuthorizesAttachable
             $attachable instanceof GrantApplication => $user->can('view', $attachable),
             $attachable instanceof BankFee => $user->can('view', $attachable),
             $attachable instanceof OperationalLiability => $user->can('view', $attachable),
+            $attachable instanceof PettyCashLine => $user->can('view', $attachable->float),
             default => false,
         };
     }
