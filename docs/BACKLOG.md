@@ -101,6 +101,19 @@ Spesifikasi terkunci: [BANTUAN.md](BANTUAN.md). **Jangan implementasi sebelum is
 
 ---
 
+## P2 — Modul kas kecil (float)
+
+Spesifikasi terkunci: [KAS-KECIL.md](KAS-KECIL.md). Branch `feature/petty-cash`.
+
+- [ ] **Spec + domain** — categories, floats, lines, permission, policy, API ([#59](https://github.com/addingama/sima/issues/59))
+- [ ] **Funding multi-DSB** — cair initial → reporting ([#60](https://github.com/addingama/sima/issues/60))
+- [ ] **Top-up** — request PJ + cair tambahan ([#61](https://github.com/addingama/sima/issues/61))
+- [ ] **Tutup + receipt sisa** ([#62](https://github.com/addingama/sima/issues/62))
+- [ ] **Frontend UI + master kategori** ([#63](https://github.com/addingama/sima/issues/63))
+- [ ] **Laporan summary + drill-down** ([#64](https://github.com/addingama/sima/issues/64))
+
+---
+
 ## P2 — Kualitas backend & API
 
 ### Standarisasi (sesuai CLAUDE.md / AGENTS.md)

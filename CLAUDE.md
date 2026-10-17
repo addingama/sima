@@ -13,6 +13,7 @@
 | Aturan permanen + status kode | File ini |
 | Dana / jurnal / rekonsiliasi | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DANA-AMANAH.md](docs/DANA-AMANAH.md) |
 | Pengajuan bantuan | [docs/BANTUAN.md](docs/BANTUAN.md) |
+| Kas kecil (float) | [docs/KAS-KECIL.md](docs/KAS-KECIL.md) |
 | Item terbuka | [docs/BACKLOG.md](docs/BACKLOG.md) |
 | Permission & role | `config/sima.php` |
 | Frontend path | [frontend/AGENTS.md](frontend/AGENTS.md), [docs/FRONTEND-TESTING.md](docs/FRONTEND-TESTING.md) |

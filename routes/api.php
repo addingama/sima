@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\GrantApplicationController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\OpeningBalanceController;
 use App\Http\Controllers\Api\OperationalLiabilityController;
+use App\Http\Controllers\Api\PettyCashCategoryController;
+use App\Http\Controllers\Api\PettyCashFloatController;
 use App\Http\Controllers\Api\PortalController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\ReceiptController;
@@ -151,6 +153,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('grant-applications/{grant_application}/return', [GrantApplicationController::class, 'returnToVerification'])->middleware('permission:grant.view');
     Route::post('grant-applications/{grant_application}/disbursements', [GrantApplicationController::class, 'createDisbursement'])->middleware('permission:disbursement.create');
     Route::post('grant-applications/{grant_application}/complete', [GrantApplicationController::class, 'complete'])->middleware('permission:grant.handover');
+
+    /*
+    |----------------------------------------------------------------------
+    | Kas Kecil (float; bukan ledger)
+    |----------------------------------------------------------------------
+    */
+    Route::get('petty-cash-categories', [PettyCashCategoryController::class, 'index'])->middleware('permission:petty_cash.view');
+    Route::post('petty-cash-categories', [PettyCashCategoryController::class, 'store'])->middleware('permission:petty_cash.category.manage');
+    Route::get('petty-cash-categories/{pettyCashCategory}', [PettyCashCategoryController::class, 'show'])->middleware('permission:petty_cash.view');
+    Route::put('petty-cash-categories/{pettyCashCategory}', [PettyCashCategoryController::class, 'update'])->middleware('permission:petty_cash.category.manage');
+    Route::delete('petty-cash-categories/{pettyCashCategory}', [PettyCashCategoryController::class, 'destroy'])->middleware('permission:petty_cash.category.manage');
+
+    Route::get('petty-cash-floats', [PettyCashFloatController::class, 'index'])->middleware('permission:petty_cash.view');
+    Route::get('petty-cash-floats/custodians', [PettyCashFloatController::class, 'custodians'])->middleware('permission:petty_cash.create');
+    Route::post('petty-cash-floats', [PettyCashFloatController::class, 'store'])->middleware('permission:petty_cash.create');
+    Route::get('petty-cash-floats/{pettyCashFloat}', [PettyCashFloatController::class, 'show'])->middleware('permission:petty_cash.view');
+    Route::put('petty-cash-floats/{pettyCashFloat}', [PettyCashFloatController::class, 'update'])->middleware('permission:petty_cash.update');
+    Route::post('petty-cash-floats/{pettyCashFloat}/cancel', [PettyCashFloatController::class, 'cancel'])->middleware('permission:petty_cash.create');
+    Route::post('petty-cash-floats/{pettyCashFloat}/lines', [PettyCashFloatController::class, 'storeLine'])->middleware('permission:petty_cash.update');
+    Route::put('petty-cash-floats/{pettyCashFloat}/lines/{pettyCashLine}', [PettyCashFloatController::class, 'updateLine'])->middleware('permission:petty_cash.update');
+    Route::delete('petty-cash-floats/{pettyCashFloat}/lines/{pettyCashLine}', [PettyCashFloatController::class, 'destroyLine'])->middleware('permission:petty_cash.update');
 
     /*
     |----------------------------------------------------------------------
