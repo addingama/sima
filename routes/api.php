@@ -273,6 +273,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('by-program', [ReportController::class, 'byProgram']);
         Route::get('opening-balances', [ReportController::class, 'openingBalances']);
         Route::get('grant-applications', [ReportController::class, 'grantApplications']);
+        Route::get('petty-cash', [ReportController::class, 'pettyCash']);
     });
 
     /*

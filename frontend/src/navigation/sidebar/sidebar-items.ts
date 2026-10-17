@@ -303,6 +303,13 @@ export const sidebarItems: NavGroup[] = [
             permission: "report.view",
           },
           {
+            id: "reports-kas-kecil",
+            title: "Kas Kecil",
+            url: "/dashboard/reports/kas-kecil",
+            icon: PiggyBank,
+            permission: "report.view",
+          },
+          {
             id: "report-opening-balances",
             title: "Saldo Awal",
             url: "/dashboard/reports/opening-balances",

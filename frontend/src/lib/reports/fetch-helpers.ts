@@ -51,6 +51,15 @@ function flattenGrantReportRow(row: Record<string, unknown>): Record<string, unk
   };
 }
 
+export async function fetchPettyCashReport(params: ListParams): Promise<ReportFetchResult> {
+  const response = await apiGet<Array<Record<string, unknown>>>("/reports/petty-cash", params);
+
+  return {
+    rows: response.data,
+    summary: response.meta?.summary as Record<string, unknown> | undefined,
+  };
+}
+
 export async function fetchGrantApplicationReport(params: ListParams): Promise<ReportFetchResult> {
   const response = await apiGet<Array<Record<string, unknown>>>("/reports/grant-applications", {
     ...params,
