@@ -144,7 +144,7 @@ Spesifikasi terkunci: [KAS-KECIL.md](KAS-KECIL.md). Branch `feature/petty-cash`.
 - [ ] **Bahasa UI** — label `Restricted`/`Submitted` → Indonesia bila diinginkan organisasi
 - [x] **Role & menu Pengaturan** — sub-menu Users serta pengelolaan permission role oleh admin ([#46](https://github.com/addingama/sima/issues/46))
 - [ ] **Hapus/arsip template legacy dashboard** — `(legacy)/analytics-v1`, `crm-v1`, dll. jika tidak dipakai SIMA
-- [ ] **Build CI** — pastikan middleware Next.js (`proxy` vs deprecated `middleware`) di-upgrade saat stabil
+- [x] **Build CI** — middleware Next.js diganti ke `proxy` (`frontend/src/proxy.ts`)
 
 ---
 

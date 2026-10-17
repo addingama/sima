@@ -110,7 +110,7 @@ function AddLineForm({ floatId, onSuccess }: { floatId: number; onSuccess: () =>
             <RelationSelect
               resource="/petty-cash-categories"
               labelKey="name"
-              params={{ active_only: 1, per_page: 100 }}
+              params={{ active_only: true, per_page: 100 }}
               value={field.value}
               onChange={field.onChange}
               placeholder="Pilih kategori..."
@@ -138,7 +138,11 @@ function AddLineForm({ floatId, onSuccess }: { floatId: number; onSuccess: () =>
 
       <Field>
         <FieldLabel>Keterangan</FieldLabel>
-        <Input {...form.register("description")} placeholder="Keterangan belanja" />
+        <Controller
+          control={form.control}
+          name="description"
+          render={({ field }) => <Input {...field} placeholder="Keterangan belanja" />}
+        />
         <FieldError>{form.formState.errors.description?.message}</FieldError>
       </Field>
 

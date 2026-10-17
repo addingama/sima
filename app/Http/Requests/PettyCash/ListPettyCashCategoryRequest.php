@@ -27,7 +27,11 @@ class ListPettyCashCategoryRequest extends FormRequest
 
     public function listQuery(): ListQueryDto
     {
-        return ListQueryDto::fromValidated($this->validated());
+        $validated = $this->validated();
+        // active_only adalah flag service, bukan kolom — jangan masuk filters ListQueryApplier.
+        unset($validated['active_only']);
+
+        return ListQueryDto::fromValidated($validated);
     }
 
     public function activeOnly(): bool

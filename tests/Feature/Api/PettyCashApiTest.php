@@ -58,6 +58,30 @@ class PettyCashApiTest extends TestCase
     }
 
     #[Test]
+    public function list_categories_with_active_only_does_not_query_missing_column(): void
+    {
+        $this->actingAsRole('petugas_bantuan');
+
+        PettyCashCategory::query()->create([
+            'code' => 'ATK',
+            'name' => 'ATK',
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+        PettyCashCategory::query()->create([
+            'code' => 'OLD',
+            'name' => 'Lama',
+            'is_active' => false,
+            'sort_order' => 99,
+        ]);
+
+        $this->getJson('/api/petty-cash-categories?active_only=1&per_page=100')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.code', 'ATK');
+    }
+
+    #[Test]
     public function bendahara_creates_operational_float_for_existing_role_custodian(): void
     {
         $bendahara = $this->actingAsRole('bendahara');

@@ -10,6 +10,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "demo:grant-video": "playwright test --config=playwright.demo.config.ts && node e2e/demo/export-video.mjs",
+    "demo:petty-cash-video": "playwright test --config=playwright.demo.config.ts e2e/demo/petty-cash-flow.spec.ts && node e2e/demo/export-video.mjs",
     "demo:videos": "playwright test --config=playwright.demo.config.ts && node e2e/demo/export-video.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
