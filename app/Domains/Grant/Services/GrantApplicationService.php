@@ -86,16 +86,20 @@ class GrantApplicationService
         private readonly GrantApplicationValidator $validator,
         private readonly DocumentNumberService $numbers,
         private readonly ExpenseService $expenses,
+        private readonly GrantRecipientDuplicateFinder $nameMatches,
     ) {}
 
     public function paginate(ListQueryDto $query, User $viewer): LengthAwarePaginator
     {
-        return $this->repository->paginate($query, $viewer);
+        $page = $this->repository->paginate($query, $viewer);
+        $this->nameMatches->attach($page->getCollection(), $viewer);
+
+        return $page;
     }
 
     public function findForShow(GrantApplication $grant): GrantApplication
     {
-        return $grant->load([
+        $grant->load([
             'assignedVerifier:id,name',
             'assignedHandover:id,name',
             'program:id,code,name',
@@ -104,6 +108,13 @@ class GrantApplicationService
             'disbursement:id,disbursement_number,status,amount,payee,account_id',
             'attachments',
         ]);
+
+        $viewer = auth()->user();
+        if ($viewer instanceof User) {
+            $this->nameMatches->attach([$grant], $viewer);
+        }
+
+        return $grant;
     }
 
     public function create(array $data, User $actor): GrantApplication

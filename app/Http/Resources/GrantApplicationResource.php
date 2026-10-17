@@ -12,6 +12,10 @@ class GrantApplicationResource extends JsonResource
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
+        $nameMatch = is_array($this->resource->nameMatchSummary ?? null)
+            ? $this->resource->nameMatchSummary
+            : null;
+
         return [
             'id' => $this->id,
             'application_number' => $this->application_number,
@@ -67,6 +71,9 @@ class GrantApplicationResource extends JsonResource
             'handover_recipient_name' => $this->handover_recipient_name,
             'handover_recipient_notes' => $this->handover_recipient_notes,
             'created_by' => $this->created_by,
+            'name_match_warning' => $nameMatch['warning'] ?? false,
+            'name_matches' => $nameMatch['matches'] ?? [],
+            'completed_assistance_count' => $nameMatch['completed_assistance_count'] ?? 0,
             'program' => ProgramResource::make($this->whenLoaded('program')),
             'assigned_verifier' => $this->whenLoaded('assignedVerifier', fn () => $this->assignedVerifier === null ? null : [
                 'id' => $this->assignedVerifier->id,

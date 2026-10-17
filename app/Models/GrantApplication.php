@@ -24,6 +24,13 @@ class GrantApplication extends Model implements Auditable
 
     public const ATTACHMENT_HANDOVER = 'handover';
 
+    /**
+     * Ringkasan kecocokan nama penerima. Diisi saat baca, tidak disimpan.
+     *
+     * @var array{warning: bool, matches: list<array<string, mixed>>, completed_assistance_count: int}|null
+     */
+    public ?array $nameMatchSummary = null;
+
     protected $fillable = [
         'application_number',
         'status',

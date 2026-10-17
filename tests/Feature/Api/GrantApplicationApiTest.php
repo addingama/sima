@@ -61,6 +61,131 @@ class GrantApplicationApiTest extends TestCase
     }
 
     #[Test]
+    public function same_recipient_name_flags_other_applications_for_the_verifier(): void
+    {
+        $officer = $this->actingAsRole('petugas_bantuan');
+        $mine = GrantApplication::factory()->create([
+            'recipient_name' => 'Siti  Aminah',
+            'reason' => 'Biaya berobat',
+            'recipient_identity_number' => '3201',
+            'status' => GrantApplicationStatus::DRAFT,
+            'created_by' => $officer->id,
+        ]);
+        $otherOfficer = $this->makeUser('petugas_bantuan');
+        $queued = GrantApplication::factory()->create([
+            'recipient_name' => 'siti aminah',
+            'reason' => 'Modal usaha',
+            'recipient_identity_number' => '9999',
+            'status' => GrantApplicationStatus::VERIFICATION,
+            'created_by' => $otherOfficer->id,
+        ]);
+        $completed = GrantApplication::factory()->create([
+            'recipient_name' => 'SITI AMINAH',
+            'reason' => 'Sembako',
+            'recipient_identity_number' => '3201',
+            'status' => GrantApplicationStatus::COMPLETED,
+            'created_by' => $otherOfficer->id,
+        ]);
+        GrantApplication::factory()->create([
+            'recipient_name' => 'Siti Aminah',
+            'reason' => 'Tidak dilanjutkan',
+            'status' => GrantApplicationStatus::REJECTED,
+            'created_by' => $otherOfficer->id,
+        ]);
+        GrantApplication::factory()->create([
+            'recipient_name' => 'Budi Santoso',
+            'status' => GrantApplicationStatus::DRAFT,
+            'created_by' => $otherOfficer->id,
+        ]);
+
+        $response = $this->getJson("/api/grant-applications/{$mine->id}")
+            ->assertOk()
+            ->assertJsonPath('data.name_match_warning', true)
+            ->assertJsonPath('data.completed_assistance_count', 1);
+
+        $matches = collect($response->json('data.name_matches'));
+        $this->assertCount(2, $matches);
+
+        $queuedMatch = $matches->firstWhere('id', $queued->id);
+        $this->assertSame('different', $queuedMatch['nik_relation']);
+        $this->assertSame('Modal usaha', $queuedMatch['reason']);
+        $this->assertSame('verification', $queuedMatch['status']);
+        $this->assertFalse($queuedMatch['viewable']);
+
+        $completedMatch = $matches->firstWhere('id', $completed->id);
+        $this->assertSame('same', $completedMatch['nik_relation']);
+        $this->assertSame('completed', $completedMatch['status']);
+        $this->assertSame('Sembako', $completedMatch['reason']);
+
+        $this->actingAsRole('admin');
+        $this->getJson("/api/grant-applications/{$mine->id}")
+            ->assertOk()
+            ->assertJsonPath('data.name_matches.0.viewable', true)
+            ->assertJsonPath('data.name_matches.1.viewable', true);
+    }
+
+    #[Test]
+    public function recipient_name_match_stays_unknown_when_identity_number_is_missing(): void
+    {
+        $officer = $this->actingAsRole('petugas_bantuan');
+        $mine = GrantApplication::factory()->create([
+            'recipient_name' => 'Ahmad',
+            'recipient_identity_number' => null,
+            'status' => GrantApplicationStatus::DRAFT,
+            'created_by' => $officer->id,
+        ]);
+        GrantApplication::factory()->create([
+            'recipient_name' => 'Ahmad',
+            'recipient_identity_number' => '3201010101010001',
+            'status' => GrantApplicationStatus::APPROVED,
+            'created_by' => $officer->id,
+        ]);
+
+        $this->getJson("/api/grant-applications/{$mine->id}")
+            ->assertOk()
+            ->assertJsonPath('data.name_match_warning', true)
+            ->assertJsonPath('data.completed_assistance_count', 0)
+            ->assertJsonPath('data.name_matches.0.nik_relation', 'unknown');
+    }
+
+    #[Test]
+    public function different_or_blank_recipient_names_are_not_flagged(): void
+    {
+        $officer = $this->actingAsRole('petugas_bantuan');
+        $named = GrantApplication::factory()->create([
+            'recipient_name' => 'Ahmad',
+            'status' => GrantApplicationStatus::DRAFT,
+            'created_by' => $officer->id,
+        ]);
+        GrantApplication::factory()->create([
+            'recipient_name' => 'Ahmad Yani',
+            'status' => GrantApplicationStatus::COMPLETED,
+            'created_by' => $officer->id,
+        ]);
+        $blank = GrantApplication::factory()->create([
+            'recipient_name' => '   ',
+            'status' => GrantApplicationStatus::DRAFT,
+            'created_by' => $officer->id,
+        ]);
+        GrantApplication::factory()->create([
+            'recipient_name' => ' ',
+            'status' => GrantApplicationStatus::DRAFT,
+            'created_by' => $officer->id,
+        ]);
+
+        $this->getJson("/api/grant-applications/{$named->id}")
+            ->assertOk()
+            ->assertJsonPath('data.name_match_warning', false)
+            ->assertJsonPath('data.name_matches', [])
+            ->assertJsonPath('data.completed_assistance_count', 0);
+
+        $this->getJson("/api/grant-applications/{$blank->id}")
+            ->assertOk()
+            ->assertJsonPath('data.name_match_warning', false)
+            ->assertJsonCount(0, 'data.name_matches');
+    }
+
+    #[Test]
     public function asisten_is_automatically_assigned_as_verifier_and_handover_officer(): void
     {
         $asisten = $this->actingAsRole('asisten_bendahara');
