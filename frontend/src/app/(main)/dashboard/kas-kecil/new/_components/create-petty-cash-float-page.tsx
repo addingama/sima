@@ -128,7 +128,8 @@ export default function CreatePettyCashFloatPage() {
                     params={{ per_page: 100 }}
                     value={field.value}
                     onChange={field.onChange}
-                    placeholder="Pilih PJ..."
+                    placeholder="Cari nama PJ..."
+                    searchable
                   />
                 )}
               />
@@ -148,7 +149,9 @@ export default function CreatePettyCashFloatPage() {
                       params={{ is_active: 1, per_page: 100 }}
                       value={field.value ?? ""}
                       onChange={field.onChange}
-                      placeholder="Pilih event..."
+                      placeholder="Cari event / program..."
+                      searchable
+                      allowClear
                     />
                   )}
                 />
