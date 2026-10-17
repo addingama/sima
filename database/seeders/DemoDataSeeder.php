@@ -6,13 +6,24 @@ use App\Domains\Expense\Services\BankFeeService;
 use App\Domains\Expense\Services\ExpenseService;
 use App\Domains\Ledger\Services\BalanceService;
 use App\Domains\Opening\Services\OpeningBalanceService;
+use App\Domains\PettyCash\Services\PettyCashCategoryService;
+use App\Domains\PettyCash\Services\PettyCashCloseService;
+use App\Domains\PettyCash\Services\PettyCashFloatService;
+use App\Domains\PettyCash\Services\PettyCashFundingService;
+use App\Domains\PettyCash\Services\PettyCashTopupService;
 use App\Domains\Receipt\Services\ReceiptService;
 use App\Domains\Reconciliation\Services\ReconciliationService;
 use App\Domains\Transfer\Services\TransferService;
+use App\Enums\PettyCashFloatPurpose;
+use App\Enums\PettyCashFundingKind;
 use App\Enums\UserRole;
 use App\Models\Account;
+use App\Models\Disbursement;
 use App\Models\Donor;
 use App\Models\Fund;
+use App\Models\PettyCashCategory;
+use App\Models\PettyCashFloat;
+use App\Models\Program;
 use App\Models\User;
 use App\Services\Master\AccountService;
 use App\Services\Master\DonorService;
@@ -48,6 +59,11 @@ class DemoDataSeeder extends Seeder
         ReconciliationService $reconciliations,
         OperationalLiabilityService $liabilities,
         BalanceService $balances,
+        PettyCashFloatService $pettyFloats,
+        PettyCashFundingService $pettyFundings,
+        PettyCashTopupService $pettyTopups,
+        PettyCashCloseService $pettyCloser,
+        PettyCashCategoryService $pettyCategories,
     ): void {
         if (Account::query()->where('code', self::MARKER_ACCOUNT_CODE)->exists()) {
             throw new RuntimeException(
@@ -61,6 +77,9 @@ class DemoDataSeeder extends Seeder
         $bendahara = User::role(UserRole::BENDAHARA->value)->first() ?? $admin;
         $verifikator = User::role(UserRole::VERIFIKATOR->value)->first() ?? $admin;
         $ketua = User::role(UserRole::KETUA->value)->first() ?? $admin;
+        $pj = User::role(UserRole::PETUGAS_BANTUAN->value)->first()
+            ?? User::role(UserRole::VERIFIKATOR->value)->first()
+            ?? $bendahara;
 
         $this->command?->info('Membuat master data demo…');
 
@@ -302,6 +321,24 @@ class DemoDataSeeder extends Seeder
             'notes' => '[Demo] Draft rekonsiliasi — selisih 0 (statement = sistem)',
         ], $bendahara);
 
+        $this->command?->info('Kas kecil (kategori, float operasional/event, top-up, tutup)…');
+        $this->seedPettyCashDemo(
+            $pettyFloats,
+            $pettyFundings,
+            $pettyTopups,
+            $pettyCloser,
+            $pettyCategories,
+            $expenses,
+            $bendahara,
+            $verifikator,
+            $ketua,
+            $pj,
+            $bca,
+            $umum,
+            $yatim,
+            $program,
+        );
+
         // Keep intentional mid-pipeline drafts for UI queues.
         unset($receiptDraft, $expenseDraft, $vendorPrint);
 
@@ -321,6 +358,174 @@ class DemoDataSeeder extends Seeder
 
         $this->command?->info('Portal donatur: login donatur@sima.test / password (tertaut ke Budi Santoso).');
         $this->command?->info('Antrian Approval: 1 penerimaan submitted, 1 pengeluaran submitted, 1 verified.');
+        $this->command?->info('Kas Kecil: login petugas.bantuan@sima.test / password sebagai PJ (float reporting + top-up pending).');
+    }
+
+    private function seedPettyCashDemo(
+        PettyCashFloatService $pettyFloats,
+        PettyCashFundingService $pettyFundings,
+        PettyCashTopupService $pettyTopups,
+        PettyCashCloseService $pettyCloser,
+        PettyCashCategoryService $pettyCategories,
+        ExpenseService $expenses,
+        User $bendahara,
+        User $verifikator,
+        User $ketua,
+        User $pj,
+        Account $bca,
+        Fund $umum,
+        Fund $yatim,
+        Program $program,
+    ): void {
+        $this->call(PettyCashCategorySeeder::class);
+
+        $internet = PettyCashCategory::query()->where('code', 'INTERNET')->firstOrFail();
+        $atk = PettyCashCategory::query()->where('code', 'ATK')->firstOrFail();
+        $transport = PettyCashCategory::query()->where('code', 'TRANSPORT')->firstOrFail();
+        $konsumsi = PettyCashCategory::query()->where('code', 'KONSUMSI')->firstOrFail();
+
+        // Ensure demo-friendly labels exist even if seeder already ran with defaults.
+        $pettyCategories->update($internet, ['name' => 'Internet & Pulsa']);
+
+        // 1) Float operasional bulanan — reporting + baris + top-up pending
+        $opsFloat = $pettyFloats->create([
+            'title' => '[Demo] Operasional Tim Lapangan — '.now()->translatedFormat('F Y'),
+            'purpose' => PettyCashFloatPurpose::OPERATIONAL->value,
+            'custodian_user_id' => $pj->id,
+            'period_start' => now()->startOfMonth()->toDateString(),
+            'period_end' => now()->endOfMonth()->toDateString(),
+            'notes' => 'Anggaran bulanan internet, ATK, transport PJ lapangan.',
+        ], $bendahara);
+
+        $this->fundAndApprovePettyCash(
+            $pettyFundings,
+            $expenses,
+            $opsFloat,
+            $bendahara,
+            $verifikator,
+            $ketua,
+            $bca,
+            $umum,
+            '750000.00',
+            PettyCashFundingKind::INITIAL,
+            '[Demo] Cair operasional kas kecil',
+        );
+
+        $opsFloat->refresh();
+        $pettyFloats->addLine($opsFloat, [
+            'category_id' => $internet->id,
+            'spent_on' => now()->subDays(5)->toDateString(),
+            'amount' => '150000.00',
+            'description' => '[Demo] Tagihan internet kantor lapangan',
+        ], $pj);
+        $pettyFloats->addLine($opsFloat, [
+            'category_id' => $atk->id,
+            'spent_on' => now()->subDays(3)->toDateString(),
+            'amount' => '85000.00',
+            'description' => '[Demo] ATK (kertas, tinta)',
+        ], $pj);
+        $pettyFloats->addLine($opsFloat, [
+            'category_id' => $transport->id,
+            'spent_on' => now()->subDay()->toDateString(),
+            'amount' => '120000.00',
+            'description' => '[Demo] Bensin & ojek survey mustahik',
+        ], $pj);
+
+        $pettyTopups->request(
+            $opsFloat->refresh(),
+            '200000.00',
+            '[Demo] Sisa hampir habis — minta top-up untuk tagihan internet sisa bulan',
+            $pj,
+        );
+
+        // 2) Float event — funded, belanja, lalu ditutup dengan sisa dikembalikan
+        $eventFloat = $pettyFloats->create([
+            'title' => '[Demo] Event Bakti Sosial Ramadan',
+            'purpose' => PettyCashFloatPurpose::EVENT->value,
+            'custodian_user_id' => $pj->id,
+            'program_id' => $program->id,
+            'period_start' => now()->subDays(14)->toDateString(),
+            'period_end' => now()->subDays(2)->toDateString(),
+            'notes' => 'Float event terpisah dari operasional bulanan.',
+        ], $bendahara);
+
+        $this->fundAndApprovePettyCash(
+            $pettyFundings,
+            $expenses,
+            $eventFloat,
+            $bendahara,
+            $verifikator,
+            $ketua,
+            $bca,
+            $yatim,
+            '500000.00',
+            PettyCashFundingKind::INITIAL,
+            '[Demo] Cair event bakti sosial',
+        );
+
+        $eventFloat->refresh();
+        $pettyFloats->addLine($eventFloat, [
+            'category_id' => $konsumsi->id,
+            'spent_on' => now()->subDays(10)->toDateString(),
+            'amount' => '275000.00',
+            'description' => '[Demo] Konsumsi panitia & penerima',
+        ], $pj);
+        $pettyFloats->addLine($eventFloat, [
+            'category_id' => $transport->id,
+            'spent_on' => now()->subDays(9)->toDateString(),
+            'amount' => '125000.00',
+            'description' => '[Demo] Sewa angkutan distribusi paket',
+        ], $pj);
+
+        $pettyCloser->close($eventFloat->refresh(), [
+            'returned_amount' => '100000.00',
+            'account_id' => $bca->id,
+            'receipt_date' => now()->subDays(2)->toDateString(),
+        ], $pj);
+
+        // 3) Float draft — menunggu cair bendahara
+        $pettyFloats->create([
+            'title' => '[Demo] Operasional Tim B — menunggu cair',
+            'purpose' => PettyCashFloatPurpose::OPERATIONAL->value,
+            'custodian_user_id' => $pj->id,
+            'period_start' => now()->startOfMonth()->toDateString(),
+            'period_end' => now()->endOfMonth()->toDateString(),
+            'notes' => 'Draft float — bendahara belum mencairkan DSB.',
+        ], $bendahara);
+    }
+
+    private function fundAndApprovePettyCash(
+        PettyCashFundingService $pettyFundings,
+        ExpenseService $expenses,
+        PettyCashFloat $float,
+        User $bendahara,
+        User $verifikator,
+        User $ketua,
+        Account $account,
+        Fund $fund,
+        string $amount,
+        PettyCashFundingKind $kind,
+        string $description,
+    ): void {
+        $pettyFundings->createDisbursement(
+            $float->load('custodian'),
+            [
+                'amount' => $amount,
+                'disbursement_date' => now()->subDays(8)->toDateString(),
+                'account_id' => $account->id,
+                'description' => $description,
+            ],
+            [['fund_id' => $fund->id, 'amount' => $amount]],
+            $bendahara,
+            $kind,
+        );
+
+        $disbursementId = $float->fresh()->fundings()->latest('id')->firstOrFail()->disbursement_id;
+        $disbursement = Disbursement::query()->findOrFail($disbursementId);
+
+        $expenses->submit($disbursement, $bendahara);
+        $expenses->verify($disbursement->refresh(), $verifikator);
+        $expenses->approve($disbursement->refresh(), $ketua, 'Disetujui (data demo kas kecil)');
     }
 
     private function ensureDonaturUser(): User

@@ -3,6 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Donor;
+use App\Models\PettyCashFloat;
+use App\Models\PettyCashLine;
+use App\Models\PettyCashTopupRequest;
+use App\Models\Receipt;
 use App\Models\User;
 use Database\Seeders\DemoDataSeeder;
 use Database\Seeders\UserSeeder;
@@ -41,6 +45,19 @@ class DemoDataSeederTest extends TestCase
         $this->assertDatabaseHas('account_transfers', ['status' => 'posted']);
         $this->assertDatabaseHas('operational_liabilities', ['status' => 'outstanding']);
         $this->assertDatabaseHas('bank_reconciliations', ['status' => 'draft']);
+
+        $this->assertDatabaseHas('petty_cash_categories', ['code' => 'INTERNET']);
+        $this->assertDatabaseHas('petty_cash_floats', ['status' => 'draft']);
+        $this->assertDatabaseHas('petty_cash_floats', ['status' => 'reporting']);
+        $this->assertDatabaseHas('petty_cash_floats', ['status' => 'closed']);
+        $this->assertDatabaseHas('petty_cash_fundings', ['kind' => 'initial']);
+        $this->assertGreaterThanOrEqual(5, PettyCashLine::query()->count());
+        $this->assertDatabaseHas('petty_cash_topup_requests', ['status' => 'pending']);
+        $this->assertSame(3, PettyCashFloat::query()->count());
+        $this->assertTrue(
+            Receipt::query()->where('description', 'like', 'Kembalian kas kecil%')->exists()
+        );
+        $this->assertTrue(PettyCashTopupRequest::query()->where('status', 'pending')->exists());
 
         $donatur = User::where('email', 'donatur@sima.test')->first();
         $this->assertNotNull($donatur);
