@@ -197,8 +197,9 @@ Format sama dengan `config/sima.php`: `modul.aksi`.
 | Verifikator | Kartu verifikasi **assigned ke saya** + (opsional toggle) yang pernah saya tangani |
 | Petugas serah terima | Kartu serah terima **assigned ke saya** + (opsional toggle) yang pernah saya tangani |
 | Pemegang `grant.assign`, ketua, bendahara, admin, auditor | Semua kartu sesuai kebutuhan tugas |
+| User yang disebut di komentar | Kartu tempat ia disebut. Akses lihat ini permanen dan tidak memberi hak ubah, assign, approve, atau serah terima |
 
-Koordinator = admin atau ketua (`grant.assign` + lihat semua). Kartu belum di-assign terlihat oleh pemegang `grant.assign`, bukan oleh verifikator lain.
+Koordinator = admin atau ketua (`grant.assign` + lihat semua). Kartu belum di-assign terlihat oleh pemegang `grant.assign`, bukan oleh verifikator lain. User internal aktif yang punya `grant.view` boleh disebut; `donatur` dan akun nonaktif tidak bisa. Sekali disebut, baris `grant_application_accesses` tetap ada meskipun komentar diedit atau dihapus.
 
 ### Pemetaan role existing
 
@@ -248,7 +249,12 @@ Invariant:
 - Kartu ringkas (jenis/nama penerima, nomor, nominal; verifikator dan petugas serah terima jika ada). Kolom discroll vertikal.
 - Nama penerima yang sama dengan kartu lain (bukan Ditolak) menampilkan flag **Nama sama**. Bantuan berulang tetap boleh, tujuan sama atau berbeda. Flag ini untuk verifikator memvalidasi orang dan tujuannya, bukan untuk menahan alur. Kartu Selesai dengan nama yang sama juga dihitung sebagai **Sudah dibantu N kali**. NIK yang berbeda atau kosong tidak menyembunyikan flag.
 - Drag hanya untuk transisi yang diizinkan; gagal jika syarat field belum lengkap (pesan jelas).
-- Detail kartu = formulir + lampiran + riwayat assignment/keputusan.
+- Detail kartu = formulir + lampiran + riwayat assignment/keputusan + utas komentar.
+- Komentar ada di detail, bukan di papan. Kartu Kanban hanya menampilkan jumlah komentar.
+- Mengetik `@` menyebut user internal aktif yang punya `grant.view`. Token tersimpan sebagai `@[user:ID]`; nama dibaca dari `users`.
+- Sekali disebut, user itu bisa melihat kartu. Daftar akses mention tampil di detail.
+- Setiap komentar baru memberitahu pengaju, verifikator assigned, dan petugas serah terima assigned lewat lonceng in-app. Yang disebut mendapat notifikasi `grant_mention` (satu baris, tidak digabung dengan notifikasi peserta). Penulis tidak diberitahu. Role yang melihat semua kartu tidak diberitahu kecuali mereka peserta atau disebut.
+- Mengedit komentar hanya memberitahu mention yang baru. Notifikasi dipolling; klik lonceng membuka `/dashboard/bantuan/{id}#komentar`.
 
 Demo template `/dashboard/kanban` **bukan** fondasi modul ini (data dummy).
 
@@ -306,8 +312,9 @@ Sampai merge: branch `feature/grant-applications`, PR #44.
 | Laporan | `ReportService::grantApplications`, `GET /api/reports/grant-applications` |
 | Kanban UI | `frontend/src/app/(main)/dashboard/bantuan/` |
 | Laporan UI | `frontend/src/app/(main)/dashboard/reports/bantuan/` + `frontend/src/lib/reports/definitions.ts` |
-| Tes | `tests/Feature/Api/GrantApplicationApiTest.php`, `GrantApplicationReportTest.php` |
-| Tes UI | **tidak ada** |
+| Komentar + mention | `GrantApplicationCommentService`, `GET/POST /api/grant-applications/{id}/comments`, `GET /api/notifications` |
+| Tes | `tests/Feature/Api/GrantApplicationApiTest.php`, `GrantApplicationCommentApiTest.php`, `GrantApplicationReportTest.php` |
+| Tes UI | `grant-comments.test.tsx`, `notification-bell.test.tsx` |
 
 Keputusan implementasi yang mudah terlewat:
 

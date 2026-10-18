@@ -12,6 +12,8 @@ use Database\Factories\GrantApplicationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
 
@@ -140,6 +142,24 @@ class GrantApplication extends Model implements Auditable
     public function handedOverBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'handed_over_by');
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(GrantApplicationComment::class);
+    }
+
+    public function mentionAccesses(): HasMany
+    {
+        return $this->hasMany(GrantApplicationAccess::class);
+    }
+
+    public function mentionAccessUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'grant_application_accesses')
+            ->withPivot('source')
+            ->wherePivot('source', GrantApplicationAccess::SOURCE_MENTION)
+            ->orderBy('users.name');
     }
 
     public function hasIdentityDocument(): bool
