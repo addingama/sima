@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,41 +11,16 @@ import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiGet, apiPost } from "@/lib/api/client";
-
-export type AppNotification = {
-  id: string;
-  kind: string | null;
-  grant_application_id: number | null;
-  application_number: string | null;
-  comment_id: number | null;
-  actor_name: string | null;
-  excerpt: string | null;
-  read_at: string | null;
-  created_at: string | null;
-};
-
-function notificationText(item: AppNotification): string {
-  const actor = item.actor_name ?? "Seseorang";
-  const number = item.application_number ?? "pengajuan";
-
-  if (item.kind === "grant_mention") {
-    return `${actor} menyebut Anda di ${number}`;
-  }
-
-  if (item.kind === "grant_comment") {
-    return `${actor} berkomentar di ${number}`;
-  }
-
-  return `${actor} mengirim notifikasi`;
-}
+import { type AppNotification, notificationText, notificationTime } from "@/lib/notifications";
 
 export function NotificationBell() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
   const notifications = useQuery({
-    queryKey: ["/notifications"],
+    queryKey: ["/notifications", "preview"],
     queryFn: async () => {
-      const response = await apiGet<AppNotification[]>("/notifications");
+      const response = await apiGet<AppNotification[]>("/notifications", { per_page: 8 });
 
       return {
         items: response.data,
@@ -55,19 +33,26 @@ export function NotificationBell() {
 
   const unread = notifications.data?.unread ?? 0;
 
-  const open = async (item: AppNotification) => {
+  const openItem = async (item: AppNotification) => {
     if (!item.read_at) {
       await apiPost(`/notifications/${item.id}/read`);
       await queryClient.invalidateQueries({ queryKey: ["/notifications"] });
     }
+
+    setOpen(false);
 
     if (item.grant_application_id) {
       router.push(`/dashboard/bantuan/${item.grant_application_id}#komentar`);
     }
   };
 
+  const markAllRead = async () => {
+    await apiPost("/notifications/read-all");
+    await queryClient.invalidateQueries({ queryKey: ["/notifications"] });
+  };
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           size="icon"
@@ -84,7 +69,14 @@ export function NotificationBell() {
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
-        <div className="border-b px-3 py-2 font-medium text-sm">Notifikasi</div>
+        <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
+          <span className="font-medium text-sm">Notifikasi</span>
+          {unread > 0 ? (
+            <Button size="xs" variant="ghost" onClick={() => void markAllRead()}>
+              Tandai semua dibaca
+            </Button>
+          ) : null}
+        </div>
         <ul className="max-h-80 overflow-y-auto">
           {(notifications.data?.items.length ?? 0) === 0 ? (
             <li className="px-3 py-6 text-center text-muted-foreground text-sm">Tidak ada notifikasi</li>
@@ -94,17 +86,31 @@ export function NotificationBell() {
                 <button
                   type="button"
                   className="flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-muted"
-                  onClick={() => void open(item)}
+                  onClick={() => void openItem(item)}
                 >
                   <span className={item.read_at ? "text-sm" : "font-medium text-sm"}>{notificationText(item)}</span>
                   {item.excerpt ? (
                     <span className="line-clamp-2 text-muted-foreground text-xs">{item.excerpt}</span>
+                  ) : null}
+                  {item.created_at ? (
+                    <time className="text-muted-foreground text-xs" dateTime={item.created_at}>
+                      {notificationTime(item.created_at)}
+                    </time>
                   ) : null}
                 </button>
               </li>
             ))
           )}
         </ul>
+        <div className="border-t px-3 py-2">
+          <Link
+            href="/dashboard/notifikasi"
+            className="text-sm underline-offset-4 hover:underline"
+            onClick={() => setOpen(false)}
+          >
+            Lihat semua
+          </Link>
+        </div>
       </PopoverContent>
     </Popover>
   );

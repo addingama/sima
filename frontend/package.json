@@ -13,6 +13,7 @@
     "demo:petty-cash-video": "playwright test --config=playwright.demo.config.ts e2e/demo/petty-cash-flow.spec.ts && node e2e/demo/export-video.mjs",
     "demo:grant-name-match-video": "playwright test --config=playwright.demo.config.ts e2e/demo/grant-name-match.spec.ts && node e2e/demo/export-video.mjs",
     "demo:grant-comments-video": "playwright test --config=playwright.demo.config.ts e2e/demo/grant-comments.spec.ts && node e2e/demo/export-video.mjs",
+    "demo:notifications-video": "playwright test --config=playwright.demo.config.ts e2e/demo/notifications.spec.ts && node e2e/demo/export-video.mjs",
     "demo:videos": "playwright test --config=playwright.demo.config.ts && node e2e/demo/export-video.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

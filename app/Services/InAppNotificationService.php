@@ -3,15 +3,23 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Notifications\DatabaseNotification;
-use Illuminate\Support\Collection;
 
 class InAppNotificationService
 {
-    /** @return Collection<int, DatabaseNotification> */
-    public function listFor(User $user, int $limit = 30): Collection
+    /** @return LengthAwarePaginator<int, DatabaseNotification> */
+    public function paginateFor(User $user, string $status = 'all', int $page = 1, int $perPage = 20): LengthAwarePaginator
     {
-        return $user->notifications()->latest()->limit($limit)->get();
+        $query = $user->notifications()->latest();
+
+        if ($status === 'unread') {
+            $query->whereNull('read_at');
+        } elseif ($status === 'read') {
+            $query->whereNotNull('read_at');
+        }
+
+        return $query->paginate(perPage: $perPage, page: $page);
     }
 
     public function unreadCount(User $user): int
@@ -21,9 +29,16 @@ class InAppNotificationService
 
     public function markRead(User $user, string $id): DatabaseNotification
     {
-        /** @var DatabaseNotification $notification */
-        $notification = $user->notifications()->whereKey($id)->firstOrFail();
+        $notification = $this->owned($user, $id);
         $notification->markAsRead();
+
+        return $notification->refresh();
+    }
+
+    public function markUnread(User $user, string $id): DatabaseNotification
+    {
+        $notification = $this->owned($user, $id);
+        $notification->markAsUnread();
 
         return $notification->refresh();
     }
@@ -41,5 +56,23 @@ class InAppNotificationService
         $notifications->each(fn (DatabaseNotification $notification) => $notification->markAsRead());
 
         return $notifications->count();
+    }
+
+    public function delete(User $user, string $id): void
+    {
+        $this->owned($user, $id)->delete();
+    }
+
+    public function deleteRead(User $user): int
+    {
+        return $user->notifications()->whereNotNull('read_at')->delete();
+    }
+
+    private function owned(User $user, string $id): DatabaseNotification
+    {
+        /** @var DatabaseNotification $notification */
+        $notification = $user->notifications()->whereKey($id)->firstOrFail();
+
+        return $notification;
     }
 }

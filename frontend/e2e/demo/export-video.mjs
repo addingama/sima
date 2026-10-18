@@ -17,6 +17,7 @@ const targets = [
   { match: /rekomendasi-sampai-selesai/, basename: "pengajuan-bantuan" },
   { match: /bnt-nama/, basename: "pengajuan-bantuan-nama-sama" },
   { match: /bnt-komentar/, basename: "pengajuan-bantuan-komentar" },
+  { match: /notif-inbox/, basename: "notifikasi" },
   // Keyword pendek di awal judul tes (Playwright memotong nama folder jika terlalu panjang).
   { match: /ksk-ops/, basename: "kas-kecil-operasional" },
   { match: /ksk-event|kas-kecil-event/, basename: "kas-kecil-event" },
