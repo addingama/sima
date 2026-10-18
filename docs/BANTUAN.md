@@ -254,7 +254,7 @@ Invariant:
 - Mengetik `@` menyebut user internal aktif yang punya `grant.view`. Token tersimpan sebagai `@[user:ID]`; nama dibaca dari `users`.
 - Sekali disebut, user itu bisa melihat kartu. Daftar akses mention tampil di detail.
 - Setiap komentar baru memberitahu pengaju, verifikator assigned, dan petugas serah terima assigned lewat lonceng in-app. Yang disebut mendapat notifikasi `grant_mention` (satu baris, tidak digabung dengan notifikasi peserta). Penulis tidak diberitahu. Role yang melihat semua kartu tidak diberitahu kecuali mereka peserta atau disebut.
-- Mengedit komentar hanya memberitahu mention yang baru. Notifikasi dipolling; klik lonceng membuka `/dashboard/bantuan/{id}#komentar`.
+- Mengedit komentar hanya memberitahu mention yang baru. Notifikasi dipolling. Lonceng menampilkan 8 terbaru plus **Lihat semua** ke `/dashboard/notifikasi` (tab semua/belum dibaca, tandai dibaca atau belum, hapus satu, hapus yang sudah dibaca). Klik notifikasi membuka `/dashboard/bantuan/{id}#komentar`.
 
 Demo template `/dashboard/kanban` **bukan** fondasi modul ini (data dummy).
 
@@ -312,9 +312,9 @@ Sampai merge: branch `feature/grant-applications`, PR #44.
 | Laporan | `ReportService::grantApplications`, `GET /api/reports/grant-applications` |
 | Kanban UI | `frontend/src/app/(main)/dashboard/bantuan/` |
 | Laporan UI | `frontend/src/app/(main)/dashboard/reports/bantuan/` + `frontend/src/lib/reports/definitions.ts` |
-| Komentar + mention | `GrantApplicationCommentService`, `GET/POST /api/grant-applications/{id}/comments`, `GET /api/notifications` |
+| Komentar + mention | `GrantApplicationCommentService`, `GET/POST /api/grant-applications/{id}/comments`, `GET /api/notifications` (`status`, pagination), `POST /read`, `POST /unread`, `DELETE /api/notifications/{id}`, `DELETE /api/notifications/read`. UI inbox: `/dashboard/notifikasi` |
 | Tes | `tests/Feature/Api/GrantApplicationApiTest.php`, `GrantApplicationCommentApiTest.php`, `GrantApplicationReportTest.php` |
-| Tes UI | `grant-comments.test.tsx`, `notification-bell.test.tsx` |
+| Tes UI | `grant-comments.test.tsx`, `notification-bell.test.tsx`, `notifications-inbox.test.tsx` |
 
 Keputusan implementasi yang mudah terlewat:
 

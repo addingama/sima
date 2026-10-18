@@ -64,4 +64,14 @@ describe("NotificationBell", () => {
     expect(apiPost).toHaveBeenCalledWith("/notifications/note-1/read");
     expect(push).toHaveBeenCalledWith("/dashboard/bantuan/12#komentar");
   });
+
+  it("menawarkan tandai semua dibaca dan tautan ke seluruh notifikasi", async () => {
+    const user = userEvent.setup();
+    renderBell();
+
+    await user.click(await screen.findByRole("button", { name: "Notifikasi, 2 belum dibaca" }));
+    await user.click(screen.getByRole("button", { name: "Tandai semua dibaca" }));
+    expect(apiPost).toHaveBeenCalledWith("/notifications/read-all");
+    expect(screen.getByRole("link", { name: "Lihat semua" })).toHaveAttribute("href", "/dashboard/notifikasi");
+  });
 });

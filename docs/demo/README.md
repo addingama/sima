@@ -10,6 +10,7 @@
 | [videos/pengajuan-bantuan-instansi.mp4](./videos/pengajuan-bantuan-instansi.mp4) | Bantuan instansi/kelompok air bersih → selesai |
 | [videos/pengajuan-bantuan-nama-sama.mp4](./videos/pengajuan-bantuan-nama-sama.mp4) | Nama penerima sama: flag verifikator, bantuan berulang tetap boleh |
 | [videos/pengajuan-bantuan-komentar.mp4](./videos/pengajuan-bantuan-komentar.mp4) | Komentar kartu, @mention, akses lihat, dan lonceng notifikasi |
+| [videos/notifikasi.mp4](./videos/notifikasi.mp4) | Inbox notifikasi: semua dan belum dibaca, tandai belum dibaca, hapus |
 | [videos/portal-donatur.mp4](./videos/portal-donatur.mp4) | Portal donatur: hanya donasi approved miliknya |
 | [videos/kas-kecil-operasional.mp4](./videos/kas-kecil-operasional.mp4) | Kas kecil operasional: buat float → cair DSB → belanja PJ → tutup |
 | [videos/kas-kecil-event.mp4](./videos/kas-kecil-event.mp4) | Kas kecil event: float terikat program → cair → belanja → tutup |
@@ -53,6 +54,13 @@ Hanya komentar, mention, dan lonceng:
 ```bash
 cd frontend
 npm run demo:grant-comments-video
+```
+
+Hanya inbox notifikasi:
+
+```bash
+cd frontend
+npm run demo:notifications-video
 ```
 
 Setelah itu regenerasi PPT agar semua video tertanam.

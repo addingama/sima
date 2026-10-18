@@ -152,7 +152,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('grant-applications/{grant_application}', [GrantApplicationController::class, 'show'])->middleware('permission:grant.view');
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::post('notifications/read-all', [NotificationController::class, 'readAll']);
+    Route::delete('notifications/read', [NotificationController::class, 'destroyRead']);
     Route::post('notifications/{notification}/read', [NotificationController::class, 'read']);
+    Route::post('notifications/{notification}/unread', [NotificationController::class, 'unread']);
+    Route::delete('notifications/{notification}', [NotificationController::class, 'destroy']);
     Route::post('grant-applications', [GrantApplicationController::class, 'store'])->middleware('permission:grant.create');
     Route::put('grant-applications/{grant_application}', [GrantApplicationController::class, 'update'])->middleware('permission:grant.update');
     Route::post('grant-applications/{grant_application}/assign', [GrantApplicationController::class, 'assign'])->middleware('permission:grant.assign');
