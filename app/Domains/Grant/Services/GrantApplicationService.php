@@ -107,7 +107,9 @@ class GrantApplicationService
             'handedOverBy:id,name',
             'disbursement:id,disbursement_number,status,amount,payee,account_id',
             'attachments',
+            'mentionAccessUsers:id,name',
         ]);
+        $grant->loadCount('comments');
 
         $viewer = auth()->user();
         if ($viewer instanceof User) {

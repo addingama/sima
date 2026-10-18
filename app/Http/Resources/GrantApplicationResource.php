@@ -74,6 +74,10 @@ class GrantApplicationResource extends JsonResource
             'name_match_warning' => $nameMatch['warning'] ?? false,
             'name_matches' => $nameMatch['matches'] ?? [],
             'completed_assistance_count' => $nameMatch['completed_assistance_count'] ?? 0,
+            'comments_count' => (int) ($this->comments_count ?? 0),
+            'mention_access' => $this->whenLoaded('mentionAccessUsers', fn () => $this->mentionAccessUsers
+                ->map(fn ($user) => ['id' => $user->id, 'name' => $user->name])
+                ->values()),
             'program' => ProgramResource::make($this->whenLoaded('program')),
             'assigned_verifier' => $this->whenLoaded('assignedVerifier', fn () => $this->assignedVerifier === null ? null : [
                 'id' => $this->assignedVerifier->id,

@@ -21,7 +21,7 @@ class GrantApplicationRepository
                 'program:id,code,name',
                 'createdBy:id,name',
                 'handedOverBy:id,name',
-            ]),
+            ])->withCount('comments'),
             $query,
             $viewer,
         )->paginate($query->perPage, ['*'], 'page', $query->page);
@@ -128,7 +128,13 @@ class GrantApplicationRepository
         return $query->where(function (Builder $w) use ($viewer): void {
             $w->where('created_by', $viewer->getKey())
                 ->orWhere('assigned_verifier_id', $viewer->getKey())
-                ->orWhere('assigned_handover_id', $viewer->getKey());
+                ->orWhere('assigned_handover_id', $viewer->getKey())
+                ->orWhereExists(function ($access) use ($viewer): void {
+                    $access->selectRaw('1')
+                        ->from('grant_application_accesses')
+                        ->whereColumn('grant_application_accesses.grant_application_id', 'grant_applications.id')
+                        ->where('grant_application_accesses.user_id', $viewer->getKey());
+                });
         });
     }
 

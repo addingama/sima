@@ -11,6 +11,7 @@ import { getPreference } from "@/server/server-actions";
 
 import { AuthAccountSwitcher } from "./_components/sidebar/auth-account-switcher";
 import { LayoutControls } from "./_components/sidebar/layout-controls";
+import { NotificationBell } from "./_components/sidebar/notification-bell";
 import { SearchDialog } from "./_components/sidebar/search-dialog";
 import { ThemeSwitcher } from "./_components/sidebar/theme-switcher";
 
@@ -60,6 +61,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
             </div>
             <div className="flex items-center gap-2">
               <LayoutControls />
+              <NotificationBell />
               <ThemeSwitcher />
               <AuthAccountSwitcher />
             </div>

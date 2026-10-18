@@ -5,6 +5,7 @@ namespace App\Domains\Grant\Policies;
 use App\Domains\Shared\Concerns\ChecksSimaPermission;
 use App\Enums\GrantApplicationStatus;
 use App\Models\GrantApplication;
+use App\Models\GrantApplicationComment;
 use App\Models\User;
 
 class GrantApplicationPolicy
@@ -28,7 +29,29 @@ class GrantApplicationPolicy
 
         return $this->isCreator($user, $grant)
             || $this->isAssignedVerifier($user, $grant)
-            || $this->isAssignedHandover($user, $grant);
+            || $this->isAssignedHandover($user, $grant)
+            || $this->hasMentionAccess($user, $grant);
+    }
+
+    public function comment(User $user, GrantApplication $grant): bool
+    {
+        return $this->view($user, $grant);
+    }
+
+    public function updateComment(User $user, GrantApplication $grant, GrantApplicationComment $comment): bool
+    {
+        return $this->view($user, $grant)
+            && (int) $comment->grant_application_id === (int) $grant->getKey()
+            && (int) $comment->user_id === (int) $user->getKey();
+    }
+
+    public function deleteComment(User $user, GrantApplication $grant, GrantApplicationComment $comment): bool
+    {
+        if (! $this->view($user, $grant) || (int) $comment->grant_application_id !== (int) $grant->getKey()) {
+            return false;
+        }
+
+        return (int) $comment->user_id === (int) $user->getKey() || $user->hasRole('admin');
     }
 
     public function create(User $user): bool
@@ -157,5 +180,10 @@ class GrantApplicationPolicy
     {
         return $grant->assigned_handover_id !== null
             && (int) $grant->assigned_handover_id === (int) $user->getKey();
+    }
+
+    private function hasMentionAccess(User $user, GrantApplication $grant): bool
+    {
+        return $grant->mentionAccesses()->where('user_id', $user->getKey())->exists();
     }
 }

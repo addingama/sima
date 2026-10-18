@@ -13,9 +13,10 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { GripVertical } from "lucide-react";
+import { GripVertical, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
+import { commentCountLabel } from "@/app/(main)/dashboard/bantuan/_components/grant-comment-text";
 import { type GrantNameMatch, GrantNameMatchBadge } from "@/app/(main)/dashboard/bantuan/_components/grant-name-match";
 import { CurrencyDisplay } from "@/components/sima/currency-display";
 import { apiPost } from "@/lib/api/client";
@@ -54,6 +55,7 @@ export type GrantCard = {
   name_match_warning?: boolean;
   name_matches?: GrantNameMatch[];
   completed_assistance_count?: number;
+  comments_count?: number;
 };
 
 function GrantKanbanCard({ grant, draggable }: { grant: GrantCard; draggable: boolean }) {
@@ -92,6 +94,13 @@ function GrantKanbanCard({ grant, draggable }: { grant: GrantCard; draggable: bo
             matches={grant.name_matches}
             completedCount={grant.completed_assistance_count}
           />
+          {commentCountLabel(grant.comments_count) ? (
+            <span className="mt-1 flex items-center gap-1 text-muted-foreground text-xs">
+              <MessageSquare className="size-3" aria-hidden="true" />
+              <span className="sr-only">{commentCountLabel(grant.comments_count)}</span>
+              <span aria-hidden="true">{grant.comments_count}</span>
+            </span>
+          ) : null}
         </Link>
       </div>
     </article>

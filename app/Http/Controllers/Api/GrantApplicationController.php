@@ -19,6 +19,7 @@ use App\Http\Resources\GrantApplicationResource;
 use App\Models\GrantApplication;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 class GrantApplicationController extends Controller
@@ -56,6 +57,31 @@ class GrantApplicationController extends Controller
             ->permission('grant.verify')
             ->where('users.is_active', true)
             ->orderBy('users.name')
+            ->get(['users.id', 'users.name']);
+
+        return $this->ok($users);
+    }
+
+    #[OA\Get(
+        path: '/grant-applications/mentionable-users',
+        summary: 'Daftar user internal yang boleh disebut di komentar',
+        tags: ['GrantApplication'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
+    public function mentionableUsers(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', GrantApplication::class);
+
+        $term = trim((string) $request->query('q', ''));
+        $like = '%'.addcslashes($term, '\\%_').'%';
+
+        $users = User::query()
+            ->permission('grant.view')
+            ->where('users.is_active', true)
+            ->when($term !== '', fn ($query) => $query->where('users.name', 'like', $like))
+            ->orderBy('users.name')
+            ->limit(20)
             ->get(['users.id', 'users.name']);
 
         return $this->ok($users);

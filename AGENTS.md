@@ -232,6 +232,7 @@ gh issue create \
 - Selesai = status `approved` + pengeluaran tertaut `approved` + (tunai) lampiran judul `handover`.
 - Satu `disbursement_id` per pengajuan. Nomor `BNT/...`.
 - Dampak bantuan: cakupan individual/kolektif, target sebelum approval, dan realisasi orang terbantu saat selesai.
+- Komentar kartu: token `@[user:ID]`, mention memberi akses lihat permanen, notifikasi in-app `grant_comment` / `grant_mention` ([#68](https://github.com/addingama/sima/issues/68)).
 - Laporan: `GET /api/reports/grant-applications` (`report.view`) + UI `/dashboard/reports/bantuan`.
 - Tes backend: `tests/Feature/Api/GrantApplicationApiTest.php`, `GrantApplicationReportTest.php`. Tes frontend berada berdampingan dengan source sebagai `*.test.ts` / `*.test.tsx`.
 
