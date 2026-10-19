@@ -192,7 +192,7 @@ DEPLOY_PATH=/opt/sima-ahp DEPLOY_BRANCH=main \
 docker compose -f docker-compose.prod.yml -f docker-compose.staging.yml exec app php artisan sima:create-admin
 ```
 
-Perintah `sima:create-admin` membuat administrator produksi pertama (interaktif atau `--name`, `--email`, `--password`). **Jangan** mengandalkan `UserSeeder` / akun `*@sima.test` di produksi.
+Perintah `sima:create-admin` membuat administrator produksi pertama (interaktif atau `--name`, `--email`, `--password`) dan mengisi peran dari `RolePermissionSeeder` bila tabel peran masih kosong. Deploy juga menjalankan `RolePermissionSeeder` dan `SystemFundSeeder` setelah migrasi. **Jangan** menjalankan `db:seed` penuh: `UserSeeder` membuat akun `*@sima.test`.
 
 ## Rolling update (zero/minimal downtime)
 

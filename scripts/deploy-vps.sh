@@ -138,6 +138,10 @@ fi
 echo "Menjalankan migration satu kali dengan image baru..."
 compose run --rm app php artisan migrate --force --no-interaction
 
+echo "Menyiapkan peran dan dana sistem..."
+compose run --rm app php artisan db:seed --class=RolePermissionSeeder --force --no-interaction
+compose run --rm app php artisan db:seed --class=SystemFundSeeder --force --no-interaction
+
 echo "Menjalankan seluruh layanan..."
 compose up -d --wait --remove-orphans
 
