@@ -57,6 +57,8 @@ fi
 cat >"$conf_path" <<EOF
 [mysqld]
 bind-address = 127.0.0.1,${gateway}
+# Trigger ledger tidak memakai SUPER. Binary log MySQL menolak CREATE TRIGGER tanpa ini.
+log_bin_trust_function_creators = 1
 EOF
 
 cat >"$sql_path" <<EOF

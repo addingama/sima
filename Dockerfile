@@ -58,6 +58,7 @@ COPY . .
 RUN composer dump-autoload --optimize \
     && php artisan package:discover --ansi \
     && mkdir -p storage/app/public storage/backups storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
+    && ln -sfn ../storage/app/public public/storage \
     && chown -R www-data:www-data storage bootstrap/cache
 
 USER www-data
