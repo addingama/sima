@@ -56,7 +56,12 @@ jobs:
         run: php artisan test
 
       - name: Validate production deployment scripts
-        run: sh tests/Scripts/check-production-env.sh
+        run: |
+          sh tests/Scripts/check-production-env.sh
+          sh tests/Scripts/render-deploy-env.sh
+          sh tests/Scripts/nginx-forwarded-proto.sh
+          sh tests/Scripts/configure-host-nginx.sh
+          sh tests/Scripts/configure-host-mysql.sh
 
   frontend:
     name: Frontend — Lint & Build

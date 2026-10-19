@@ -30,7 +30,7 @@ prod-build:
 	docker compose -f docker-compose.prod.yml build
 
 prod-up:
-	docker compose -f docker-compose.prod.yml up -d --build
+	COMPOSE_PROFILES=bundled-nginx,bundled-mysql docker compose -f docker-compose.prod.yml up -d --build
 
 prod-check:
 	sh scripts/check-production-env.sh
@@ -39,13 +39,17 @@ deploy:
 	sh scripts/deploy-vps.sh
 
 prod-down:
-	docker compose -f docker-compose.prod.yml down
+	COMPOSE_PROFILES=bundled-nginx,bundled-mysql docker compose -f docker-compose.prod.yml down
 
 test:
 	php artisan test
 
 test-deploy:
 	sh tests/Scripts/check-production-env.sh
+	sh tests/Scripts/render-deploy-env.sh
+	sh tests/Scripts/nginx-forwarded-proto.sh
+	sh tests/Scripts/configure-host-nginx.sh
+	sh tests/Scripts/configure-host-mysql.sh
 
 lint:
 	./vendor/bin/pint --test

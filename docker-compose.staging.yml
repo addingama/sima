@@ -1,0 +1,33 @@
+# Override staging: nginx dan MySQL berjalan di host VPS, bukan di container.
+# Pakai bersama file production:
+#   COMPOSE_FILES="docker-compose.prod.yml docker-compose.staging.yml"
+#   SIMA_NGINX=host
+#   SIMA_MYSQL=host
+#   DB_HOST=host.docker.internal
+#
+# PHP-FPM dan Next.js hanya membuka port di localhost supaya nginx host yang
+# menerima trafik publik. Butuh Docker Compose v2.24+ untuk tag !override.
+
+services:
+  app:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:9000:9000"
+    depends_on: !override
+      redis:
+        condition: service_healthy
+    volumes: !override
+      - ${SIMA_HOST_STORAGE:-/var/lib/sima/storage}:/var/www/html/storage
+      - ${SIMA_HOST_BACKUP_DIR:-/var/lib/sima/backups}:/var/www/html/storage/backups
+
+  worker:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes: !override
+      - ${SIMA_HOST_STORAGE:-/var/lib/sima/storage}:/var/www/html/storage
+      - ${SIMA_HOST_BACKUP_DIR:-/var/lib/sima/backups}:/var/www/html/storage/backups
+
+  frontend:
+    ports:
+      - "127.0.0.1:3000:3000"

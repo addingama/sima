@@ -6,6 +6,7 @@ cd "$ROOT"
 
 ENV_FILE="${ENV_FILE:-.env}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
+COMPOSE_FILES="${COMPOSE_FILES:-$COMPOSE_FILE}"
 
 fail() {
     echo "ERROR: $*" >&2
@@ -31,7 +32,12 @@ env_value() {
 command -v docker >/dev/null 2>&1 || fail "Docker tidak ditemukan."
 docker compose version >/dev/null 2>&1 || fail "Docker Compose v2 tidak tersedia."
 [ -f "$ENV_FILE" ] || fail "File environment tidak ditemukan: $ENV_FILE"
-[ -f "$COMPOSE_FILE" ] || fail "Compose production tidak ditemukan: $COMPOSE_FILE"
+
+compose_args=""
+for compose_file in $COMPOSE_FILES; do
+    [ -f "$compose_file" ] || fail "Compose tidak ditemukan: $compose_file"
+    compose_args="$compose_args -f $compose_file"
+done
 
 for key in APP_KEY APP_URL DB_PASSWORD MYSQL_ROOT_PASSWORD REDIS_PASSWORD SANCTUM_STATEFUL_DOMAINS; do
     value="$(env_value "$key")"
@@ -62,6 +68,12 @@ if [ "$filesystem_disk" = "s3" ]; then
     done
 fi
 
+case " $COMPOSE_FILES " in
+    *" docker-compose.staging.yml "*)
+        [ -n "$(env_value SIMA_DOMAIN)" ] || fail "SIMA_DOMAIN wajib diisi ketika nginx host (staging) dipakai."
+        ;;
+esac
+
 portal_auto_create="$(env_value SIMA_PORTAL_AUTO_CREATE_USER)"
 if [ "$portal_auto_create" = "true" ]; then
     portal_password="$(env_value SIMA_PORTAL_DEFAULT_PASSWORD)"
@@ -69,6 +81,7 @@ if [ "$portal_auto_create" = "true" ]; then
     [ "$portal_password" != "password" ] || fail "SIMA_PORTAL_DEFAULT_PASSWORD tidak boleh memakai password demo."
 fi
 
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" config --quiet
+# shellcheck disable=SC2086
+docker compose --env-file "$ENV_FILE" $compose_args config --quiet
 
 echo "Preflight production berhasil: environment dan Compose valid."

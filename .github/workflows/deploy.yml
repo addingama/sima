@@ -33,9 +33,13 @@ jobs:
     env:
       DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
       DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
       DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
       DEPLOY_REPO: ${{ secrets.DEPLOY_REPO || format('{0}/{1}.git', github.server_url, github.repository) }}
+      DEPLOY_BRANCH: ${{ inputs.branch || 'main' }}
+      COMPOSE_FILES: ${{ vars.COMPOSE_FILES || 'docker-compose.prod.yml' }}
+      SIMA_NGINX: ${{ vars.SIMA_NGINX || 'container' }}
+      SIMA_MYSQL: ${{ vars.SIMA_MYSQL || 'container' }}
 
     steps:
       - name: Validate deploy secrets
@@ -44,7 +48,7 @@ jobs:
 
           [ -n "$DEPLOY_HOST" ] || missing="$missing DEPLOY_HOST"
           [ -n "$DEPLOY_USER" ] || missing="$missing DEPLOY_USER"
-          [ -n "$DEPLOY_SSH_KEY" ] || missing="$missing DEPLOY_SSH_KEY"
+          [ -n "$DEPLOY_PASSWORD" ] || missing="$missing DEPLOY_PASSWORD"
           [ -n "$DEPLOY_PATH" ] || missing="$missing DEPLOY_PATH"
 
           if [ -n "$missing" ]; then
@@ -52,24 +56,113 @@ jobs:
             exit 1
           fi
 
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Render server env
+        env:
+          APP_NAME: ${{ vars.APP_NAME }}
+          APP_ENV: ${{ vars.APP_ENV }}
+          APP_KEY: ${{ secrets.APP_KEY }}
+          APP_DEBUG: ${{ vars.APP_DEBUG }}
+          APP_TIMEZONE: ${{ vars.APP_TIMEZONE }}
+          APP_URL: ${{ vars.APP_URL }}
+          APP_LOCALE: ${{ vars.APP_LOCALE }}
+          APP_FALLBACK_LOCALE: ${{ vars.APP_FALLBACK_LOCALE }}
+          APP_MAINTENANCE_DRIVER: ${{ vars.APP_MAINTENANCE_DRIVER }}
+          BCRYPT_ROUNDS: ${{ vars.BCRYPT_ROUNDS }}
+          LOG_CHANNEL: ${{ vars.LOG_CHANNEL }}
+          LOG_STACK: ${{ vars.LOG_STACK }}
+          LOG_LEVEL: ${{ vars.LOG_LEVEL }}
+          LOG_DAILY_DAYS: ${{ vars.LOG_DAILY_DAYS }}
+          DB_CONNECTION: ${{ vars.DB_CONNECTION }}
+          DB_HOST: ${{ vars.DB_HOST }}
+          DB_PORT: ${{ vars.DB_PORT }}
+          DB_DATABASE: ${{ vars.DB_DATABASE }}
+          DB_USERNAME: ${{ vars.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          SESSION_DRIVER: ${{ vars.SESSION_DRIVER }}
+          SESSION_LIFETIME: ${{ vars.SESSION_LIFETIME }}
+          SESSION_ENCRYPT: ${{ vars.SESSION_ENCRYPT }}
+          SESSION_DOMAIN: ${{ vars.SESSION_DOMAIN }}
+          SESSION_SECURE_COOKIE: ${{ vars.SESSION_SECURE_COOKIE }}
+          BROADCAST_CONNECTION: ${{ vars.BROADCAST_CONNECTION }}
+          FILESYSTEM_DISK: ${{ vars.FILESYSTEM_DISK }}
+          QUEUE_CONNECTION: ${{ vars.QUEUE_CONNECTION }}
+          CACHE_STORE: ${{ vars.CACHE_STORE }}
+          CACHE_PREFIX: ${{ vars.CACHE_PREFIX }}
+          REDIS_CLIENT: ${{ vars.REDIS_CLIENT }}
+          REDIS_HOST: ${{ vars.REDIS_HOST }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          REDIS_PORT: ${{ vars.REDIS_PORT }}
+          MAIL_MAILER: ${{ vars.MAIL_MAILER }}
+          MAIL_HOST: ${{ vars.MAIL_HOST }}
+          MAIL_PORT: ${{ vars.MAIL_PORT }}
+          MAIL_USERNAME: ${{ vars.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          MAIL_ENCRYPTION: ${{ vars.MAIL_ENCRYPTION }}
+          MAIL_FROM_ADDRESS: ${{ vars.MAIL_FROM_ADDRESS }}
+          MAIL_FROM_NAME: ${{ vars.MAIL_FROM_NAME }}
+          FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+          SANCTUM_STATEFUL_DOMAINS: ${{ vars.SANCTUM_STATEFUL_DOMAINS }}
+          SANCTUM_TOKEN_EXPIRATION: ${{ vars.SANCTUM_TOKEN_EXPIRATION }}
+          AWS_ACCESS_KEY_ID: ${{ vars.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+          AWS_BUCKET: ${{ vars.AWS_BUCKET }}
+          AWS_URL: ${{ vars.AWS_URL }}
+          AWS_ENDPOINT: ${{ vars.AWS_ENDPOINT }}
+          AWS_USE_PATH_STYLE_ENDPOINT: ${{ vars.AWS_USE_PATH_STYLE_ENDPOINT }}
+          SIMA_PORTAL_AUTO_CREATE_USER: ${{ vars.SIMA_PORTAL_AUTO_CREATE_USER }}
+          SIMA_PORTAL_DEFAULT_PASSWORD: ${{ secrets.SIMA_PORTAL_DEFAULT_PASSWORD }}
+          RUN_MIGRATIONS: ${{ vars.RUN_MIGRATIONS }}
+          SIMA_HTTP_PORT: ${{ vars.SIMA_HTTP_PORT }}
+          SIMA_BACKUP_DIR: ${{ vars.SIMA_BACKUP_DIR }}
+          SIMA_HEALTH_TIMEOUT: ${{ vars.SIMA_HEALTH_TIMEOUT }}
+          SIMA_DOMAIN: ${{ vars.SIMA_DOMAIN }}
+          SIMA_HOST_STORAGE: ${{ vars.SIMA_HOST_STORAGE }}
+          SIMA_HOST_BACKUP_DIR: ${{ vars.SIMA_HOST_BACKUP_DIR }}
+          SIMA_TLS_EMAIL: ${{ vars.SIMA_TLS_EMAIL }}
+        run: sh scripts/render-deploy-env.sh deploy.env
+
+      - name: Prepare repository on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          password: ${{ env.DEPLOY_PASSWORD }}
+          command_timeout: 10m
+          envs: DEPLOY_PATH,DEPLOY_REPO,DEPLOY_BRANCH
+          script: |
+            set -eu
+            if [ ! -d "$DEPLOY_PATH/.git" ]; then
+              mkdir -p "$(dirname "$DEPLOY_PATH")"
+              git clone --branch "$DEPLOY_BRANCH" "$DEPLOY_REPO" "$DEPLOY_PATH"
+            fi
+
+      - name: Upload env file
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          password: ${{ env.DEPLOY_PASSWORD }}
+          source: deploy.env
+          target: ${{ env.DEPLOY_PATH }}
+          overwrite: true
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ env.DEPLOY_HOST }}
           username: ${{ env.DEPLOY_USER }}
-          key: ${{ env.DEPLOY_SSH_KEY }}
+          password: ${{ env.DEPLOY_PASSWORD }}
           command_timeout: 30m
+          envs: DEPLOY_PATH,DEPLOY_REPO,DEPLOY_BRANCH,COMPOSE_FILES,SIMA_NGINX,SIMA_MYSQL
           script: |
-            set -e
-            export DEPLOY_PATH="${{ env.DEPLOY_PATH }}"
-            export DEPLOY_REPO="${{ env.DEPLOY_REPO }}"
-            export DEPLOY_BRANCH="${{ inputs.branch || 'main' }}"
-
-            if [ ! -d "$DEPLOY_PATH/.git" ]; then
-              git clone --branch "$DEPLOY_BRANCH" "$DEPLOY_REPO" "$DEPLOY_PATH"
-            fi
-
+            set -eu
             cd "$DEPLOY_PATH"
-            git fetch --prune origin "$DEPLOY_BRANCH"
-            git reset --hard "origin/$DEPLOY_BRANCH"
+            mv -f deploy.env .env
+            chmod 600 .env
             sh scripts/deploy-vps.sh

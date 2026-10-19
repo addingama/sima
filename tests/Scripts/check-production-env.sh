@@ -9,6 +9,10 @@ mkdir -p "$TMP_DIR/bin"
 
 cat >"$TMP_DIR/bin/docker" <<'EOF'
 #!/usr/bin/env sh
+if [ -n "${DOCKER_LOG:-}" ]; then
+    printf '%s\n' "$*" >>"$DOCKER_LOG"
+fi
+
 if [ "$1" = "compose" ] && [ "${2:-}" = "version" ]; then
     exit 0
 fi
@@ -75,5 +79,19 @@ if run_check >"$TMP_DIR/output" 2>&1; then
     exit 1
 fi
 grep -q 'SIMA_PORTAL_DEFAULT_PASSWORD minimal 12 karakter' "$TMP_DIR/output"
+
+write_valid_env
+if COMPOSE_FILES="docker-compose.prod.yml docker-compose.staging.yml" run_check >"$TMP_DIR/output" 2>&1; then
+    echo "Preflight seharusnya menolak nginx host tanpa SIMA_DOMAIN." >&2
+    exit 1
+fi
+grep -q 'SIMA_DOMAIN wajib diisi' "$TMP_DIR/output"
+
+write_valid_env
+printf '\nSIMA_DOMAIN=sima.example.com\n' >>"$TMP_DIR/.env"
+export DOCKER_LOG="$TMP_DIR/docker.log"
+: >"$DOCKER_LOG"
+COMPOSE_FILES="docker-compose.prod.yml docker-compose.staging.yml" run_check >/dev/null
+grep -q -- '-f docker-compose.prod.yml -f docker-compose.staging.yml' "$DOCKER_LOG"
 
 echo "Test preflight production lulus."

@@ -26,6 +26,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // TLS berhenti di Caddy. Nginx dan PHP melihat koneksi HTTP internal.
+        $middleware->trustProxies(at: '*');
+
         $middleware->api(prepend: [
             AssignRequestId::class,
         ]);

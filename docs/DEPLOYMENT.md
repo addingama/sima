@@ -95,17 +95,25 @@ Response sehat:
 
 ## TLS / HTTPS
 
-Compose default hanya HTTP port 80. Opsi umum:
+Ada dua topologi:
 
-1. **Reverse proxy eksternal** (Traefik, Caddy, cloud LB) → forward ke `:80`
-2. **Certbot standalone** di host, mount sertifikat ke NGINX (perlu konfigurasi SSL tambahan)
+| Aspek | Staging (`ahp-staging`) | Production |
+|-------|-------------------------|------------|
+| Nginx | Di host VPS | Container (`bundled-nginx`) |
+| MySQL | Di host VPS | Container (`bundled-mysql`) |
+| Cara menyalakan | `SIMA_NGINX=host`, `SIMA_MYSQL=host`, `DB_HOST=host.docker.internal` | `SIMA_NGINX=container` dan `SIMA_MYSQL=container` (default) |
+
+Pada staging, PHP-FPM membuka `127.0.0.1:9000` dan Next.js membuka `127.0.0.1:3000`. Nginx host menerima port 80/443 dan meminta sertifikat Let's Encrypt. Aplikasi di container menghubungi MySQL host lewat `host.docker.internal`. MySQL hanya mendengarkan `127.0.0.1` dan alamat gateway Docker, lalu user aplikasi boleh masuk dari jaringan container.
+
+`scripts/configure-host-nginx.sh` dan `scripts/configure-host-mysql.sh` menulis konfigurasi itu saat deploy. Production tidak menjalankan kedua script tersebut.
 
 Setelah HTTPS aktif, pastikan:
 
 ```
-APP_URL=https://sima.example.com
+APP_URL=https://sima.ahpeduli.org
 SESSION_SECURE_COOKIE=true
-SANCTUM_STATEFUL_DOMAINS=sima.example.com
+SANCTUM_STATEFUL_DOMAINS=sima.ahpeduli.org
+SIMA_DOMAIN=sima.ahpeduli.org
 ```
 
 ## Storage, upload & backup
@@ -143,48 +151,41 @@ gunzip -c storage/backups/sima_YYYYMMDD_HHMMSS.sql.gz | \
 
 ## Auto deploy ke VPS via SSH
 
-Workflow `.github/workflows/deploy.yml` melakukan SSH ke VPS, mengambil kode terbaru dari git, lalu build image Docker langsung di server dengan `docker compose build --pull`. Untuk sementara, workflow otomatis saat push ke branch `main` memakai environment GitHub `ahp-staging` karena server production belum tersedia. Deploy manual dari **Actions → Deploy → Run workflow** tetap bisa memilih `ahp-staging` atau `ahp-production`.
+Workflow `.github/workflows/deploy.yml` masuk ke VPS lewat SSH **username dan password**, menulis `.env` dari secrets/variables environment GitHub, mengambil kode terbaru, lalu build image Docker di server. Push ke `main` memakai environment `ahp-staging`. Environment itu adalah **server staging** `https://sima.ahpeduli.org`. Deploy manual dari **Actions → Deploy → Run workflow** tetap bisa memilih `ahp-staging` atau `ahp-production`.
 
-### Secrets GitHub
+### Secrets dan variables GitHub
 
-Isi secrets berikut pada environment GitHub `ahp-production` dan `ahp-staging` sesuai target server masing-masing.
+Isi pada environment GitHub target. Jangan menyimpan password di repository.
 
 | Secret | Keterangan |
 |--------|------------|
 | `DEPLOY_HOST` | IP/hostname server |
 | `DEPLOY_USER` | User SSH |
-| `DEPLOY_SSH_KEY` | Private key SSH |
-| `DEPLOY_PATH` | Path repo di server, mis. `/opt/sima` untuk production atau `/opt/sima-staging` untuk staging |
-| `DEPLOY_REPO` | Opsional. URL git yang dipakai VPS untuk clone/pull jika berbeda dari URL repo GitHub default |
+| `DEPLOY_PASSWORD` | Password SSH user tersebut |
+| `DEPLOY_PATH` | Path repo di server, mis. `/opt/sima-ahp` untuk staging |
+| `DEPLOY_REPO` | Opsional. URL git yang dipakai VPS untuk clone/pull |
+| `APP_KEY` | Key Laravel, prefix `base64:` |
+| `DB_PASSWORD` | Password user MySQL aplikasi |
+| `MYSQL_ROOT_PASSWORD` | Password root MySQL |
+| `REDIS_PASSWORD` | Password Redis |
+
+Konfigurasi non-rahasia (URL, domain, mailer, port) disimpan sebagai **environment variables** dengan nama yang sama seperti kunci `.env`. Workflow merakit file itu lewat `scripts/render-deploy-env.sh` setiap deploy. Untuk staging, variable `SIMA_NGINX` dan `SIMA_MYSQL` bernilai `host`, `DB_HOST` bernilai `host.docker.internal`, `COMPOSE_FILES` bernilai `docker-compose.prod.yml docker-compose.staging.yml`, dan `SIMA_DOMAIN` bernilai `sima.ahpeduli.org`.
 
 ### Setup pertama di VPS
 
-Install Docker Engine, Docker Compose v2, dan Git di VPS. Pastikan user deploy bisa menjalankan Docker.
+Install Docker Engine, Docker Compose v2.24+, Git, Nginx, dan MySQL 8 di VPS staging. User SSH harus boleh menjalankan Docker, dan login password harus aktif (`PasswordAuthentication yes`). Nginx dan MySQL staging adalah layanan sistem, bukan service Compose.
+
+Workflow deploy membuat direktori, menulis `.env`, lalu menjalankan stack. Path staging saat ini: `/opt/sima-ahp`.
+
+Deploy manual di server, bila `.env` sudah ada:
 
 ```bash
-sudo mkdir -p /opt/sima
-sudo chown "$USER":"$USER" /opt/sima
-git clone git@github.com:addingama/sima.git /opt/sima
-cd /opt/sima
-cp .env.production.example .env
-```
-
-Isi `.env` produksi minimal:
-
-| Variabel | Keterangan |
-|----------|------------|
-| `APP_KEY` | Generate dari mesin dev: `php artisan key:generate --show` |
-| `APP_URL` | URL publik aplikasi |
-| `DB_PASSWORD` | Password user MySQL aplikasi |
-| `MYSQL_ROOT_PASSWORD` | Password root MySQL |
-| `REDIS_PASSWORD` | Password Redis, disarankan |
-| `SANCTUM_STATEFUL_DOMAINS` | Domain aplikasi tanpa scheme |
-
-Deploy manual pertama:
-
-```bash
-DEPLOY_PATH=/opt/sima DEPLOY_BRANCH=main sh scripts/deploy-vps.sh
-docker compose -f docker-compose.prod.yml exec app php artisan sima:create-admin
+DEPLOY_PATH=/opt/sima-ahp DEPLOY_BRANCH=main \
+  SIMA_NGINX=host \
+  SIMA_MYSQL=host \
+  COMPOSE_FILES="docker-compose.prod.yml docker-compose.staging.yml" \
+  sh scripts/deploy-vps.sh
+docker compose -f docker-compose.prod.yml -f docker-compose.staging.yml exec app php artisan sima:create-admin
 ```
 
 Perintah `sima:create-admin` membuat administrator produksi pertama (interaktif atau `--name`, `--email`, `--password`). **Jangan** mengandalkan `UserSeeder` / akun `*@sima.test` di produksi.
@@ -219,7 +220,10 @@ Opsi script:
 | `DEPLOY_BRANCH` | `main` | Branch yang dideploy |
 | `DEPLOY_REPO` | kosong | Wajib hanya untuk clone pertama |
 | `ENV_FILE` | `.env` | File environment Compose |
-| `COMPOSE_FILE` | `docker-compose.prod.yml` | File Compose production |
+| `COMPOSE_FILE` | `docker-compose.prod.yml` | File Compose bila `COMPOSE_FILES` kosong |
+| `COMPOSE_FILES` | sama dengan `COMPOSE_FILE` | Daftar file Compose, dipisah spasi. Staging menambah `docker-compose.staging.yml` |
+| `SIMA_NGINX` | `container` | `container` menyalakan nginx Compose (production). `host` memakai nginx di VPS (staging) |
+| `SIMA_MYSQL` | `container` | `container` menyalakan MySQL Compose (production). `host` memakai MySQL di VPS (staging); `DB_HOST` harus `host.docker.internal` |
 | `DEPLOY_BACKUP` | `true` | Backup DB sebelum update jika app lama sedang berjalan |
 | `SIMA_HEALTH_TIMEOUT` | `120` | Batas tunggu health check dalam detik |
 
