@@ -131,11 +131,7 @@ export async function selectRadixOption(page: Page, fieldLabel: string, optionLa
 }
 
 export async function fillMoneyInGroup(page: Page, groupLabel: string, amount: string) {
-  await page
-    .getByRole("group")
-    .filter({ hasText: groupLabel })
-    .locator('input[inputmode="numeric"]')
-    .fill(amount);
+  await page.getByRole("group").filter({ hasText: groupLabel }).locator('input[inputmode="numeric"]').fill(amount);
 }
 
 /** Cairkan anggaran awal dari detail float (masih draft), lalu approve DSB (bendahara saja). */
@@ -185,19 +181,14 @@ export async function fundAndApproveFloatDisbursement(
   await expect(page.getByText("reporting", { exact: true }).first()).toBeVisible();
 }
 
-export async function addPettyCashLine(
-  page: Page,
-  opts: { category: string; amount: string; description: string },
-) {
+export async function addPettyCashLine(page: Page, opts: { category: string; amount: string; description: string }) {
   const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Tambah Baris" }) });
   const categorySelect = form.getByRole("combobox").first();
   const descriptionInput = form.getByPlaceholder("Keterangan belanja");
   const amountInput = form.locator('input[inputmode="numeric"]');
 
   await expect(categorySelect).toBeVisible({ timeout: 20_000 });
-  await expect
-    .poll(async () => categorySelect.locator("option").count(), { timeout: 20_000 })
-    .toBeGreaterThan(1);
+  await expect.poll(async () => categorySelect.locator("option").count(), { timeout: 20_000 }).toBeGreaterThan(1);
   // Tunggu reset form setelah baris sebelumnya (hindari race RHF).
   await expect(descriptionInput).toHaveValue("");
   await expect(amountInput).toHaveValue("");
@@ -213,10 +204,7 @@ export async function addPettyCashLine(
 }
 
 /** Tutup float. Jika ada sisa, isi rekening (butuh permission account.view — biasanya bendahara). */
-export async function closePettyCashFloat(
-  page: Page,
-  opts?: { returnedAmount?: string; accountLabel?: string },
-) {
+export async function closePettyCashFloat(page: Page, opts?: { returnedAmount?: string; accountLabel?: string }) {
   await page.getByRole("button", { name: "Tutup Float" }).click();
   const dialog = page.getByRole("alertdialog");
   await expect(dialog).toBeVisible();

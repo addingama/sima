@@ -28,9 +28,11 @@ test("ksk-ops dari buat float sampai tutup", async ({ page }) => {
   await selectSearchable(page, "Cari nama PJ...", "Petugas Bantuan");
   await page.getByRole("group").filter({ hasText: "Periode Mulai" }).locator('input[type="date"]').fill("2026-10-01");
   await page.getByRole("group").filter({ hasText: "Periode Akhir" }).locator('input[type="date"]').fill("2026-10-31");
-  await page.getByRole("group").filter({ hasText: "Catatan" }).locator("textarea").fill(
-    "Anggaran bulanan ATK, transport, dan internet tim lapangan.",
-  );
+  await page
+    .getByRole("group")
+    .filter({ hasText: "Catatan" })
+    .locator("textarea")
+    .fill("Anggaran bulanan ATK, transport, dan internet tim lapangan.");
   await caption(page, "3. Simpan float draft — belum mengurangi ledger", 700);
   await page.getByRole("button", { name: "Buat Float" }).click();
   await expect(page).toHaveURL(/\/dashboard\/kas-kecil\/\d+$/);
@@ -91,9 +93,11 @@ test("ksk-event dari buat float sampai tutup", async ({ page }) => {
   await selectRadixOption(page, "Tujuan", "Event");
   await selectSearchable(page, "Cari nama PJ...", "Petugas Bantuan");
   await selectSearchable(page, "Cari event / program...", "Bakti Sosial Ramadan");
-  await page.getByRole("group").filter({ hasText: "Catatan" }).locator("textarea").fill(
-    "Uang muka panitia distribusi paket — terikat program Bakti Sosial Ramadan.",
-  );
+  await page
+    .getByRole("group")
+    .filter({ hasText: "Catatan" })
+    .locator("textarea")
+    .fill("Uang muka panitia distribusi paket — terikat program Bakti Sosial Ramadan.");
   await caption(page, "2. Pilih Event/Program — float tidak bercampur dengan operasional", 800);
   await page.getByRole("button", { name: "Buat Float" }).click();
   await expect(page).toHaveURL(/\/dashboard\/kas-kecil\/\d+$/);
