@@ -33,7 +33,12 @@ fi
 mkdir -p "$TMP_DIR/system/letsencrypt/live/sima.ahpeduli.org"
 touch "$TMP_DIR/system/letsencrypt/live/sima.ahpeduli.org/fullchain.pem"
 sh "$ROOT/scripts/configure-host-nginx.sh" install
+grep -q "listen 443 ssl http2;" "$conf"
 grep -q "ssl_certificate /etc/letsencrypt/live/sima.ahpeduli.org/fullchain.pem;" "$conf"
+if grep -q "http2 on;" "$conf"; then
+    echo "Direktif http2 on tidak didukung nginx host yang lebih lama." >&2
+    exit 1
+fi
 grep -q "fastcgi_param HTTPS on;" "$conf"
 grep -q 'return 301 https://$host$request_uri;' "$conf"
 
