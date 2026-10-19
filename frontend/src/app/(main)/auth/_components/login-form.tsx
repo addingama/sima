@@ -39,8 +39,8 @@ function LoginFormInner() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      login: "bendahara@sima.test",
-      password: "password",
+      login: process.env.NODE_ENV === "development" ? "bendahara@sima.test" : "",
+      password: process.env.NODE_ENV === "development" ? "password" : "",
       remember: true,
     },
   });
