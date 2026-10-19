@@ -83,10 +83,10 @@ done
 : "${RUN_MIGRATIONS:=false}"
 : "${SIMA_HTTP_PORT:=80}"
 : "${SIMA_BACKUP_DIR:=storage/backups}"
-    : "${SIMA_HEALTH_TIMEOUT:=120}"
-    : "${SIMA_DOMAIN:=}"
-    : "${SIMA_HOST_STORAGE:=/var/lib/sima/storage}"
-    : "${SIMA_HOST_BACKUP_DIR:=/var/lib/sima/backups}"
+: "${SIMA_HEALTH_TIMEOUT:=120}"
+: "${SIMA_DOMAIN:=}"
+: "${SIMA_HOST_STORAGE:=}"
+: "${SIMA_HOST_BACKUP_DIR:=}"
 
 umask 077
 tmp="${output}.tmp"

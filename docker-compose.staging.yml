@@ -6,7 +6,9 @@
 #   DB_HOST=host.docker.internal
 #
 # PHP-FPM dan Next.js hanya membuka port di localhost supaya nginx host yang
-# menerima trafik publik. Butuh Docker Compose v2.24+ untuk tag !override.
+# menerima trafik publik. Storage mengikuti SIMA_HOST_STORAGE di file production.
+# depends_on mysql pada file production memakai required: false, jadi Compose
+# sebelum v2.24 tetap bisa membangun image tanpa service mysql.
 
 services:
   app:
@@ -17,16 +19,10 @@ services:
     depends_on: !override
       redis:
         condition: service_healthy
-    volumes: !override
-      - ${SIMA_HOST_STORAGE:-/var/lib/sima/storage}:/var/www/html/storage
-      - ${SIMA_HOST_BACKUP_DIR:-/var/lib/sima/backups}:/var/www/html/storage/backups
 
   worker:
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    volumes: !override
-      - ${SIMA_HOST_STORAGE:-/var/lib/sima/storage}:/var/www/html/storage
-      - ${SIMA_HOST_BACKUP_DIR:-/var/lib/sima/backups}:/var/www/html/storage/backups
 
   frontend:
     ports:

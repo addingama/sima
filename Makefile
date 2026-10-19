@@ -50,6 +50,7 @@ test-deploy:
 	sh tests/Scripts/nginx-forwarded-proto.sh
 	sh tests/Scripts/configure-host-nginx.sh
 	sh tests/Scripts/configure-host-mysql.sh
+	sh tests/Scripts/compose-staging.sh
 
 lint:
 	./vendor/bin/pint --test

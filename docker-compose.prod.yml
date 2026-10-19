@@ -69,11 +69,14 @@ services:
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
       SIMA_BACKUP_DIR: /var/www/html/storage/backups
     volumes:
-      - app_storage:/var/www/html/storage
-      - backup_data:/var/www/html/storage/backups
+      # Kosong = named volume. Staging mengisi path host lewat SIMA_HOST_STORAGE.
+      - ${SIMA_HOST_STORAGE:-app_storage}:/var/www/html/storage
+      - ${SIMA_HOST_BACKUP_DIR:-backup_data}:/var/www/html/storage/backups
     depends_on:
       mysql:
         condition: service_healthy
+        # Profile bundled-mysql mati pada staging. Tanpa ini Compose menolak project.
+        required: false
       redis:
         condition: service_healthy
     healthcheck:
@@ -168,8 +171,8 @@ services:
       <<: *app_env
       RUN_MIGRATIONS: "false"
     volumes:
-      - app_storage:/var/www/html/storage
-      - backup_data:/var/www/html/storage/backups
+      - ${SIMA_HOST_STORAGE:-app_storage}:/var/www/html/storage
+      - ${SIMA_HOST_BACKUP_DIR:-backup_data}:/var/www/html/storage/backups
     depends_on:
       app:
         condition: service_healthy
