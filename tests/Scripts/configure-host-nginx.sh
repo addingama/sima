@@ -36,4 +36,8 @@ grep -q "ssl_certificate /etc/letsencrypt/live/sima.ahpeduli.org/fullchain.pem;"
 grep -q "fastcgi_param HTTPS on;" "$conf"
 grep -q 'return 301 https://$host$request_uri;' "$conf"
 
+hook="$TMP_DIR/system/letsencrypt/renewal-hooks/deploy/sima-reload-nginx.sh"
+[ -x "$hook" ]
+grep -q "systemctl reload nginx" "$hook"
+
 echo "Test nginx host staging lulus."

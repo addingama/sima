@@ -107,6 +107,10 @@ Pada staging, PHP-FPM membuka `127.0.0.1:9000` dan Next.js membuka `127.0.0.1:30
 
 `scripts/configure-host-nginx.sh` dan `scripts/configure-host-mysql.sh` menulis konfigurasi itu saat deploy. Production tidak menjalankan kedua script tersebut.
 
+Staging tidak memakai sertifikat yang dibeli. Deploy memasang nginx HTTP dulu, lalu Certbot meminta sertifikat Let's Encrypt untuk `SIMA_DOMAIN` lewat `http://<domain>/.well-known/acme-challenge/`. Setelah file sertifikat ada, nginx beralih ke `deploy/nginx/sima-host.conf` (port 443, port 80 hanya untuk tantangan perpanjangan dan redirect HTTPS).
+
+Perpanjangan berjalan sendiri. Certbot memperbarui sertifikat lewat `certbot.timer` (atau cron dua kali sehari bila timer tidak ada). Hook `/etc/letsencrypt/renewal-hooks/deploy/sima-reload-nginx.sh` me-reload nginx setelah perpanjangan berhasil. Isi variable GitHub `SIMA_TLS_EMAIL` supaya Let's Encrypt bisa mengirim peringatan bila perpanjangan gagal. DNS domain harus mengarah ke VPS, dan port 80 serta 443 harus terbuka.
+
 Setelah HTTPS aktif, pastikan:
 
 ```

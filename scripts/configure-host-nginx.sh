@@ -116,6 +116,36 @@ issue_certificate() {
     fi
 }
 
+install_renewal() {
+    if [ -n "$root" ]; then
+        hook_dir="$root/letsencrypt/renewal-hooks/deploy"
+    else
+        hook_dir="/etc/letsencrypt/renewal-hooks/deploy"
+    fi
+
+    mkdir -p "$hook_dir"
+    cat >"$hook_dir/sima-reload-nginx.sh" <<'EOF'
+#!/bin/sh
+systemctl reload nginx
+EOF
+    chmod 755 "$hook_dir/sima-reload-nginx.sh"
+
+    if [ -n "$root" ]; then
+        return 0
+    fi
+
+    if command -v systemctl >/dev/null 2>&1 && systemctl cat certbot.timer >/dev/null 2>&1; then
+        systemctl enable --now certbot.timer
+        return 0
+    fi
+
+    cat >/etc/cron.d/sima-certbot <<'EOF'
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+0 3,15 * * * root certbot renew --quiet
+EOF
+}
+
 case "$action" in
     prepare)
         prepare_storage
@@ -124,6 +154,7 @@ case "$action" in
         render_conf
         reload_nginx
         issue_certificate
+        install_renewal
         render_conf
         reload_nginx
         ;;
@@ -132,6 +163,7 @@ case "$action" in
         render_conf
         reload_nginx
         issue_certificate
+        install_renewal
         render_conf
         reload_nginx
         ;;
