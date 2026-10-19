@@ -119,6 +119,7 @@ jobs:
           SIMA_PORTAL_DEFAULT_PASSWORD: ${{ secrets.SIMA_PORTAL_DEFAULT_PASSWORD }}
           RUN_MIGRATIONS: ${{ vars.RUN_MIGRATIONS }}
           SIMA_HTTP_PORT: ${{ vars.SIMA_HTTP_PORT }}
+          SIMA_FRONTEND_PORT: ${{ vars.SIMA_FRONTEND_PORT }}
           SIMA_BACKUP_DIR: ${{ vars.SIMA_BACKUP_DIR }}
           SIMA_HEALTH_TIMEOUT: ${{ vars.SIMA_HEALTH_TIMEOUT }}
           SIMA_DOMAIN: ${{ vars.SIMA_DOMAIN }}

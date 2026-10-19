@@ -103,7 +103,7 @@ Ada dua topologi:
 | MySQL | Di host VPS | Container (`bundled-mysql`) |
 | Cara menyalakan | `SIMA_NGINX=host`, `SIMA_MYSQL=host`, `DB_HOST=host.docker.internal` | `SIMA_NGINX=container` dan `SIMA_MYSQL=container` (default) |
 
-Pada staging, PHP-FPM membuka `127.0.0.1:9000` dan Next.js membuka `127.0.0.1:3000`. Nginx host menerima port 80/443 dan meminta sertifikat Let's Encrypt. Aplikasi di container menghubungi MySQL host lewat `host.docker.internal`. MySQL hanya mendengarkan `127.0.0.1` dan alamat gateway Docker, lalu user aplikasi boleh masuk dari jaringan container.
+Pada staging, PHP-FPM membuka `127.0.0.1:9000` dan Next.js membuka `127.0.0.1` pada port `SIMA_FRONTEND_PORT` (default `3010`; di dalam container Next tetap mendengar `3000`). Nginx host menerima port 80/443 dan meminta sertifikat Let's Encrypt. Aplikasi di container menghubungi MySQL host lewat `host.docker.internal`. MySQL hanya mendengarkan `127.0.0.1` dan alamat gateway Docker, lalu user aplikasi boleh masuk dari jaringan container.
 
 `scripts/configure-host-nginx.sh` dan `scripts/configure-host-mysql.sh` menulis konfigurasi itu saat deploy. Production tidak menjalankan kedua script tersebut.
 
@@ -230,6 +230,7 @@ Opsi script:
 | `SIMA_MYSQL` | `container` | `container` menyalakan MySQL Compose (production). `host` memakai MySQL di VPS (staging); `DB_HOST` harus `host.docker.internal` |
 | `DEPLOY_BACKUP` | `true` | Backup DB sebelum update jika app lama sedang berjalan |
 | `SIMA_HEALTH_TIMEOUT` | `120` | Batas tunggu health check dalam detik |
+| `SIMA_FRONTEND_PORT` | `3010` | Port localhost VPS untuk Next.js staging. Variable GitHub dengan nama yang sama |
 
 ## Monitoring
 

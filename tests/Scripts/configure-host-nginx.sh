@@ -6,6 +6,7 @@ TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT HUP INT TERM
 
 export SIMA_DOMAIN="sima.ahpeduli.org"
+export SIMA_FRONTEND_PORT="3456"
 export SIMA_HOST_STORAGE="$TMP_DIR/storage"
 export SIMA_HOST_BACKUP_DIR="$TMP_DIR/backups"
 export SIMA_NGINX_ROOT="$TMP_DIR/system"
@@ -18,7 +19,7 @@ sh "$ROOT/scripts/configure-host-nginx.sh" install
 conf="$TMP_DIR/system/nginx/sima.conf"
 grep -q "server_name sima.ahpeduli.org;" "$conf"
 grep -q "fastcgi_pass 127.0.0.1:9000;" "$conf"
-grep -q "proxy_pass http://127.0.0.1:3000;" "$conf"
+grep -q "proxy_pass http://127.0.0.1:3456;" "$conf"
 grep -q "alias $TMP_DIR/storage/app/public/;" "$conf"
 if grep -q "ssl_certificate" "$conf"; then
     echo "Tanpa sertifikat, konfigurasi host harus tetap HTTP." >&2

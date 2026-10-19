@@ -7,6 +7,7 @@ set -eu
 
 action="${1:-all}"
 domain="${SIMA_DOMAIN:-}"
+frontend_port="${SIMA_FRONTEND_PORT:-3010}"
 storage="${SIMA_HOST_STORAGE:-/var/lib/sima/storage}"
 backup="${SIMA_HOST_BACKUP_DIR:-/var/lib/sima/backups}"
 root="${SIMA_NGINX_ROOT:-}"
@@ -17,6 +18,12 @@ fail() {
 }
 
 [ -n "$domain" ] || fail "SIMA_DOMAIN wajib diisi untuk nginx host."
+case "$frontend_port" in
+    *[!0-9]*) fail "SIMA_FRONTEND_PORT harus berupa angka." ;;
+esac
+if [ "$frontend_port" -lt 1 ] || [ "$frontend_port" -gt 65535 ]; then
+    fail "SIMA_FRONTEND_PORT harus di antara 1 dan 65535."
+fi
 
 script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 repo_root="$(CDPATH= cd -- "$script_dir/.." && pwd)"
@@ -67,6 +74,7 @@ render_conf() {
     sed \
         -e "s#__SIMA_DOMAIN__#$domain#g" \
         -e "s#__SIMA_STORAGE__#$storage#g" \
+        -e "s#__SIMA_FRONTEND_PORT__#$frontend_port#g" \
         "$template" >"$conf_path"
     echo "Konfigurasi nginx host ditulis ke $conf_path"
 }

@@ -35,13 +35,18 @@ assert_no_mysql() {
 }
 
 write_env
-printf '\nSIMA_HOST_STORAGE=/var/lib/sima/storage\nSIMA_HOST_BACKUP_DIR=/var/lib/sima/backups\n' >>"$TMP_DIR/.env"
+printf '\nSIMA_HOST_STORAGE=/var/lib/sima/storage\nSIMA_HOST_BACKUP_DIR=/var/lib/sima/backups\nSIMA_FRONTEND_PORT=3456\n' >>"$TMP_DIR/.env"
 
 assert_no_mysql "Staging" -f "$ROOT/docker-compose.prod.yml" -f "$ROOT/docker-compose.staging.yml"
-if ! docker compose --env-file "$TMP_DIR/.env" -f "$ROOT/docker-compose.prod.yml" -f "$ROOT/docker-compose.staging.yml" config | grep -q '/var/lib/sima/storage'; then
+staging_config="$(docker compose --env-file "$TMP_DIR/.env" -f "$ROOT/docker-compose.prod.yml" -f "$ROOT/docker-compose.staging.yml" config)"
+printf '%s\n' "$staging_config" | grep -q '/var/lib/sima/storage' || {
     echo "Staging harus memasang storage host ke container." >&2
     exit 1
-fi
+}
+printf '%s\n' "$staging_config" | grep -q 'published: "3456"' || {
+    echo "Staging harus memetakan Next.js ke SIMA_FRONTEND_PORT." >&2
+    exit 1
+}
 
 write_env
 assert_no_mysql "Production tanpa profile MySQL" -f "$ROOT/docker-compose.prod.yml"

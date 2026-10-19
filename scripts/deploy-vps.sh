@@ -147,6 +147,7 @@ if [ "$SIMA_NGINX" = "host" ]; then
         SIMA_HOST_STORAGE="$(env_value SIMA_HOST_STORAGE)" \
         SIMA_HOST_BACKUP_DIR="$(env_value SIMA_HOST_BACKUP_DIR)" \
         SIMA_TLS_EMAIL="$(env_value SIMA_TLS_EMAIL)" \
+        SIMA_FRONTEND_PORT="$(env_value SIMA_FRONTEND_PORT)" \
         sh scripts/configure-host-nginx.sh install
 fi
 

@@ -25,6 +25,7 @@ grep -q 'APP_URL="https://sima.ahpeduli.org"' "$TMP_DIR/.env"
 grep -q 'DB_PASSWORD="test-db-password"' "$TMP_DIR/.env"
 grep -q 'SIMA_DOMAIN="sima.ahpeduli.org"' "$TMP_DIR/.env"
 grep -q 'APP_NAME="SIMA Dev"' "$TMP_DIR/.env"
+grep -q 'SIMA_FRONTEND_PORT="3010"' "$TMP_DIR/.env"
 
 unset APP_KEY
 if sh "$ROOT/scripts/render-deploy-env.sh" "$TMP_DIR/missing.env" >"$TMP_DIR/missing.out" 2>&1; then
