@@ -33,8 +33,15 @@ describe("filterSidebarItems", () => {
 
     expect(ids).toContain("dashboard");
     expect(ids).toContain("bantuan");
+    expect(ids).toContain("istilah");
     expect(ids).not.toContain("master-data");
     expect(ids).not.toContain("events");
+  });
+
+  it("tetap menampilkan daftar istilah tanpa permission", () => {
+    const filtered = filterSidebarItems(sidebarItems, user(["donatur"], []));
+
+    expect(itemIds(filtered)).toContain("istilah");
   });
 
   it("tetap menampilkan master data sesuai permission untuk role internal lain", () => {

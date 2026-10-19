@@ -56,12 +56,18 @@ class RolePermissionApiTest extends TestCase
             'grant.update',
             'grant.verify',
             'grant.view',
+            'petty_cash.close',
+            'petty_cash.topup_request',
+            'petty_cash.update',
+            'petty_cash.view',
             'program.view',
         ], $role->permissions->pluck('name')->sort()->values()->all());
 
         $this->assertFalse($role->hasPermissionTo('grant.assign'));
         $this->assertFalse($role->hasPermissionTo('grant.approve'));
         $this->assertFalse($role->hasPermissionTo('disbursement.create'));
+        $this->assertFalse($role->hasPermissionTo('petty_cash.create'));
+        $this->assertFalse($role->hasPermissionTo('petty_cash.fund'));
     }
 
     public function test_all_internal_roles_share_basic_grant_execution_permissions_except_donatur(): void
