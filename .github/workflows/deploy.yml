@@ -125,7 +125,9 @@ jobs:
           SIMA_HOST_STORAGE: ${{ vars.SIMA_HOST_STORAGE }}
           SIMA_HOST_BACKUP_DIR: ${{ vars.SIMA_HOST_BACKUP_DIR }}
           SIMA_TLS_EMAIL: ${{ vars.SIMA_TLS_EMAIL }}
-        run: sh scripts/render-deploy-env.sh deploy.env
+        run: |
+          sh scripts/render-deploy-env.sh deploy.env
+          chmod 644 deploy.env
 
       - name: Prepare repository on VPS
         uses: appleboy/ssh-action@v1
