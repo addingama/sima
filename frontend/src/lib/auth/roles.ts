@@ -3,6 +3,7 @@ export const SIMA_ROLE_OPTIONS = [
   { value: "asisten_bendahara", label: "Asisten Bendahara" },
   { value: "bendahara", label: "Bendahara" },
   { value: "verifikator", label: "Verifikator" },
+  { value: "petugas_bantuan", label: "Petugas Bantuan" },
   { value: "ketua", label: "Ketua" },
   { value: "auditor", label: "Auditor" },
   { value: "donatur", label: "Donatur" },

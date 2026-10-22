@@ -7,6 +7,10 @@ describe("roleLabel", () => {
     expect(roleLabel(value)).toBe(label);
   });
 
+  it("menyertakan Petugas Bantuan pada pilihan role", () => {
+    expect(SIMA_ROLE_OPTIONS).toContainEqual({ value: "petugas_bantuan", label: "Petugas Bantuan" });
+  });
+
   it("mempertahankan nilai role yang belum dikenal", () => {
     expect(roleLabel("role_baru")).toBe("role_baru");
   });
