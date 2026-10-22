@@ -1,10 +1,10 @@
-# SIMA — Laravel 11 API (PHP 8.2 FPM)
+# SIMA — Laravel 11 API (PHP 8.2.35 FPM)
 # Targets:
 #   dev        — docker compose build app
 #   production — PHP-FPM API (docker-compose.prod.yml)
 #   worker     — Supervisor: queue + scheduler
 
-FROM php:8.2-fpm-alpine AS base
+FROM php:8.2.35-fpm-alpine AS base
 
 RUN apk add --no-cache \
         icu-dev \
