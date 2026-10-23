@@ -3,6 +3,7 @@
 | File | Isi |
 |------|-----|
 | [SIMA-Presentasi-Demo.pptx](./SIMA-Presentasi-Demo.pptx) | Slide presentasi produk (26 slide, widescreen 16:9; video alur di slide 11–13, 15–16, 18) |
+| [SIMA-Uji-Coba-Staging.pptx](./SIMA-Uji-Coba-Staging.pptx) | Urutan setup data demo di staging dan giliran uji coba tiap peran (23 Okt 2026) |
 | [videos/dashboard-dana.mp4](./videos/dashboard-dana.mp4) | Dashboard, Dana Amanah, kas/bank, rekonsiliasi Seimbang |
 | [videos/penerimaan.mp4](./videos/penerimaan.mp4) | Penerimaan + alokasi → submit → approve |
 | [videos/pengeluaran.mp4](./videos/pengeluaran.mp4) | Pengeluaran → submit → verifikasi → approve |
@@ -23,6 +24,7 @@
 python3 -m venv .venv-pptx
 .venv-pptx/bin/pip install python-pptx
 .venv-pptx/bin/python docs/demo/generate_pptx.py
+.venv-pptx/bin/python docs/demo/generate_uji_coba_staging_pptx.py
 ```
 
 ## Regenerasi video demo

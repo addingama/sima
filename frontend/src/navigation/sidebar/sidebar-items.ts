@@ -94,20 +94,6 @@ export const sidebarItems: NavGroup[] = [
         hiddenForRoles: ["petugas_bantuan"],
         subItems: [
           {
-            id: "donors",
-            title: "Donatur",
-            url: "/dashboard/donors",
-            icon: Users,
-            permission: "donor.view",
-          },
-          {
-            id: "vendors",
-            title: "Vendor",
-            url: "/dashboard/vendors",
-            icon: Store,
-            permission: "vendor.view",
-          },
-          {
             id: "funds",
             title: "Dana Amanah",
             url: "/dashboard/funds",
@@ -127,6 +113,20 @@ export const sidebarItems: NavGroup[] = [
             url: "/dashboard/programs",
             icon: CalendarDays,
             permission: "program.view",
+          },
+          {
+            id: "donors",
+            title: "Donatur",
+            url: "/dashboard/donors",
+            icon: Users,
+            permission: "donor.view",
+          },
+          {
+            id: "vendors",
+            title: "Vendor",
+            url: "/dashboard/vendors",
+            icon: Store,
+            permission: "vendor.view",
           },
         ],
       },

@@ -6,6 +6,7 @@ Dokumen ini menjelaskan **langkah demi langkah** yang harus dilakukan lembaga so
 > **Bukan** panduan instalasi server — lihat [DEPLOYMENT.md](DEPLOYMENT.md).  
 > **Konsep Dana Amanah:** lihat [DANA-AMANAH.md](DANA-AMANAH.md).
 > **Kontrak Pengajuan Bantuan:** lihat [BANTUAN.md](BANTUAN.md).
+> **Kas kecil:** lihat [KAS-KECIL.md](KAS-KECIL.md).
 
 ---
 
@@ -131,6 +132,7 @@ Pastikan database & cache terhubung.
 - URL frontend: `/auth/v2/login` (atau sesuai deploy)
 - Login sebagai **admin** untuk fase master data inti
 - Pada lokal/staging, akun contoh memakai password `password`; akun tersebut tidak boleh ada di produksi
+- Setelah login pertama, setiap pengguna mengganti password sendiri dari menu akun (inisial di kanan atas) → **Ubah password**
 
 ---
 
@@ -140,9 +142,11 @@ Pastikan database & cache terhubung.
 
 | Status UI | Keterangan |
 |-----------|------------|
-| Menu **Pengaturan** (`/dashboard/settings`) | **Ada** — CRUD pengguna, role, nonaktifkan, reset password (permission `user.manage`) |
+| Menu **Pengaturan** (`/dashboard/settings`) | **Ada** — CRUD pengguna, role, nonaktifkan, reset password oleh pengelola (permission `user.manage`) |
+| **Ubah password sendiri** (`/dashboard/account/password`) | **Ada** — menu akun di kanan atas. Semua pengguna yang sedang login, termasuk donatur. Tidak membutuhkan `user.manage` |
 | Menu **Role & Permission** (`/dashboard/roles`) | **Ada** — admin dapat mengubah permission role non-admin; role Administrator dikunci dan semua perubahan dicatat di audit trail |
-| API | `GET/POST/PUT/DELETE /api/users`, `PUT /api/users/{id}/roles`, `POST /api/users/{id}/reset-password` |
+| API pengguna | `GET/POST/PUT/DELETE /api/users`, `PUT /api/users/{id}/roles`, `POST /api/users/{id}/reset-password` |
+| API password sendiri | `PUT /api/me/password` — password saat ini, password baru, dan konfirmasi |
 | API role & permission | `GET /api/roles`, `PUT /api/roles/{role}/permissions` — khusus role `admin` |
 | Produksi (admin pertama) | `php artisan sima:create-admin` — tanpa akun `*@sima.test` |
 
@@ -150,8 +154,9 @@ Pastikan database & cache terhubung.
 
 1. **Produksi:** buat administrator pertama dengan `php artisan sima:create-admin` (lihat [DEPLOYMENT.md](DEPLOYMENT.md)).
 2. Login sebagai admin → **Pengaturan** → tambah asisten bendahara, bendahara, verifikator, petugas bantuan, ketua, dan auditor sesuai struktur organisasi.
-3. Setiap user: email organisasi, role tunggal, status aktif.
-4. Reset password dari halaman detail/edit pengguna bila diperlukan.
+3. Setiap user: email organisasi, role tunggal, status aktif, dan password awal yang diserahkan lewat kanal aman.
+4. Minta setiap pengguna mengganti password sendiri saat login pertama.
+5. Reset oleh admin, dari halaman detail pengguna, hanya jika pengguna tidak lagi mengetahui password saat ini.
 
 **Alternatif teknis:** seeder development (`UserSeeder`) hanya untuk lokal/staging — **jangan** dipakai di produksi.
 
@@ -171,6 +176,18 @@ Pastikan database & cache terhubung.
 ### 2.3 Nonaktifkan akun demo
 
 Production tidak boleh di-seed dengan `UserSeeder`. Jika database staging yang pernah di-seed akan dipromosikan, **nonaktifkan** seluruh akun `*@sima.test`, buat ulang admin nyata, dan rotasi semua kredensial sebelum dibuka ke publik.
+
+### 2.4 Ubah password sendiri
+
+| Item | Detail |
+|------|--------|
+| **Menu** | Menu akun (inisial di kanan atas) → **Ubah password** (`/dashboard/account/password`) |
+| **Siapa** | Setiap pengguna yang sedang login, termasuk donatur |
+| **Isian** | Password saat ini, password baru, dan ulangi password baru. Minimal 8 karakter, dan harus berbeda dari password saat ini |
+| **Sesi** | Sesi di perangkat lain berakhir. Sesi yang dipakai untuk mengubah password tetap masuk |
+| **API** | `PUT /api/me/password` |
+
+Reset oleh pengelola (`POST /api/users/{id}/reset-password`) tidak meminta password lama dan mencabut seluruh sesi pengguna itu. Pakai jalur ini hanya ketika pengguna lupa password saat ini.
 
 ---
 
@@ -467,7 +484,8 @@ Setelah Fase 3–5 selesai, alur harian:
 | 5 | **Transfer Dana** | Asisten buat → bendahara post | Hanya memindahkan batas Dana Amanah; tidak mengubah Kas/Bank |
 | 6 | **Liabilitas operasional** | Asisten/bendahara | Buat/edit tagihan, settle ke pengeluaran approved, atau void dengan alasan |
 | 7 | **Rekonsiliasi bank** | Bendahara | Cocokkan SIMA dengan rekening koran dan selesaikan periode |
-| 8 | **Laporan & audit** | Pemegang `report.view`; auditor | Saldo, mutasi, ledger, approval, rekonsiliasi, opening, bantuan, dan audit trail |
+| 8 | **Kas kecil** | Bendahara cair; PJ mencatat dan menutup | Uang muka lewat Pengeluaran tertaut. Baris belanja tidak memposting ledger. Lihat [KAS-KECIL.md](KAS-KECIL.md) |
+| 9 | **Laporan & audit** | Pemegang `report.view`; auditor | Saldo, mutasi, ledger, approval, rekonsiliasi, opening, bantuan, kas kecil, dan audit trail |
 
 Workflow approval transaksi keuangan tersedia di menu **Approval**. Transaksi approved tidak diedit atau dihapus; koreksi memakai reversal.
 
@@ -520,6 +538,7 @@ Papan kerja ada di `/dashboard/bantuan`. Laporan organisasi berada di `/dashboar
 | Pengeluaran | ✅ | buat/submit | buat/submit/verify/approve | verify | — | approve/eskalasi | lihat |
 | Biaya bank/transfer/rekonsiliasi | ✅ | draft sesuai permission | kelola/post | lihat terbatas | — | lihat terbatas | lihat terbatas |
 | Pengajuan bantuan | ✅ semua | dasar | dasar + pengeluaran | dasar | sendiri/assigned | assign/approve | dasar + lihat semua |
+| Kas kecil | ✅ kelola | buat/cair | buat/cair | catat/tutup jika PJ | catat/tutup jika PJ | catat/tutup jika PJ | lihat |
 | Laporan organisasi | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ |
 
 \* Posting opening: **admin** via menu Saldo Awal; auditor dapat melihat batch karena memiliki `opening.view`. Role `donatur` hanya menggunakan Portal Donatur dan tidak masuk matriks operasional internal.
@@ -535,6 +554,7 @@ Papan kerja ada di `/dashboard/bantuan`. Laporan organisasi berada di `/dashboar
 - [ ] Daftar dana amanah disepakati
 - [ ] Daftar rekening kas/bank disepakati
 - [ ] User & role produksi dibuat
+- [ ] Setiap pengguna mengganti password awal sendiri setelah login pertama
 - [ ] Preflight produksi (`make prod-check`) lulus dan deploy memakai `scripts/deploy-vps.sh`
 - [ ] Admin pertama dibuat dengan `sima:create-admin`; tidak ada akun `*@sima.test`
 
@@ -562,6 +582,7 @@ Papan kerja ada di `/dashboard/bantuan`. Laporan organisasi berada di `/dashboar
 - [ ] Prosedur reversal dipahami (tidak ada hapus transaksi)
 - [ ] Rekonsiliasi bank bulanan dan pemeriksaan rekonsiliasi global dijadwalkan
 - [ ] Jika modul bantuan dipakai: koordinator, verifikator, petugas serah terima, kebijakan bukti, dan cara menghitung dampak kolektif sudah ditetapkan
+- [ ] Jika kas kecil dipakai: PJ, kategori belanja, dan cara menutup float sudah ditetapkan
 - [ ] Petugas bantuan training: rekomendasi → verifikasi → approval → pengeluaran → serah terima
 - [ ] Backup dan health check produksi berhasil; prosedur restore/rollback dipahami tim IT
 
@@ -579,6 +600,7 @@ Papan kerja ada di `/dashboard/bantuan`. Laporan organisasi berada di `/dashboar
 | Menganggap ketua satu-satunya approver keuangan | Pekerjaan bendahara tertunda dan pemetaan role keliru | Bendahara adalah approver keuangan; ketua tersedia untuk approval pimpinan/eskalasi |
 | Double posting opening | Saldo dobel | Satu kali posting per baris worksheet |
 | Menjalankan `db:seed` di produksi | Membuat akun contoh dengan password demo | Gunakan migrasi deploy + `sima:create-admin` |
+| Membiarkan password awal atau password demo | Akun mudah ditebak | Pengguna mengubah password sendiri; admin mereset hanya jika password saat ini tidak diketahui |
 | Menandai bantuan selesai sebelum pengeluaran approved | Kasus dan ledger tidak sinkron | Approve pengeluaran tertaut dan unggah bukti penyaluran dahulu |
 | Membuat satu penerima per warga untuk bantuan massal | Data membengkak dan dampak sulit direkap | Gunakan cakupan kolektif + target/realisasi orang terbantu |
 
@@ -601,11 +623,16 @@ Papan kerja ada di `/dashboard/bantuan`. Laporan organisasi berada di `/dashboar
 | Rekonsiliasi Bank | `/dashboard/reconciliations` |
 | Liabilitas Operasional | `/dashboard/liabilities` |
 | Pengajuan Bantuan | `/dashboard/bantuan` |
+| Kas Kecil | `/dashboard/kas-kecil` |
+| Approval | `/dashboard/approvals` |
 | Saldo Awal | `/dashboard/opening-balances` |
+| Ubah password | `/dashboard/account/password` |
 | Pengaturan (Users) | `/dashboard/settings` |
 | Pengaturan (Role & Permission) | `/dashboard/roles` |
+| Istilah | `/dashboard/istilah` |
 | Laporan Saldo Awal | `/dashboard/reports/opening-balances` |
 | Laporan Pengajuan Bantuan | `/dashboard/reports/bantuan` |
+| Laporan Kas Kecil | `/dashboard/reports/kas-kecil` |
 | Laporan | `/dashboard/reports` |
 | Portal Donatur | `/dashboard/portal-donatur` |
 
@@ -618,6 +645,7 @@ Papan kerja ada di `/dashboard/bantuan`. Laporan organisasi berada di `/dashboar
 - [ARCHITECTURE.md](ARCHITECTURE.md) — aliran ledger
 - [DEPLOYMENT.md](DEPLOYMENT.md) — deploy produksi
 - [BANTUAN.md](BANTUAN.md) — aturan pengajuan, assignment, dampak, pengeluaran, dan serah terima bantuan
+- [KAS-KECIL.md](KAS-KECIL.md) — uang muka, PJ, top-up, dan tutup float
 - [README.md](../README.md) — konsep inti & role
 
 ---
@@ -631,3 +659,4 @@ Papan kerja ada di `/dashboard/bantuan`. Laporan organisasi berada di `/dashboar
 | Jun 2026 | §4.2 mekanisme SYS-OPENING; laporan cutover; checklist & Fase 5 audit opening |
 | Jun 2026 | Fase 2 manajemen pengguna (UI Pengaturan, API users, sima:create-admin) |
 | Okt 2026 | Sinkronisasi role `petugas_bantuan`, keamanan seed produksi, approval keuangan, vendor/transfer/rekonsiliasi/liabilitas, deployment, dan alur pengajuan bantuan individual/kolektif |
+| 23 Okt 2026 | Ubah password sendiri, kas kecil pada operasional harian, dan menu yang sudah tersedia |
