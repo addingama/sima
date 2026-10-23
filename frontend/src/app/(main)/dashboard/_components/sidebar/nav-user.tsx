@@ -1,6 +1,8 @@
 "use client";
 
-import { CircleUser, CreditCard, EllipsisVertical, LogOut, MessageSquareDot } from "lucide-react";
+import Link from "next/link";
+
+import { CircleUser, CreditCard, EllipsisVertical, KeyRound, LogOut, MessageSquareDot } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -68,6 +70,12 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/account/password">
+                  <KeyRound />
+                  Ubah password
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem>
                 <CircleUser />
                 Account

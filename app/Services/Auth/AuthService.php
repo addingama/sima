@@ -4,10 +4,12 @@ namespace App\Services\Auth;
 
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthService
 {
@@ -62,6 +64,25 @@ class AuthService
     public function logout(User $user): void
     {
         $user->currentAccessToken()->delete();
+    }
+
+    public function updateOwnPassword(User $user, string $currentPassword, string $password): void
+    {
+        if (! Hash::check($currentPassword, $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Password saat ini tidak sesuai.'],
+            ]);
+        }
+
+        DB::transaction(function () use ($user, $password): void {
+            $currentToken = $user->currentAccessToken();
+
+            $user->update(['password' => $password]);
+
+            if ($currentToken instanceof PersonalAccessToken) {
+                $user->tokens()->whereKeyNot($currentToken->getKey())->delete();
+            }
+        });
     }
 
     private function findByLogin(string $login): ?User

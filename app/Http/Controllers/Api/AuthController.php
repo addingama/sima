@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\UpdateOwnPasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\JsonResponse;
@@ -56,5 +57,23 @@ class AuthController extends Controller
         $this->service->logout($request->user());
 
         return $this->message('Berhasil keluar.');
+    }
+
+    #[OA\Put(
+        path: '/me/password',
+        summary: 'Ubah password akun yang sedang login',
+        tags: ['Auth'],
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/ApiEnvelope'))]
+    )]
+    public function updatePassword(UpdateOwnPasswordRequest $request): JsonResponse
+    {
+        $this->service->updateOwnPassword(
+            $request->user(),
+            $request->string('current_password')->toString(),
+            $request->string('password')->toString(),
+        );
+
+        return $this->message('Password berhasil diubah.');
     }
 }

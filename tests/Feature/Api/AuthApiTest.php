@@ -95,6 +95,89 @@ class AuthApiTest extends TestCase
         $this->withToken($token)->getJson('/api/me')->assertUnauthorized();
     }
 
+    public function test_authenticated_user_can_change_own_password_without_user_manage(): void
+    {
+        $user = $this->user('own-password@sima.test', true);
+        $user->assignRole('donatur');
+
+        $current = $this->postJson('/api/login', [
+            'login' => $user->email,
+            'password' => 'password',
+            'device_name' => 'current-device',
+        ])->assertOk()->json('data.token');
+
+        $other = $this->postJson('/api/login', [
+            'login' => $user->email,
+            'password' => 'password',
+            'device_name' => 'other-device',
+        ])->assertOk()->json('data.token');
+
+        $this->withToken($current)->putJson('/api/me/password', [
+            'current_password' => 'password',
+            'password' => 'password-baru',
+            'password_confirmation' => 'password-baru',
+        ])->assertOk()
+            ->assertJsonPath('message', 'Password berhasil diubah.');
+
+        $this->assertTrue(Hash::check('password-baru', $user->refresh()->password));
+
+        $this->app['auth']->forgetGuards();
+        $this->withToken($current)->getJson('/api/me')->assertOk();
+
+        $this->app['auth']->forgetGuards();
+        $this->withToken($other)->getJson('/api/me')->assertUnauthorized();
+
+        $this->postJson('/api/login', [
+            'login' => $user->email,
+            'password' => 'password',
+        ])->assertUnprocessable();
+
+        $this->postJson('/api/login', [
+            'login' => $user->email,
+            'password' => 'password-baru',
+            'device_name' => 'after-change',
+        ])->assertOk();
+    }
+
+    public function test_own_password_change_rejects_invalid_input(): void
+    {
+        $user = $this->user('invalid-password@sima.test', true);
+        $token = $this->postJson('/api/login', [
+            'login' => $user->email,
+            'password' => 'password',
+            'device_name' => 'invalid-password',
+        ])->assertOk()->json('data.token');
+
+        $this->putJson('/api/me/password', [
+            'current_password' => 'password',
+            'password' => 'password-baru',
+            'password_confirmation' => 'password-baru',
+        ])->assertUnauthorized();
+
+        $this->withToken($token)->putJson('/api/me/password', [
+            'current_password' => 'salah',
+            'password' => 'password-baru',
+            'password_confirmation' => 'password-baru',
+        ])->assertUnprocessable()
+            ->assertJsonPath('errors.fields.current_password.0', 'Password saat ini tidak sesuai.');
+
+        $this->withToken($token)->putJson('/api/me/password', [
+            'current_password' => 'password',
+            'password' => 'password-baru',
+            'password_confirmation' => 'tidak-sama',
+        ])->assertUnprocessable()
+            ->assertJsonPath('errors.fields.password.0', 'Konfirmasi password tidak sama.');
+
+        $this->withToken($token)->putJson('/api/me/password', [
+            'current_password' => 'password',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertUnprocessable()
+            ->assertJsonPath('errors.fields.password.0', 'Password baru harus berbeda dari password saat ini.');
+
+        $this->assertTrue(Hash::check('password', $user->refresh()->password));
+    }
+
     private function user(string $email, bool $active): User
     {
         return User::factory()->create([

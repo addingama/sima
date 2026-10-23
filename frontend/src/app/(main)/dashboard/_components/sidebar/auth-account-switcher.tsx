@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { BadgeCheck, LogOut } from "lucide-react";
+import { BadgeCheck, KeyRound, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -29,7 +30,7 @@ export function AuthAccountSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="size-8 rounded-lg">
+        <Avatar aria-label="Menu akun" className="size-8 rounded-lg">
           <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
@@ -48,6 +49,12 @@ export function AuthAccountSwitcher() {
           <DropdownMenuItem disabled>
             <BadgeCheck />
             {user.email}
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/account/password">
+              <KeyRound />
+              Ubah password
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

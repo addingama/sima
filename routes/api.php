@@ -45,6 +45,7 @@ Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('me', [AuthController::class, 'me']);
+    Route::put('me/password', [AuthController::class, 'updatePassword'])->middleware('throttle:5,1');
     Route::post('logout', [AuthController::class, 'logout']);
 
     // Dashboard (staff only — bukan portal donatur)
